@@ -1,19 +1,19 @@
-import { useQuery } from '@apollo/client'
-import { useParams, Link } from 'react-router-dom'
-import { GET_POST_BY_SLUG } from '../graphql/queries.js'
+import { useQuery } from '@apollo/client';
+import { useParams, Link } from 'react-router-dom';
+import { GET_POST_BY_SLUG } from '../graphql/queries.js';
 
 /**
  * Post detail page component
  * Displays a single post with its content and comments
  */
 export function PostDetailPage() {
-  const { slug } = useParams<{ slug: string }>()
-  
+  const { slug } = useParams<{ slug: string }>();
+
   const { loading, error, data } = useQuery(GET_POST_BY_SLUG, {
     variables: { slug },
     skip: !slug,
-  })
-  
+  });
+
   if (loading) {
     return (
       <div className="post-detail-page">
@@ -21,9 +21,9 @@ export function PostDetailPage() {
           <p>Loading post...</p>
         </div>
       </div>
-    )
+    );
   }
-  
+
   if (error) {
     return (
       <div className="post-detail-page">
@@ -35,11 +35,11 @@ export function PostDetailPage() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
-  
-  const post = data?.posts?.nodes?.[0]
-  
+
+  const post = data?.posts?.nodes?.[0];
+
   if (!post) {
     return (
       <div className="post-detail-page">
@@ -51,11 +51,11 @@ export function PostDetailPage() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
-  
-  const comments = post.commentsByPostId?.nodes || []
-  
+
+  const comments = post.commentsByPostId?.nodes || [];
+
   return (
     <div className="post-detail-page">
       <nav className="breadcrumb">
@@ -63,14 +63,12 @@ export function PostDetailPage() {
         <span className="breadcrumb-separator">→</span>
         <span className="breadcrumb-current">{post.title}</span>
       </nav>
-      
+
       <article className="post-detail">
         <header className="post-header">
           <h1 className="post-title">{post.title}</h1>
           <div className="post-meta">
-            <span className="post-author">
-              By {post.userByAuthorId?.name || 'Unknown Author'}
-            </span>
+            <span className="post-author">By {post.userByAuthorId?.name || 'Unknown Author'}</span>
             <span className="post-date">
               Published on {new Date(post.publishedAt).toLocaleDateString()}
             </span>
@@ -81,7 +79,7 @@ export function PostDetailPage() {
             )}
           </div>
         </header>
-        
+
         <div className="post-content">
           <div className="prose">
             {post.content.split('\n').map((paragraph: string, index: number) => (
@@ -90,12 +88,12 @@ export function PostDetailPage() {
           </div>
         </div>
       </article>
-      
+
       <section className="comments-section">
         <header className="comments-header">
           <h2>Comments ({comments.length})</h2>
         </header>
-        
+
         {comments.length === 0 ? (
           <div className="no-comments">
             <p>No comments yet. Be the first to share your thoughts!</p>
@@ -121,6 +119,5 @@ export function PostDetailPage() {
         )}
       </section>
     </div>
-  )
+  );
 }
-

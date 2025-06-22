@@ -39,10 +39,5 @@
   },
   "include": [],
   "exclude": ["node_modules", "dist", "build"],
-  "references": [
-    { "path": "./packages/shared" },
-    { "path": "./packages/backend" },
-    { "path": "./packages/frontend" }
-  ]
+  "references": [{ "path": "./packages/shared" }, { "path": "./packages/backend" }, { "path": "./packages/frontend" }]
 }
-

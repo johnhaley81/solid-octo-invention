@@ -1,13 +1,14 @@
 # Solid Octo Invention
 
-A modern full-stack application built with functional programming principles, domain-driven design, and type safety from database to UI.
+A modern full-stack application built with functional programming principles,
+domain-driven design, and type safety from database to UI.
 
 ## 🏗️ Architecture
 
 This application follows a clean architecture approach with:
 
 - **Backend**: PostGraphile + Graphile Worker + Effect-TS
-- **Frontend**: React + Apollo Client + Effect-TS  
+- **Frontend**: React + Apollo Client + Effect-TS
 - **Database**: PostgreSQL with Row Level Security
 - **Caching**: Redis for sessions and background jobs
 - **Type Safety**: End-to-end TypeScript with Effect-TS schemas
@@ -15,29 +16,40 @@ This application follows a clean architecture approach with:
 ## 🚀 Tech Stack
 
 ### Backend
-- [PostGraphile](https://www.graphile.org/postgraphile/) - Automatic GraphQL API from PostgreSQL schema
-- [Graphile Worker](https://github.com/graphile/worker) - Background job processing
-- [Graphile Migrate](https://github.com/graphile/migrate) - Database schema management
-- [Effect-TS](https://effect.website/) - Functional programming with type-safe effects
+
+- [PostGraphile](https://www.graphile.org/postgraphile/) - Automatic GraphQL API
+  from PostgreSQL schema
+- [Graphile Worker](https://github.com/graphile/worker) - Background job
+  processing
+- [Graphile Migrate](https://github.com/graphile/migrate) - Database schema
+  management
+- [Effect-TS](https://effect.website/) - Functional programming with type-safe
+  effects
 - [Express](https://expressjs.com/) - Web server framework
 
 ### Frontend
+
 - [React 18](https://react.dev/) - UI library with concurrent features
-- [Apollo Client](https://www.apollographql.com/docs/react/) - GraphQL client with intelligent caching
+- [Apollo Client](https://www.apollographql.com/docs/react/) - GraphQL client
+  with intelligent caching
 - [React Router](https://reactrouter.com/) - Client-side routing
 - [Vite](https://vitejs.dev/) - Fast build tool and dev server
 
 ### Development
+
 - [TypeScript](https://www.typescriptlang.org/) - Type safety
 - [pnpm](https://pnpm.io/) - Fast, disk space efficient package manager
-- [ESLint](https://eslint.org/) + [Prettier](https://prettier.io/) - Code quality and formatting
+- [ESLint](https://eslint.org/) + [Prettier](https://prettier.io/) - Code
+  quality and formatting
 - [Vitest](https://vitest.dev/) - Unit testing
 - [Playwright](https://playwright.dev/) - E2E testing
 
 ## 🎯 Core Principles
 
-1. **Pure Functional Programming** - Immutable data structures and pure functions
-2. **Domain-Driven Development** - Clear domain boundaries and ubiquitous language
+1. **Pure Functional Programming** - Immutable data structures and pure
+   functions
+2. **Domain-Driven Development** - Clear domain boundaries and ubiquitous
+   language
 3. **Making Impossible States Impossible** - Leveraging TypeScript's type system
 4. **Type Safety** - From database schema to UI components
 5. **Effect-TS Integration** - Composable, type-safe side effects
@@ -78,22 +90,26 @@ This application follows a clean architecture approach with:
 ### Quick Start
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd solid-octo-invention
    ```
 
 2. **Install dependencies**
+
    ```bash
    pnpm install
    ```
 
 3. **Start local services**
+
    ```bash
    pnpm db:up
    ```
 
 4. **Run database migrations**
+
    ```bash
    pnpm migrate:up
    ```
@@ -104,6 +120,7 @@ This application follows a clean architecture approach with:
    ```
 
 This will start:
+
 - Backend API server at http://localhost:3000
 - Frontend development server at http://localhost:5173
 - GraphiQL interface at http://localhost:3000/graphiql
@@ -117,23 +134,27 @@ cp .env.example .env
 ```
 
 Key variables:
+
 - `DATABASE_URL` - PostgreSQL connection string
-- `REDIS_URL` - Redis connection string  
+- `REDIS_URL` - Redis connection string
 - `VITE_GRAPHQL_ENDPOINT` - GraphQL endpoint for frontend
 
 ## 🧪 Testing
 
 ### Unit Tests
+
 ```bash
 pnpm test:unit
 ```
 
 ### E2E Tests
+
 ```bash
 pnpm test:e2e
 ```
 
 ### Run All Tests
+
 ```bash
 pnpm test
 ```
@@ -141,17 +162,20 @@ pnpm test
 ## 🔍 Code Quality
 
 ### Linting
+
 ```bash
 pnpm lint
 pnpm lint:fix
 ```
 
 ### Type Checking
+
 ```bash
 pnpm type-check
 ```
 
 ### Formatting
+
 ```bash
 pnpm format
 pnpm format:check
@@ -162,6 +186,7 @@ pnpm format:check
 ### Docker Production Build
 
 1. **Build production images**
+
    ```bash
    docker-compose -f docker-compose.prod.yml build
    ```
@@ -193,13 +218,15 @@ The application uses PostgreSQL with:
 - **Proper indexes** for query performance
 
 Key entities:
+
 - `users` - User accounts and profiles
 - `posts` - Blog posts with status workflow
 - `comments` - Threaded comments on posts
 
 ## 🔧 GraphQL API
 
-PostGraphile automatically generates a GraphQL API from the PostgreSQL schema with:
+PostGraphile automatically generates a GraphQL API from the PostgreSQL schema
+with:
 
 - **CRUD operations** for all tables
 - **Computed fields** via PostgreSQL functions
@@ -267,4 +294,3 @@ All PRs must pass CI checks before merging.
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
-

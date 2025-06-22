@@ -1,5 +1,5 @@
-import js from '@eslint/js'
-import typescriptParser from '@typescript-eslint/parser'
+import js from '@eslint/js';
+import typescriptParser from '@typescript-eslint/parser';
 
 export default [
   js.configs.recommended,
@@ -40,13 +40,13 @@ export default [
       'template-curly-spacing': 'error',
       'arrow-spacing': 'error',
       'comma-dangle': ['error', 'always-multiline'],
-      'semi': ['error', 'never'],
-      'quotes': ['error', 'single', { avoidEscape: true }],
-      
+      semi: ['error', 'never'],
+      quotes: ['error', 'single', { avoidEscape: true }],
+
       // Effect-TS specific rules
       'no-throw-literal': 'error', // Prefer Effect.fail over throw
       'prefer-promise-reject-errors': 'error',
-      
+
       // TypeScript specific overrides
       'no-redeclare': 'off', // TypeScript handles this better
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
@@ -65,13 +65,6 @@ export default [
     },
   },
   {
-    ignores: [
-      'dist',
-      'build',
-      'node_modules',
-      '*.config.js',
-      '*.config.ts',
-      'coverage',
-    ],
+    ignores: ['dist', 'build', 'node_modules', '*.config.js', '*.config.ts', 'coverage'],
   },
-]
+];

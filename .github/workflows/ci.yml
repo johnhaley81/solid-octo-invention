@@ -353,7 +353,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch full history to compare with base branch
+          fetch-depth: 0 # Fetch full history to compare with base branch
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -377,7 +377,7 @@ jobs:
       - name: Check for uncommitted migrations
         run: |
           echo "🔍 Checking for uncommitted database migrations..."
-          
+
           # Check if current.sql exists and has content
           if [ -f "packages/backend/migrations/current.sql" ] && [ -s "packages/backend/migrations/current.sql" ]; then
             echo "❌ ERROR: Uncommitted migrations found in current.sql"
@@ -389,7 +389,7 @@ jobs:
             echo "📚 See: https://github.com/graphile/migrate#committing-migrations"
             exit 1
           fi
-          
+
           # Check if there are any .sql files in current/ directory
           if [ -d "packages/backend/migrations/current" ] && [ "$(ls -A packages/backend/migrations/current 2>/dev/null)" ]; then
             echo "❌ ERROR: Uncommitted migration files found in current/ directory"
@@ -400,14 +400,14 @@ jobs:
             echo "📖 Run 'pnpm migrate:commit' to commit your migrations."
             exit 1
           fi
-          
+
           # Check for schema changes without migrations
           echo "🔍 Checking for potential schema changes in committed files..."
-          
+
           # Get list of changed files in this PR
           git fetch origin ${{ github.base_ref }}
           CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
-          
+
           # Check if any SQL files were modified outside of committed migrations
           if echo "$CHANGED_FILES" | grep -E "\.(sql)$" | grep -v "packages/backend/migrations/committed/" | grep -q .; then
             echo "⚠️  WARNING: SQL files were modified outside of committed migrations directory"
@@ -416,7 +416,7 @@ jobs:
             echo ""
             echo "💡 If these are schema changes, ensure they are properly migrated using Graphile Migrate."
           fi
-          
+
           echo "✅ Migration validation passed! All migrations appear to be committed."
 
   # Job 9: PR status check

@@ -1,6 +1,6 @@
-import { useQuery } from '@apollo/client'
-import { Link } from 'react-router-dom'
-import { GET_POSTS } from '../graphql/queries.js'
+import { useQuery } from '@apollo/client';
+import { Link } from 'react-router-dom';
+import { GET_POSTS } from '../graphql/queries.js';
 
 /**
  * Posts listing page component
@@ -12,8 +12,8 @@ export function PostsPage() {
       first: 10,
       condition: { status: 'published' },
     },
-  })
-  
+  });
+
   if (loading) {
     return (
       <div className="posts-page">
@@ -21,9 +21,9 @@ export function PostsPage() {
           <p>Loading posts...</p>
         </div>
       </div>
-    )
+    );
   }
-  
+
   if (error) {
     return (
       <div className="posts-page">
@@ -32,18 +32,18 @@ export function PostsPage() {
           <p>{error.message}</p>
         </div>
       </div>
-    )
+    );
   }
-  
-  const posts = data?.posts?.nodes || []
-  
+
+  const posts = data?.posts?.nodes || [];
+
   return (
     <div className="posts-page">
       <header className="page-header">
         <h1>Blog Posts</h1>
         <p>Explore our latest articles and insights</p>
       </header>
-      
+
       {posts.length === 0 ? (
         <div className="empty-state">
           <h2>No Posts Yet</h2>
@@ -55,9 +55,7 @@ export function PostsPage() {
             <article key={post.id} className="post-card">
               <header className="post-card-header">
                 <h2 className="post-title">
-                  <Link to={`/posts/${post.slug}`}>
-                    {post.title}
-                  </Link>
+                  <Link to={`/posts/${post.slug}`}>{post.title}</Link>
                 </h2>
                 <div className="post-meta">
                   <span className="post-author">
@@ -68,16 +66,15 @@ export function PostsPage() {
                   </span>
                 </div>
               </header>
-              
+
               <div className="post-excerpt">
                 <p>
-                  {post.content.length > 200 
+                  {post.content.length > 200
                     ? `${post.content.substring(0, 200)}...`
-                    : post.content
-                  }
+                    : post.content}
                 </p>
               </div>
-              
+
               <footer className="post-card-footer">
                 <Link to={`/posts/${post.slug}`} className="read-more">
                   Read More →
@@ -88,6 +85,5 @@ export function PostsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
-

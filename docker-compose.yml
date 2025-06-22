@@ -10,12 +10,12 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./packages/backend/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,11 +27,11 @@ services:
     image: redis:7-alpine
     container_name: solid-octo-redis
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,7 +52,7 @@ services:
       - PORT=3000
       - CORS_ORIGIN=http://localhost:5173
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - ./packages/backend/src:/app/packages/backend/src
       - ./packages/shared/src:/app/packages/shared/src
@@ -76,7 +76,7 @@ services:
     environment:
       - VITE_GRAPHQL_ENDPOINT=http://localhost:3000/graphql
     ports:
-      - "5173:5173"
+      - '5173:5173'
     volumes:
       - ./packages/frontend/src:/app/packages/frontend/src
       - ./packages/shared/src:/app/packages/shared/src

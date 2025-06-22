@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 
 /**
  * 404 Not Found page component
@@ -14,14 +14,14 @@ export function NotFoundPage() {
           The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="space-x-4">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors inline-block"
           >
             Go Home
           </Link>
-          <Link 
-            to="/posts" 
+          <Link
+            to="/posts"
             className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors inline-block"
           >
             View Posts
@@ -29,5 +29,5 @@ export function NotFoundPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
