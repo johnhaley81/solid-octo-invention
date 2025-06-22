@@ -335,12 +335,18 @@ jobs:
           EOF
           pnpm migrate:up
 
+      - name: Build backend
+        run: pnpm --filter backend build
+
       - name: Start backend server
         run: pnpm --filter backend start &
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e
           REDIS_URL: redis://localhost:6379
           PORT: 3000
+          NODE_ENV: test
+          JWT_SECRET: test-jwt-secret-for-e2e-testing
+          CORS_ORIGIN: http://localhost:5173
 
       - name: Wait for backend to be ready
         run: |
