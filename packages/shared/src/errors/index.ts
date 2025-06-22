@@ -218,3 +218,5 @@ export const ErrorUtils = {
     });
   },
 };
+
+// Authentication errors are exported separately to avoid conflicts

@@ -80,7 +80,7 @@ const ServerProgram = E.gen(function* () {
       legacyRelations: 'omit',
       pgSettings: _req => ({
         // Set PostgreSQL settings based on request context
-        role: 'postgres', // This should be dynamic based on authentication
+        role: 'postgres', // This will be enhanced with proper authentication
       }),
     }),
   );

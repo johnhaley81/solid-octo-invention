@@ -5,8 +5,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: ['./src/test-setup.ts'],
-    testTimeout: 30000, // 30 seconds for database operations
-    hookTimeout: 30000, // 30 seconds for setup/teardown
+    include: ['src/**/*.unit.test.ts', 'src/auth-unit.test.ts'],
+    testTimeout: 10000,
+    hookTimeout: 10000,
   },
 });
