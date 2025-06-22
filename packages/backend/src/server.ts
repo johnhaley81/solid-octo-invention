@@ -73,8 +73,8 @@ const ServerProgram = E.gen(function* () {
   });
 
   // Now try to initialize database services
-  const databaseResult = yield* E.either(DatabaseService);
-  const workerResult = yield* E.either(WorkerService);
+  const databaseResult = yield* E.either(DatabaseService.pipe(E.provide(DatabaseServiceLive)));
+  const workerResult = yield* E.either(WorkerService.pipe(E.provide(WorkerServiceLive)));
   
   if (E.isRight(databaseResult) && E.isRight(workerResult)) {
     const databaseService = databaseResult.right;
@@ -192,9 +192,10 @@ const ServerProgram = E.gen(function* () {
 );
 
 /**
- * Main application layer with all dependencies
+ * Main application layer with minimal dependencies (no database/worker services)
+ * These services will be initialized conditionally within the program
  */
-const MainLayer = Layer.mergeAll(DatabaseServiceLive, WorkerServiceLive);
+const MainLayer = Layer.empty;
 
 /**
  * Logger configuration
