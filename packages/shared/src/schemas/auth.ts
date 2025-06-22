@@ -168,7 +168,7 @@ export const AuthSwitchResponse = Schema.Struct({
 export const AuthError = Schema.Struct({
   code: Schema.String,
   message: Schema.String,
-  details: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+  details: Schema.optional(Schema.Unknown),
 });
 
 // Validation result schemas
@@ -267,4 +267,3 @@ export type AuthStateType = Schema.Schema.Type<typeof AuthState>;
 
 export type WebAuthnRegistrationCredentialType = Schema.Schema.Type<typeof WebAuthnRegistrationCredential>;
 export type WebAuthnAuthenticationCredentialType = Schema.Schema.Type<typeof WebAuthnAuthenticationCredential>;
-
