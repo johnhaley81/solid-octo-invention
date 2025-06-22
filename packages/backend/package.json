@@ -1,0 +1,50 @@
+{
+  "name": "@solid-octo-invention/backend",
+  "version": "0.1.0",
+  "description": "Backend API server with PostGraphile and Effect-TS",
+  "private": true,
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "vitest",
+    "test:unit": "vitest run",
+    "test:watch": "vitest --watch",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "migrate:up": "graphile-migrate migrate",
+    "migrate:down": "graphile-migrate reset --erase",
+    "migrate:reset": "graphile-migrate reset --erase && graphile-migrate migrate",
+    "migrate:watch": "graphile-migrate watch",
+    "worker:start": "tsx src/worker/index.ts",
+    "db:seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.45.0",
+    "@effect/platform-node": "^0.42.0",
+    "@effect/schema": "^0.60.0",
+    "@solid-octo-invention/shared": "workspace:*",
+    "cors": "^2.8.5",
+    "effect": "^2.19.0",
+    "express": "^4.18.2",
+    "graphile-migrate": "^1.4.1",
+    "graphile-worker": "^0.16.6",
+    "helmet": "^7.1.0",
+    "pg": "^8.11.3",
+    "postgraphile": "^4.13.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/pg": "^8.10.9",
+    "tsx": "^4.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+

@@ -1,0 +1,247 @@
+---
+description: Comprehensive Effect-TS service architecture patterns covering stores, usecases, handlers, and testing for building scalable applications
+globs: 
+alwaysApply: false
+---
+# Effect-TS Service Architecture Patterns and Best Practices
+
+## 1. Import Patterns
+
+### Always Use Relative Paths for Internal Imports
+- **CRITICAL**: Never use `src/` aliases for internal imports
+- Always use relative paths like `../../stores/blog/blog-store.js`
+- Use package imports only for external dependencies
+
+```typescript
+// ✅ CORRECT - Relative paths for internal imports
+import { BlogStore } from '../../stores/blog/blog-store.js'
+import { createBlogPostUsecase } from '../create/usecase.js'
+
+// ✅ CORRECT - Package imports for external dependencies
+import { BlogPost, BlogPostId } from '@solid-octo-invention/shared'
+import { Effect as E, Schema as S } from 'effect'
+
+// ❌ WRONG - Never use src/ aliases
+import { BlogStore } from 'src/stores/blog/blog-store.js'
+```
+
+## 2. Store Layer (Data Access)
+
+### Service Class Structure
+```typescript
+export class BlogStore extends E.Service ()('BlogStore', {
+dependencies: [DatabaseService, ConfigService],
+effect: E.gen(function* () {
+const database = yield* DatabaseService
+const config = yield* ConfigService
+ 
+return {
+create: (blogPost: BlogPost) => E.gen(function* () {
+// Implementation
+}),
+getById: (id: BlogPostId) => E.gen(function* () {
+// Implementation 
+}),
+}
+}),
+}) {}
+```
+
+### Store Responsibilities
+- ✅ Data persistence and retrieval only
+- ✅ Schema encoding/decoding
+- ✅ External service integration (PostgreSQL, Redis, etc.)
+- ✅ Return raw data without business logic processing
+- ❌ No pagination calculations or business logic
+
+## 3. Usecase Layer (Business Logic)
+
+### Usecase Structure with Observability
+```typescript
+/**
+ * Creates a new blog post with default values
+ * @param input - Blog post creation input
+ * @returns Created blog post with generated ID and timestamps
+ */
+export const createBlogPostUsecase = (input: CreateBlogPostInput) =>
+E.gen(function* () {
+// Start logging - concise format
+yield* E.logInfo('createBlogPostUsecase started', JSON.stringify(input))
+ 
+const blogStore = yield* BlogStore
+ 
+// Annotate key data points for tracing
+const blogPostData = BlogPost.make({
+id: BlogPostId.make(randomUUID()),
+...input,
+// ... other fields
+})
+yield* E.annotateCurrentSpan('blogPostData', JSON.stringify(blogPostData))
+ 
+const createdBlogPost = yield* blogStore.create(blogPostData)
+yield* E.annotateCurrentSpan('createdBlogPost', JSON.stringify(createdBlogPost))
+ 
+// Completion logging - concise format
+yield* E.logInfo('createBlogPostUsecase completed successfully', JSON.stringify(createdBlogPost))
+ 
+return createdBlogPost
+}).pipe(
+E.tapError((error) =>
+E.logError('createBlogPostUsecase failed', JSON.stringify({ error, input }))
+),
+E.withSpan('createBlogPostUsecase', { attributes: { input } })
+)
+```
+
+### Usecase Responsibilities
+- ✅ Business logic and orchestration
+- ✅ Pagination calculations and data transformation
+- ✅ Concise logging with JSON.stringify for structured data
+- ✅ Span annotations for key data points using E.annotateCurrentSpan
+- ✅ Detailed JSDoc documentation
+- ✅ Error context and handling
+- ❌ No direct database or external service calls
+
+## 4. Handler Layer (HTTP Interface)
+
+### Handler Structure
+```typescript
+export const _handler = schemaBody(CreateBlogPostInput).pipe(
+E.flatMap(createBlogPostUsecase),
+E.flatMap(createdResponse),
+E.catchTags({
+ParseError: (error) => badRequestResponse(error.message),
+ConflictError: () => conflictResponse('Blog post already exists'),
+}),
+E.orDie,
+E.withSpan('create-blog-post'),
+)
+
+export const handler = _handler.pipe(
+E.provide(BlogStore.Default),
+E.withSpan('create-blog-post-handler'),
+toHandler,
+)
+```
+
+### Handler Responsibilities
+- ✅ Input validation using schemas
+- ✅ Usecase delegation
+- ✅ Response formatting
+- ✅ Error mapping to HTTP responses
+- ✅ Service dependency injection
+
+## 5. Error Handling Patterns
+
+### Tagged Error Types
+```typescript
+export class NotFoundError extends Data.TaggedError('NotFoundError')<{
+readonly resource: string
+readonly id: string
+}> {}
+
+export class ConflictError extends Data.TaggedError('ConflictError')<{
+readonly message: string
+}> {}
+
+// Usage
+Effect.catchTags({
+NotFoundError: (error) => notFoundResponse(error.message),
+ConflictError: (error) => conflictResponse(error.message),
+})
+```
+
+## 6. Testing Patterns
+
+### Service Testing with Dependency Injection
+```typescript
+describe('BlogStore', () => {
+const TestBlogStore = BlogStore.pipe(
+E.provide(TestDatabaseService),
+E.provide(TestConfigService)
+)
+
+it('should create blog post', async () => {
+const result = await E.runPromise(
+TestBlogStore.pipe(
+E.flatMap(store => store.create(mockBlogPost))
+)
+)
+expect(result).toEqual(expectedBlogPost)
+})
+})
+```
+
+## 7. Pure Functional Programming Principles
+
+### Immutability and Pure Functions
+```typescript
+// ✅ CORRECT - Pure function with immutable data
+const updateBlogPost = (post: BlogPost, updates: Partial<BlogPost>): BlogPost => ({
+...post,
+...updates,
+updatedAt: new Date()
+})
+
+// ❌ WRONG - Mutating input
+const updateBlogPost = (post: BlogPost, updates: Partial<BlogPost>): BlogPost => {
+post.title = updates.title || post.title
+post.updatedAt = new Date()
+return post
+}
+```
+
+### Making Impossible States Impossible
+```typescript
+// ✅ CORRECT - Use discriminated unions to prevent invalid states
+type BlogPostStatus = 
+| { status: 'draft'; publishedAt: never }
+| { status: 'published'; publishedAt: Date }
+| { status: 'archived'; publishedAt: Date }
+
+// ❌ WRONG - Allows invalid combinations
+interface BlogPost {
+status: 'draft' | 'published' | 'archived'
+publishedAt?: Date // Could be undefined when status is 'published'
+}
+```
+
+## 8. Domain-Driven Development
+
+### Domain Models with Effect Schema
+```typescript
+export const BlogPostId = S.String.pipe(S.brand('BlogPostId'))
+export type BlogPostId = S.Schema.Type<typeof BlogPostId>
+
+export const BlogPost = S.Struct({
+id: BlogPostId,
+title: S.String.pipe(S.minLength(1), S.maxLength(200)),
+content: S.String.pipe(S.minLength(1)),
+authorId: UserId,
+status: S.Literal('draft', 'published', 'archived'),
+createdAt: S.Date,
+updatedAt: S.Date,
+publishedAt: S.optional(S.Date)
+})
+export type BlogPost = S.Schema.Type<typeof BlogPost>
+```
+
+### Aggregate Boundaries
+```typescript
+// ✅ CORRECT - Clear aggregate boundaries
+export class BlogPostAggregate {
+constructor(private readonly blogPost: BlogPost) {}
+
+publish(): Effect.Effect<BlogPost, ConflictError> {
+if (this.blogPost.status === 'published') {
+return E.fail(new ConflictError({ message: 'Blog post already published' }))
+}
+return E.succeed({
+...this.blogPost,
+status: 'published' as const,
+publishedAt: new Date()
+})
+}
+}
+```
+

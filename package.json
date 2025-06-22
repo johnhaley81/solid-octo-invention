@@ -1,0 +1,79 @@
+{
+  "name": "solid-octo-invention",
+  "version": "0.1.0",
+  "description": "A modern full-stack application built with Graphile stack, React, Apollo Client, and Effect-TS",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./packages/*\" dev",
+    "build": "pnpm --filter \"./packages/*\" build",
+    "test": "pnpm --filter \"./packages/*\" test",
+    "test:unit": "pnpm --filter \"./packages/*\" test:unit",
+    "test:e2e": "pnpm --filter frontend test:e2e",
+    "lint": "pnpm --filter \"./packages/*\" lint",
+    "lint:fix": "pnpm --filter \"./packages/*\" lint:fix",
+    "type-check": "pnpm --filter \"./packages/*\" type-check",
+    "clean": "pnpm --filter \"./packages/*\" clean && rm -rf node_modules",
+    "db:up": "docker-compose up -d postgres redis",
+    "db:down": "docker-compose down",
+    "db:reset": "docker-compose down -v && docker-compose up -d postgres redis",
+    "migrate:up": "pnpm --filter backend migrate:up",
+    "migrate:down": "pnpm --filter backend migrate:down",
+    "migrate:reset": "pnpm --filter backend migrate:reset",
+    "worker:start": "pnpm --filter backend worker:start",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "keywords": [
+    "graphile",
+    "postgraphile",
+    "react",
+    "apollo-client",
+    "effect-ts",
+    "typescript",
+    "functional-programming",
+    "domain-driven-design"
+  ],
+  "author": "Solid Octo Invention Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnhaley81/solid-octo-invention.git"
+  },
+  "bugs": {
+    "url": "https://github.com/johnhaley81/solid-octo-invention/issues"
+  },
+  "homepage": "https://github.com/johnhaley81/solid-octo-invention#readme"
+}
+

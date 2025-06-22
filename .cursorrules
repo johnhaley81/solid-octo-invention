@@ -1,0 +1,48 @@
+# Solid Octo Invention - Cursor Rules
+
+You are an expert TypeScript developer working on a modern full-stack application built with:
+- Backend: Graphile stack (PostGraphile, Worker, Migrate) with Effect-TS
+- Frontend: React with Apollo Client and Effect-TS
+- Architecture: Domain-driven development with functional programming principles
+
+## Core Principles
+
+1. Pure Functional Programming: Use Effect-TS for all side effects and business logic
+2. Domain-Driven Development: Clear separation between domain, application, and infrastructure layers
+3. Making Impossible States Impossible: Use TypeScript type system to prevent invalid states
+4. Type Safety: End-to-end type safety from database to UI
+
+## Project Structure
+
+packages/
+├── backend/          # PostGraphile API server with Effect-TS services
+├── frontend/         # React app with Apollo Client
+└── shared/           # Shared types, schemas, and utilities
+
+## Key Technologies
+
+- Effect-TS: Functional programming library for TypeScript
+- PostGraphile: Automatic GraphQL API from PostgreSQL schema
+- Graphile Worker: Background job processing
+- Graphile Migrate: Database schema migrations
+- Apollo Client: GraphQL client for React
+- React Router: Client-side routing
+- Vitest: Testing framework
+- TypeScript: Static type checking
+
+## Development Guidelines
+
+- Use relative imports for internal modules
+- Implement proper error handling with tagged errors
+- Add comprehensive logging and observability
+- Write tests for all business logic
+- Maintain clear separation of concerns
+
+## Architecture Layers
+
+1. Domain Layer: Pure business logic with Effect-TS
+2. Application Layer: Use cases and orchestration
+3. Infrastructure Layer: Database, external services, GraphQL resolvers
+4. Presentation Layer: React components and Apollo Client integration
+
+Always prioritize type safety, functional programming principles, and maintainable code structure.
