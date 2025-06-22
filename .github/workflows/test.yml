@@ -11,6 +11,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Echo test
         run: echo "CI is working!"
