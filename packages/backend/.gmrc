@@ -7,5 +7,5 @@
   },
   "afterReset": [],
   "afterAllMigrations": [],
-  "afterCurrent": []
+  "afterCurrent": ["node scripts/dump-schema.js"]
 }

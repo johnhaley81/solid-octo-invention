@@ -459,9 +459,9 @@ jobs:
       - name: Validate schema consistency
         run: |
           echo "🔍 Validating database schema consistency..."
-          
+
           cd packages/backend
-          
+
           # Create test database configuration
           cat > .gmrc << EOF
           {
@@ -476,19 +476,19 @@ jobs:
             "afterCurrent": ["node scripts/dump-schema.js"]
           }
           EOF
-          
+
           # Run migrations (this will also generate schema dump via afterCurrent hook)
           echo "📦 Running migrations..."
           pnpm migrate:up
-          
+
           # Check if schema dump was generated
           if [ ! -f "schema-dump.sql" ]; then
             echo "❌ ERROR: Schema dump was not generated"
             exit 1
           fi
-          
+
           echo "📊 Generated schema dump size: $(wc -c < schema-dump.sql) bytes"
-          
+
           # Compare with committed schema dump (if it exists)
           if git show HEAD:packages/backend/schema-dump.sql > committed-schema-dump.sql 2>/dev/null; then
             echo "🔍 Comparing schema dump with committed version..."
@@ -507,7 +507,7 @@ jobs:
           else
             echo "⚠️  No committed schema dump found - this is expected for new projects"
           fi
-          
+
           echo "✅ Schema validation completed successfully!"
           echo "✅ Migration validation passed! All migrations appear to be committed."
 

@@ -1,0 +1,68 @@
+# Backend Cursor Rules
+
+## Database Migration Rules
+
+**CRITICAL**: Database migrations must NEVER be committed in development:
+
+1. **NEVER commit migrations** - migrations are only committed on `prod` branch
+2. **Always work with `current.sql`**:
+   - Add all schema changes to `migrations/current.sql`
+   - Never run `pnpm migrate:commit` in development
+   - Keep all changes in `current.sql` until production deployment
+3. **Migration workflow**:
+   - Development: Work only with `migrations/current.sql`
+   - Production: Only `prod` branch commits migrations automatically
+   - CI validates schema consistency via schema dumps
+4. **Schema validation**:
+   - Post-migration script generates schema dumps
+   - CI ensures schema dump matches expected state
+   - Any schema drift causes CI failure
+
+## Effect-TS Backend Patterns
+
+Follow these patterns for backend services:
+
+### Service Layer Architecture
+```typescript
+// Use Effect-TS services for business logic
+import { Effect, Layer } from "effect"
+
+export class DatabaseService extends Effect.Service<DatabaseService>()("DatabaseService", {
+  effect: Effect.gen(function* () {
+    // Service implementation
+  })
+}) {}
+```
+
+### Error Handling
+```typescript
+// Use tagged errors for domain-specific failures
+export class DatabaseError extends Data.TaggedError("DatabaseError")<{
+  readonly message: string
+  readonly cause?: unknown
+}> {}
+```
+
+### Configuration
+```typescript
+// Use Effect Config for type-safe configuration
+export const DatabaseConfig = Config.all({
+  host: Config.string("DATABASE_HOST"),
+  port: Config.integer("DATABASE_PORT"),
+  database: Config.string("DATABASE_NAME")
+})
+```
+
+## PostGraphile Integration
+
+- Use PostGraphile for automatic GraphQL API generation
+- Leverage RLS (Row Level Security) for authorization
+- Use smart comments for GraphQL schema customization
+- Follow PostGraphile naming conventions
+
+## Graphile Worker Integration
+
+- Use Graphile Worker for background job processing
+- Define jobs as Effect-TS services
+- Use proper error handling and retry logic
+- Leverage job queues for scalability

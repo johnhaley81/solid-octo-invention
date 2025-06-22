@@ -50,21 +50,11 @@ packages/
 
 ## Database Migration Rules
 
-**CRITICAL**: Database migrations must NEVER be committed in development:
+**See `packages/backend/.cursorrules` for detailed migration workflow rules.**
 
-1. **NEVER commit migrations** - migrations are only committed on `prod` branch
-2. **Always work with `current.sql`**:
-   - Add all schema changes to `migrations/current.sql`
-   - Never run `pnpm migrate:commit` in development
-   - Keep all changes in `current.sql` until production deployment
-3. **Migration workflow**:
-   - Development: Work only with `migrations/current.sql`
-   - Production: Only `prod` branch commits migrations automatically
-   - CI validates schema consistency via schema dumps
-4. **Schema validation**:
-   - Post-migration script generates schema dumps
-   - CI ensures schema dump matches expected state
-   - Any schema drift causes CI failure
+- Database migrations follow Graphile Migrate patterns
+- Schema validation via automated dumps
+- CI ensures consistency across environments
 
 ## Architecture Layers
 
