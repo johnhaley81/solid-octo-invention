@@ -1,5 +1,9 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
 import express from 'express';
+
+// Load environment variables from .env file (located in project root)
+config({ path: '../../.env' });
+
 import cors from 'cors';
 import helmet from 'helmet';
 import { postgraphile } from 'postgraphile';
