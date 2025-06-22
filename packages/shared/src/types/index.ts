@@ -157,12 +157,12 @@ export type Immutable<T> = {
 /**
  * Utility type for function parameters
  */
-export type Parameters<T extends (...args: any) => any> = T extends (...args: infer P) => any ? P : never
+export type Parameters<T extends (..._args: any) => any> = T extends (..._args: infer P) => any ? P : never
 
 /**
  * Utility type for function return type
  */
-export type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => infer R ? R : any
+export type ReturnType<T extends (..._args: any) => any> = T extends (..._args: any) => infer R ? R : any
 
 /**
  * Utility type for promise resolution type
@@ -215,4 +215,3 @@ export type Option<T> = T | null | undefined
 export type Either<L, R> = 
   | { readonly _tag: 'Left'; readonly left: L }
   | { readonly _tag: 'Right'; readonly right: R }
-

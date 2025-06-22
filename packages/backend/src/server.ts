@@ -2,11 +2,11 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import { postgraphile } from 'postgraphile'
-import { Effect as E, Layer, Logger, LogLevel } from 'effect'
-import { NodeHttpServer, NodeRuntime } from '@effect/platform-node'
+import { Effect as E, Layer, Logger, LogLevel, Redacted } from 'effect'
+import { NodeRuntime } from '@effect/platform-node'
 import { envVars } from './config/index.js'
-import { DatabaseService } from './services/database.js'
-import { WorkerService } from './services/worker.js'
+import { DatabaseService, DatabaseServiceLive } from './services/database.js'
+import { WorkerService, WorkerServiceLive } from './services/worker.js'
 
 /**
  * Main server application using Effect-TS
@@ -34,7 +34,7 @@ const ServerProgram = E.gen(function* () {
   
   // Security middleware
   app.use(helmet({
-    contentSecurityPolicy: nodeEnv === 'production' ? undefined : false,
+    contentSecurityPolicy: nodeEnv === 'production',
     crossOriginEmbedderPolicy: false,
   }))
   
@@ -45,16 +45,16 @@ const ServerProgram = E.gen(function* () {
   }))
   
   // Health check endpoint
-  app.get('/health', (req, res) => {
+  app.get('/health', (_req, res) => {
     res.json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || '0.1.0'
+      version: process.env.npm_package_version || '0.1.0',
     })
   })
   
   // PostGraphile middleware
-  app.use(postgraphile(databaseUrl, 'public', {
+  app.use(postgraphile(Redacted.value(databaseUrl), 'public', {
     watchPg: nodeEnv === 'development',
     graphiql: enableGraphiQL,
     enhanceGraphiql: true,
@@ -66,30 +66,36 @@ const ServerProgram = E.gen(function* () {
     appendPlugins: [
       // Add PostGraphile plugins here as needed
     ],
-    exportGqlSchemaPath: nodeEnv === 'development' ? 'schema.graphql' : undefined,
+    ...(nodeEnv === 'development' && { exportGqlSchemaPath: 'schema.graphql' }),
     sortExport: true,
     legacyRelations: 'omit',
-    pgSettings: (req) => ({
+    pgSettings: (_req) => ({
       // Set PostgreSQL settings based on request context
       role: 'postgres', // This should be dynamic based on authentication
     }),
   }))
   
   // Error handling middleware
-  app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    yield* E.logError('Express error', { error: err.message, stack: err.stack })
+  app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    console.error('Express error:', err.message, err.stack)
     res.status(500).json({ 
-      error: nodeEnv === 'development' ? err.message : 'Internal server error' 
+      error: nodeEnv === 'development' ? err.message : 'Internal server error', 
     })
   })
   
   // Start the server
   const server = app.listen(port, () => {
-    yield* E.logInfo('Server started successfully', {
+    console.log('Server started successfully', {
       port,
       graphqlEndpoint: `http://localhost:${port}/graphql`,
       healthEndpoint: `http://localhost:${port}/health`,
     })
+  })
+  
+  yield* E.logInfo('Server started successfully', {
+    port,
+    graphqlEndpoint: `http://localhost:${port}/graphql`,
+    healthEndpoint: `http://localhost:${port}/health`,
   })
   
   // Graceful shutdown
@@ -106,7 +112,7 @@ const ServerProgram = E.gen(function* () {
     yield* E.async<void>((resume) => {
       server.close((err) => {
         if (err) {
-          resume(E.fail(err))
+          resume(E.die(err))
         } else {
           resume(E.succeed(undefined))
         }
@@ -128,15 +134,15 @@ const ServerProgram = E.gen(function* () {
   return server
 }).pipe(
   E.tapError((error) => E.logError('Failed to start server', { error })),
-  E.withSpan('server-startup')
+  E.withSpan('server-startup'),
 )
 
 /**
  * Main application layer with all dependencies
  */
 const MainLayer = Layer.mergeAll(
-  DatabaseService.Default,
-  WorkerService.Default,
+  DatabaseServiceLive,
+  WorkerServiceLive,
 )
 
 /**
@@ -148,7 +154,7 @@ const LoggerLayer = Logger.replace(
     const timestamp = new Date().toISOString()
     const level = logLevel.label.toUpperCase()
     console.log(`[${timestamp}] ${level}: ${message}`, rest)
-  })
+  }),
 )
 
 /**
@@ -157,9 +163,8 @@ const LoggerLayer = Logger.replace(
 const program = ServerProgram.pipe(
   E.provide(MainLayer),
   E.provide(LoggerLayer),
-  Logger.withMinimumLogLevel(LogLevel.Info)
+  Logger.withMinimumLogLevel(LogLevel.Info),
 )
 
 // Run the program
 NodeRuntime.runMain(program)
-

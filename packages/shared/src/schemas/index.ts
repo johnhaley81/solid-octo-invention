@@ -48,21 +48,21 @@ export const DraftPost = BasePost.pipe(
   S.extend(S.Struct({
     status: S.Literal('draft'),
     publishedAt: S.Literal(null),
-  }))
+  })),
 )
 
 export const PublishedPost = BasePost.pipe(
   S.extend(S.Struct({
     status: S.Literal('published'),
     publishedAt: S.Date,
-  }))
+  })),
 )
 
 export const ArchivedPost = BasePost.pipe(
   S.extend(S.Struct({
     status: S.Literal('archived'),
     publishedAt: S.Date,
-  }))
+  })),
 )
 
 export const Post = S.Union(DraftPost, PublishedPost, ArchivedPost)

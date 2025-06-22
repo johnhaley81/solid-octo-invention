@@ -3,8 +3,8 @@ import { Data } from 'effect'
 /**
  * Base domain error
  */
-export abstract class DomainError extends Data.TaggedError() {
-  abstract readonly message: string
+export abstract class DomainError extends Data.TaggedError('DomainError') {
+  abstract override readonly message: string
 }
 
 /**
@@ -13,7 +13,7 @@ export abstract class DomainError extends Data.TaggedError() {
 export class UserNotFoundError extends Data.TaggedError('UserNotFoundError')<{
   readonly userId: string
 }> {
-  get message() {
+  override get message() {
     return `User with ID ${this.userId} not found`
   }
 }
@@ -21,7 +21,7 @@ export class UserNotFoundError extends Data.TaggedError('UserNotFoundError')<{
 export class PostNotFoundError extends Data.TaggedError('PostNotFoundError')<{
   readonly postId: string
 }> {
-  get message() {
+  override get message() {
     return `Post with ID ${this.postId} not found`
   }
 }
@@ -29,7 +29,7 @@ export class PostNotFoundError extends Data.TaggedError('PostNotFoundError')<{
 export class CommentNotFoundError extends Data.TaggedError('CommentNotFoundError')<{
   readonly commentId: string
 }> {
-  get message() {
+  override get message() {
     return `Comment with ID ${this.commentId} not found`
   }
 }
@@ -41,7 +41,7 @@ export class ValidationError extends Data.TaggedError('ValidationError')<{
   readonly field: string
   readonly reason: string
 }> {
-  get message() {
+  override get message() {
     return `Validation failed for field '${this.field}': ${this.reason}`
   }
 }
@@ -49,7 +49,7 @@ export class ValidationError extends Data.TaggedError('ValidationError')<{
 export class SchemaValidationError extends Data.TaggedError('SchemaValidationError')<{
   readonly errors: readonly string[]
 }> {
-  get message() {
+  override get message() {
     return `Schema validation failed: ${this.errors.join(', ')}`
   }
 }
@@ -61,7 +61,7 @@ export class ConflictError extends Data.TaggedError('ConflictError')<{
   readonly resource: string
   readonly reason: string
 }> {
-  get message() {
+  override get message() {
     return `Conflict with ${this.resource}: ${this.reason}`
   }
 }
@@ -70,7 +70,7 @@ export class UnauthorizedError extends Data.TaggedError('UnauthorizedError')<{
   readonly action: string
   readonly resource?: string
 }> {
-  get message() {
+  override get message() {
     return this.resource 
       ? `Unauthorized to ${this.action} ${this.resource}`
       : `Unauthorized to ${this.action}`
@@ -81,7 +81,7 @@ export class ForbiddenError extends Data.TaggedError('ForbiddenError')<{
   readonly action: string
   readonly resource?: string
 }> {
-  get message() {
+  override get message() {
     return this.resource 
       ? `Forbidden to ${this.action} ${this.resource}`
       : `Forbidden to ${this.action}`
@@ -95,7 +95,7 @@ export class DatabaseError extends Data.TaggedError('DatabaseError')<{
   readonly operation: string
   readonly cause?: unknown
 }> {
-  get message() {
+  override get message() {
     return `Database error during ${this.operation}`
   }
 }
@@ -105,7 +105,7 @@ export class ExternalServiceError extends Data.TaggedError('ExternalServiceError
   readonly operation: string
   readonly cause?: unknown
 }> {
-  get message() {
+  override get message() {
     return `External service error: ${this.service} failed during ${this.operation}`
   }
 }
@@ -116,7 +116,7 @@ export class ExternalServiceError extends Data.TaggedError('ExternalServiceError
 export class PostAlreadyPublishedError extends Data.TaggedError('PostAlreadyPublishedError')<{
   readonly postId: string
 }> {
-  get message() {
+  override get message() {
     return `Post ${this.postId} is already published`
   }
 }
@@ -124,7 +124,7 @@ export class PostAlreadyPublishedError extends Data.TaggedError('PostAlreadyPubl
 export class PostNotPublishedError extends Data.TaggedError('PostNotPublishedError')<{
   readonly postId: string
 }> {
-  get message() {
+  override get message() {
     return `Post ${this.postId} is not published`
   }
 }
@@ -132,7 +132,7 @@ export class PostNotPublishedError extends Data.TaggedError('PostNotPublishedErr
 export class SlugAlreadyExistsError extends Data.TaggedError('SlugAlreadyExistsError')<{
   readonly slug: string
 }> {
-  get message() {
+  override get message() {
     return `Post with slug '${this.slug}' already exists`
   }
 }
@@ -143,7 +143,7 @@ export class SlugAlreadyExistsError extends Data.TaggedError('SlugAlreadyExistsE
 export class CommentOnArchivedPostError extends Data.TaggedError('CommentOnArchivedPostError')<{
   readonly postId: string
 }> {
-  get message() {
+  override get message() {
     return `Cannot comment on archived post ${this.postId}`
   }
 }
@@ -152,7 +152,7 @@ export class InvalidParentCommentError extends Data.TaggedError('InvalidParentCo
   readonly parentId: string
   readonly postId: string
 }> {
-  get message() {
+  override get message() {
     return `Parent comment ${this.parentId} does not belong to post ${this.postId}`
   }
 }
@@ -194,7 +194,7 @@ export const ErrorUtils = {
   /**
    * Convert an unknown error to a domain error
    */
-  toDomainError: (error: unknown, context: string): DomainError => {
+  toDomainError: (error: unknown, context: string): DomainError | ExternalServiceError => {
     if (ErrorUtils.isDomainError(error)) {
       return error
     }
@@ -203,15 +203,14 @@ export const ErrorUtils = {
       return new ExternalServiceError({ 
         service: 'unknown', 
         operation: context, 
-        cause: error 
+        cause: error, 
       })
     }
     
     return new ExternalServiceError({ 
       service: 'unknown', 
       operation: context, 
-      cause: error 
+      cause: error, 
     })
   },
 }
-

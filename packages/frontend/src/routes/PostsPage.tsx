@@ -1,4 +1,3 @@
-import React from 'react'
 import { useQuery } from '@apollo/client'
 import { Link } from 'react-router-dom'
 import { GET_POSTS } from '../graphql/queries.js'
@@ -11,8 +10,8 @@ export function PostsPage() {
   const { loading, error, data } = useQuery(GET_POSTS, {
     variables: {
       first: 10,
-      condition: { status: 'published' }
-    }
+      condition: { status: 'published' },
+    },
   })
   
   if (loading) {

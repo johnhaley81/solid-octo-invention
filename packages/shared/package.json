@@ -18,8 +18,8 @@
     "test": "vitest",
     "test:unit": "vitest run",
     "test:watch": "vitest --watch",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist"
   },

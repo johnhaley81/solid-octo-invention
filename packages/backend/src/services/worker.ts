@@ -1,12 +1,12 @@
-import { Effect as E, Layer, Context, Schedule } from 'effect'
-import { run, Worker, WorkerPool } from 'graphile-worker'
+import { Effect as E, Layer, Context, Schedule, Redacted } from 'effect'
+import { run } from 'graphile-worker'
 import { envVars } from '../config/index.js'
 
 /**
  * Worker service interface for background job processing
  */
 export interface WorkerService {
-  readonly addJob: (taskIdentifier: string, payload?: any, options?: JobOptions) => E.Effect<void, WorkerError>
+  readonly addJob: (_taskIdentifier: string, _payload?: any, _options?: JobOptions) => E.Effect<void, WorkerError>
   readonly shutdown: () => E.Effect<void, never>
 }
 
@@ -25,11 +25,14 @@ export interface JobOptions {
  */
 export class WorkerError extends Error {
   readonly _tag = 'WorkerError'
+  public readonly errorCause?: unknown
+  
   constructor(
     message: string,
-    public readonly cause?: unknown
+    cause?: unknown,
   ) {
     super(message)
+    this.errorCause = cause
   }
 }
 
@@ -43,17 +46,19 @@ export const WorkerService = Context.GenericTag<WorkerService>('WorkerService')
  */
 const taskHandlers = {
   // Example task handlers
-  'send-email': async (payload: { to: string; subject: string; body: string }) => {
-    console.log('Sending email:', payload)
+  'send-email': async (payload: unknown) => {
+    const typedPayload = payload as { to: string; subject: string; body: string }
+    console.log('Sending email:', typedPayload)
     // Implement email sending logic here
   },
   
-  'process-image': async (payload: { imageUrl: string; userId: string }) => {
-    console.log('Processing image:', payload)
+  'process-image': async (payload: unknown) => {
+    const typedPayload = payload as { imageUrl: string; userId: string }
+    console.log('Processing image:', typedPayload)
     // Implement image processing logic here
   },
   
-  'cleanup-expired-sessions': async () => {
+  'cleanup-expired-sessions': async (_payload: unknown) => {
     console.log('Cleaning up expired sessions')
     // Implement session cleanup logic here
   },
@@ -71,14 +76,14 @@ const makeWorkerService = E.gen(function* () {
   // Start the worker
   const workerPool = yield* E.tryPromise({
     try: () => run({
-      connectionString: databaseUrl,
+      connectionString: Redacted.value(databaseUrl),
       concurrency,
       taskList: taskHandlers,
       pollInterval: 1000,
       // Worker will automatically retry failed jobs
       noHandleSignals: true,
     }),
-    catch: (error) => new WorkerError('Failed to start worker', error)
+    catch: (error) => new WorkerError('Failed to start worker', error),
   })
   
   yield* E.logInfo('Graphile Worker started successfully')
@@ -89,17 +94,17 @@ const makeWorkerService = E.gen(function* () {
       
       yield* E.tryPromise({
         try: () => workerPool.addJob(taskIdentifier, payload, {
-          runAt: options?.runAt,
+          ...(options?.runAt && { runAt: options.runAt }),
           maxAttempts: options?.maxAttempts || 3,
           priority: options?.priority || 0,
-          jobKey: options?.jobKey,
+          ...(options?.jobKey && { jobKey: options.jobKey }),
         }),
-        catch: (error) => new WorkerError(`Failed to add job: ${taskIdentifier}`, error)
+        catch: (error) => new WorkerError(`Failed to add job: ${taskIdentifier}`, error),
       })
       
       yield* E.logInfo('Job added successfully', { taskIdentifier })
     }).pipe(
-      E.withSpan('worker-add-job', { attributes: { taskIdentifier } })
+      E.withSpan('worker-add-job', { attributes: { taskIdentifier } }),
     )
   
   const shutdown = () =>
@@ -107,11 +112,12 @@ const makeWorkerService = E.gen(function* () {
       yield* E.logInfo('Shutting down Graphile Worker')
       
       yield* E.tryPromise({
-        try: () => workerPool.gracefulShutdown(5000), // 5 second timeout
-        catch: (error) => {
-          yield* E.logError('Failed to gracefully shutdown worker', { error })
-        }
-      }).pipe(E.ignore)
+        try: () => workerPool.stop(), // Use stop() instead of gracefulShutdown
+        catch: (error) => new Error(`Failed to shutdown worker: ${error}`),
+      }).pipe(
+        E.tapError((error) => E.logError('Failed to gracefully shutdown worker', { error })),
+        E.ignore,
+      )
       
       yield* E.logInfo('Graphile Worker shutdown complete')
     })
@@ -130,7 +136,7 @@ export const WorkerServiceLive = Layer.effect(WorkerService, makeWorkerService)
 /**
  * Default worker service layer
  */
-WorkerService.Default = WorkerServiceLive
+// WorkerService.Default = WorkerServiceLive
 
 /**
  * Test worker service for testing
@@ -164,7 +170,7 @@ export const WorkerUtils = {
       // This is a simplified example - in practice, you'd want a more sophisticated scheduler
       yield* E.repeat(
         workerService.addJob(taskIdentifier, payload),
-        schedule
+        schedule,
       )
     }),
   
@@ -177,4 +183,3 @@ export const WorkerUtils = {
       yield* workerService.addJob(taskIdentifier, payload, { priority: 100 })
     }),
 }
-

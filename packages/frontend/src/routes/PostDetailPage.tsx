@@ -1,4 +1,3 @@
-import React from 'react'
 import { useQuery } from '@apollo/client'
 import { useParams, Link } from 'react-router-dom'
 import { GET_POST_BY_SLUG } from '../graphql/queries.js'
@@ -12,7 +11,7 @@ export function PostDetailPage() {
   
   const { loading, error, data } = useQuery(GET_POST_BY_SLUG, {
     variables: { slug },
-    skip: !slug
+    skip: !slug,
   })
   
   if (loading) {
