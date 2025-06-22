@@ -1,15 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import session from 'express-session';
 import { postgraphile } from 'postgraphile';
 import { Effect as E, Layer, Logger, LogLevel, Redacted } from 'effect';
 import { NodeRuntime } from '@effect/platform-node';
 import { envVars } from './config/index.js';
 import { DatabaseService, DatabaseServiceLive } from './services/database.js';
 import { WorkerService, WorkerServiceLive } from './services/worker.js';
-import authRoutes from './routes/auth.js';
-import { optionalAuth } from './middleware/auth.js';
 
 /**
  * Main server application using Effect-TS
@@ -34,24 +31,6 @@ const ServerProgram = E.gen(function* () {
 
   // Create Express app
   const app = express();
-
-  // Body parsing middleware
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true }));
-
-  // Session configuration
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: nodeEnv === 'production',
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      },
-    }),
-  );
 
   // Security middleware
   app.use(
@@ -78,12 +57,6 @@ const ServerProgram = E.gen(function* () {
     });
   });
 
-  // Authentication routes
-  app.use('/api/auth', authRoutes);
-
-  // Optional authentication middleware for GraphQL
-  app.use('/graphql', optionalAuth);
-
   // PostGraphile middleware
   app.use(
     postgraphile(Redacted.value(databaseUrl), 'public', {
@@ -101,10 +74,9 @@ const ServerProgram = E.gen(function* () {
       ...(nodeEnv === 'development' && { exportGqlSchemaPath: 'schema.graphql' }),
       sortExport: true,
       legacyRelations: 'omit',
-      pgSettings: req => ({
+      pgSettings: _req => ({
         // Set PostgreSQL settings based on request context
-        role: req.user ? 'authenticated_user' : 'anonymous_user',
-        'app.current_user_id': req.user?.id || null,
+        role: 'postgres', // This will be enhanced with proper authentication
       }),
     }),
   );
