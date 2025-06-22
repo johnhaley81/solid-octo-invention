@@ -284,7 +284,8 @@ jobs:
         run: pnpm --filter frontend exec playwright install --with-deps
 
       - name: Run database migrations
-        run: pnpm --filter backend migrate:up
+        run: pnpm migrate:up
+        working-directory: packages/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e
 
