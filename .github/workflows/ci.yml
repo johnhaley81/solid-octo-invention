@@ -486,7 +486,7 @@ jobs:
 
           # Run migrations (this will also generate schema dump via afterCurrent hook)
           echo "📦 Running migrations..."
-          ROOT_DIR=$(realpath ../../..)
+          ROOT_DIR="$GITHUB_WORKSPACE"
           cd "$ROOT_DIR"
           pnpm migrate:up
 
