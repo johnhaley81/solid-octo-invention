@@ -64,6 +64,52 @@ export class DatabaseError extends Error {
 - Add automatic timestamps with triggers
 - Keep schema simple and focused on core domain
 
+## 🚫 PROHIBITED PATTERNS
+
+### REST API Endpoints
+- **❌ NO REST endpoints** - All API interactions must go through GraphQL
+- **❌ NO Express routes** for business logic (except health checks)
+- **❌ NO custom middleware** for authentication - use PostGraphile's built-in features
+- **❌ NO `/api/*` routes** - everything should be accessible via `/graphql`
+
+### Database Schema Violations
+- **❌ NO boolean columns** - use `TIMESTAMPTZ` columns instead (e.g., `email_verified_at` not `email_verified`)
+- **❌ NO TEXT columns with CHECK constraints** - use PostgreSQL ENUMs for better GraphQL type generation
+- **❌ NO separate migration files** - all schema changes go in `current.sql`
+- **❌ NO sensitive data in public schema** - use `app_private` schema for authentication tables
+
+### Background Processing Anti-patterns
+- **❌ NO database functions for background tasks** - use graphile-worker jobs
+- **❌ NO cron-like database functions** - schedule jobs through graphile-worker
+- **❌ NO direct database cleanup functions** - implement as worker tasks
+
+## ✅ REQUIRED PATTERNS
+
+### GraphQL-First Architecture
+- **✅ USE PostGraphile functions** for custom mutations and queries
+- **✅ USE PostgreSQL functions** with `SECURITY DEFINER` for business logic
+- **✅ USE GraphQL mutations** for all user actions
+- **✅ EXPOSE functions** via PostGraphile's automatic schema generation
+
+### Database Schema Best Practices
+- **✅ USE `app_private` schema** for sensitive authentication data
+- **✅ USE PostgreSQL ENUMs** instead of TEXT with CHECK constraints
+- **✅ USE TIMESTAMPTZ columns** instead of boolean flags
+- **✅ USE `current.sql`** as the single source of truth for schema
+- **✅ USE Row Level Security (RLS)** for data access control
+
+### Background Processing
+- **✅ USE graphile-worker** for all background tasks
+- **✅ USE worker jobs** for email sending, cleanup, notifications
+- **✅ USE scheduled jobs** for periodic maintenance tasks
+- **✅ IMPLEMENT task handlers** in the worker service
+
+### Authentication Patterns
+- **✅ USE PostgreSQL functions** for authentication logic
+- **✅ USE `app_private` schema** for credentials and sessions
+- **✅ USE PostGraphile's pgSettings** for user context
+- **✅ USE RLS policies** with `current_setting('app.current_user_id')`
+
 ## Testing
 
 - Write unit tests for all services
