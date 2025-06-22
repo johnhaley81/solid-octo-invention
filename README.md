@@ -163,21 +163,28 @@ pnpm test
 
 ### Pre-Push Hook
 
-This project includes a comprehensive pre-push git hook that runs **CI-equivalent checks locally** before allowing pushes. This ensures code quality and prevents broken builds from reaching the remote repository.
+This project includes a comprehensive pre-push git hook that runs
+**CI-equivalent checks locally** before allowing pushes. This ensures code
+quality and prevents broken builds from reaching the remote repository.
 
 #### Checks Performed
 
 The hook runs the same checks as our CI pipeline:
 
-- **Type Checking** (~30-60s): `pnpm type-check` - Validates TypeScript types across all packages
-- **Linting & Formatting** (~15-30s): `pnpm lint && pnpm format:check` - Enforces code style and quality
-- **Unit Tests** (~60-120s): `pnpm test:unit` - Runs all unit tests to verify functionality  
+- **Type Checking** (~30-60s): `pnpm type-check` - Validates TypeScript types
+  across all packages
+- **Linting & Formatting** (~15-30s): `pnpm lint && pnpm format:check` -
+  Enforces code style and quality
+- **Unit Tests** (~60-120s): `pnpm test:unit` - Runs all unit tests to verify
+  functionality
 - **Build** (~90-180s): `pnpm build` - Ensures all packages compile successfully
-- **Secret Scanning** (~5-15s): `trufflehog` - Detects potential secrets in changed files
+- **Secret Scanning** (~5-15s): `trufflehog` - Detects potential secrets in
+  changed files
 
 #### Configuration
 
-The hook runs automatically on `git push` and is fully configurable via `.pre-push-config`:
+The hook runs automatically on `git push` and is fully configurable via
+`.pre-push-config`:
 
 ```bash
 # Enable/disable individual checks
@@ -201,6 +208,7 @@ CUSTOM_TEST_COMMAND="pnpm test:unit --changed"  # Run only changed tests
 #### Performance Tips
 
 - **Fast Development**: Disable slower checks during active development:
+
   ```bash
   ENABLE_BUILD_CHECKS=false
   ENABLE_TEST_CHECKS=false
@@ -208,6 +216,7 @@ CUSTOM_TEST_COMMAND="pnpm test:unit --changed"  # Run only changed tests
   ```
 
 - **Emergency Pushes**: Skip all checks for hotfix branches:
+
   ```bash
   SKIP_BRANCHES="hotfix/*,emergency/*"
   ```
