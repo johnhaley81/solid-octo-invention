@@ -48,22 +48,25 @@ export const WorkerService = Context.GenericTag<WorkerService>('WorkerService');
 const taskHandlers = {
   // Authentication-related tasks
   'send-verification-email': async (payload: unknown) => {
-    const typedPayload = payload as { 
-      userId: string; 
-      email: string; 
-      token: string; 
+    const typedPayload = payload as {
+      userId: string;
+      email: string;
+      token: string;
       name: string;
     };
-    console.log('Sending verification email:', { email: typedPayload.email, userId: typedPayload.userId });
+    console.log('Sending verification email:', {
+      email: typedPayload.email,
+      userId: typedPayload.userId,
+    });
     // TODO: Implement email sending with verification link
     // This would use nodemailer or similar service
   },
 
   'send-login-otp': async (payload: unknown) => {
-    const typedPayload = payload as { 
-      userId: string; 
-      email: string; 
-      otp: string; 
+    const typedPayload = payload as {
+      userId: string;
+      email: string;
+      otp: string;
       name: string;
     };
     console.log('Sending login OTP:', { email: typedPayload.email, userId: typedPayload.userId });
@@ -71,13 +74,16 @@ const taskHandlers = {
   },
 
   'send-password-reset-email': async (payload: unknown) => {
-    const typedPayload = payload as { 
-      userId: string; 
-      email: string; 
-      token: string; 
+    const typedPayload = payload as {
+      userId: string;
+      email: string;
+      token: string;
       name: string;
     };
-    console.log('Sending password reset email:', { email: typedPayload.email, userId: typedPayload.userId });
+    console.log('Sending password reset email:', {
+      email: typedPayload.email,
+      userId: typedPayload.userId,
+    });
     // TODO: Implement password reset email
   },
 
@@ -88,16 +94,16 @@ const taskHandlers = {
   },
 
   'send-auth-method-change-notification': async (payload: unknown) => {
-    const typedPayload = payload as { 
-      userId: string; 
-      email: string; 
+    const typedPayload = payload as {
+      userId: string;
+      email: string;
       oldMethod: string;
       newMethod: string;
       name: string;
     };
-    console.log('Sending auth method change notification:', { 
-      email: typedPayload.email, 
-      change: `${typedPayload.oldMethod} -> ${typedPayload.newMethod}`, 
+    console.log('Sending auth method change notification:', {
+      email: typedPayload.email,
+      change: `${typedPayload.oldMethod} -> ${typedPayload.newMethod}`,
     });
     // TODO: Implement security notification email
   },

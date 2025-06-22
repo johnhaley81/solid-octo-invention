@@ -5,12 +5,14 @@ import express from 'express';
 import { postgraphile } from 'postgraphile';
 
 // Test database configuration
-const TEST_DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/solid_octo_invention_test';
+const TEST_DATABASE_URL =
+  process.env.DATABASE_URL ||
+  'postgresql://postgres:postgres@localhost:5432/solid_octo_invention_test';
 
 // Create test app with PostGraphile
 const createTestApp = () => {
   const app = express();
-  
+
   app.use(
     postgraphile(TEST_DATABASE_URL, 'public', {
       graphiql: false,
@@ -34,7 +36,7 @@ const createTestApp = () => {
       },
     }),
   );
-  
+
   return app;
 };
 
@@ -119,10 +121,7 @@ describe('GraphQL Authentication API', () => {
       };
 
       // First registration should succeed
-      await request(app)
-        .post('/graphql')
-        .send({ query: mutation, variables })
-        .expect(200);
+      await request(app).post('/graphql').send({ query: mutation, variables }).expect(200);
 
       // Second registration should fail
       const response = await request(app)
@@ -652,22 +651,26 @@ describe('GraphQL Authentication API', () => {
         .expect(200);
 
       expect(response.body.errors).toBeUndefined();
-      
+
       const mutations = response.body.data.__schema.mutationType.fields;
-      const authMutations = mutations.filter((field: any) => 
-        ['registerUser', 'verifyEmail', 'loginWithPassword', 'switchAuthMethod', 'logout', 'currentUserFromSession']
-          .includes(field.name),
+      const authMutations = mutations.filter((field: any) =>
+        [
+          'registerUser',
+          'verifyEmail',
+          'loginWithPassword',
+          'switchAuthMethod',
+          'logout',
+          'currentUserFromSession',
+        ].includes(field.name),
       );
 
       expect(authMutations.length).toBeGreaterThan(0);
-      
+
       // Check that registerUser mutation exists with correct args
       const registerUser = authMutations.find((m: any) => m.name === 'registerUser');
       expect(registerUser).toBeDefined();
       expect(registerUser.args).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ name: 'input' }),
-        ]),
+        expect.arrayContaining([expect.objectContaining({ name: 'input' })]),
       );
     });
 
@@ -686,16 +689,13 @@ describe('GraphQL Authentication API', () => {
         }
       `;
 
-      const response = await request(app)
-        .post('/graphql')
-        .send({ query: enumQuery })
-        .expect(200);
+      const response = await request(app).post('/graphql').send({ query: enumQuery }).expect(200);
 
       expect(response.body.errors).toBeUndefined();
-      
+
       const types = response.body.data.__schema.types;
       const authMethodEnum = types.find((type: any) => type.name === 'AuthMethod');
-      
+
       expect(authMethodEnum).toBeDefined();
       expect(authMethodEnum.kind).toBe('ENUM');
       expect(authMethodEnum.enumValues).toEqual(

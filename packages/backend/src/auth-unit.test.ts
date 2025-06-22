@@ -62,27 +62,27 @@ describe('Authentication Unit Tests', () => {
   describe('Password Validation', () => {
     const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
       const errors: string[] = [];
-      
+
       if (password.length < 8) {
         errors.push('Password must be at least 8 characters long');
       }
-      
+
       if (!/[A-Z]/.test(password)) {
         errors.push('Password must contain at least one uppercase letter');
       }
-      
+
       if (!/[a-z]/.test(password)) {
         errors.push('Password must contain at least one lowercase letter');
       }
-      
+
       if (!/\d/.test(password)) {
         errors.push('Password must contain at least one number');
       }
-      
+
       if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
         errors.push('Password must contain at least one special character');
       }
-      
+
       return { valid: errors.length === 0, errors };
     };
 
@@ -293,25 +293,29 @@ describe('Authentication Unit Tests', () => {
       lockedUntil?: Date;
     }
 
-    const checkRateLimit = (state: RateLimitState, maxAttempts: number = 5, lockoutMinutes: number = 15): { allowed: boolean; remaining: number } => {
+    const checkRateLimit = (
+      state: RateLimitState,
+      maxAttempts: number = 5,
+      lockoutMinutes: number = 15,
+    ): { allowed: boolean; remaining: number } => {
       const now = new Date();
-      
+
       // Check if currently locked out
       if (state.lockedUntil && state.lockedUntil > now) {
         return { allowed: false, remaining: 0 };
       }
-      
+
       // Reset if lockout period has passed
       if (state.lockedUntil && state.lockedUntil <= now) {
         state.attempts = 0;
         state.lockedUntil = undefined;
       }
-      
+
       // Check if under rate limit
       if (state.attempts < maxAttempts) {
         return { allowed: true, remaining: maxAttempts - state.attempts - 1 };
       }
-      
+
       // Lock out user
       state.lockedUntil = new Date(now.getTime() + lockoutMinutes * 60 * 1000);
       return { allowed: false, remaining: 0 };
@@ -324,7 +328,7 @@ describe('Authentication Unit Tests', () => {
       };
 
       const result = checkRateLimit(state, 5, 15);
-      
+
       expect(result.allowed).toBe(true);
       expect(result.remaining).toBe(2); // 5 - 2 - 1 = 2
     });
@@ -336,7 +340,7 @@ describe('Authentication Unit Tests', () => {
       };
 
       const result = checkRateLimit(state, 5, 15);
-      
+
       expect(result.allowed).toBe(false);
       expect(result.remaining).toBe(0);
       expect(state.lockedUntil).toBeDefined();
@@ -351,7 +355,7 @@ describe('Authentication Unit Tests', () => {
       };
 
       const result = checkRateLimit(state, 5, 15);
-      
+
       expect(result.allowed).toBe(true);
       expect(state.attempts).toBe(0);
       expect(state.lockedUntil).toBeUndefined();

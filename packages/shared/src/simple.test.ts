@@ -4,21 +4,21 @@ describe('Shared Package', () => {
   describe('Basic Types', () => {
     it('should define authentication method types', () => {
       type AuthMethod = 'password' | 'webauthn';
-      
+
       const passwordMethod: AuthMethod = 'password';
       const webauthnMethod: AuthMethod = 'webauthn';
-      
+
       expect(passwordMethod).toBe('password');
       expect(webauthnMethod).toBe('webauthn');
     });
 
     it('should define OTP token types', () => {
       type OTPTokenType = 'email_verification' | 'login_otp' | 'password_reset';
-      
+
       const emailVerification: OTPTokenType = 'email_verification';
       const loginOtp: OTPTokenType = 'login_otp';
       const passwordReset: OTPTokenType = 'password_reset';
-      
+
       expect(emailVerification).toBe('email_verification');
       expect(loginOtp).toBe('login_otp');
       expect(passwordReset).toBe('password_reset');
@@ -41,7 +41,8 @@ describe('Shared Package', () => {
 
     it('should validate UUID format', () => {
       const isValidUUID = (uuid: string): boolean => {
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const uuidRegex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         return uuidRegex.test(uuid);
       };
 
@@ -54,27 +55,27 @@ describe('Shared Package', () => {
     it('should validate password strength', () => {
       const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
         const errors: string[] = [];
-        
+
         if (password.length < 8) {
           errors.push('Password must be at least 8 characters long');
         }
-        
+
         if (!/[A-Z]/.test(password)) {
           errors.push('Password must contain at least one uppercase letter');
         }
-        
+
         if (!/[a-z]/.test(password)) {
           errors.push('Password must contain at least one lowercase letter');
         }
-        
+
         if (!/\d/.test(password)) {
           errors.push('Password must contain at least one number');
         }
-        
+
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
           errors.push('Password must contain at least one special character');
         }
-        
+
         return { valid: errors.length === 0, errors };
       };
 
@@ -98,7 +99,7 @@ describe('Shared Package', () => {
         createdAt: Date;
         updatedAt: Date;
       }
-      
+
       const user: User = {
         id: '123e4567-e89b-12d3-a456-426614174000',
         email: 'test@example.com',
@@ -107,7 +108,7 @@ describe('Shared Package', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      
+
       expect(user.id).toBeDefined();
       expect(user.email).toContain('@');
       expect(user.name).toBeTruthy();
@@ -123,14 +124,14 @@ describe('Shared Package', () => {
         expiresAt: Date;
         createdAt: Date;
       }
-      
+
       const session: Session = {
         userId: '123e4567-e89b-12d3-a456-426614174000',
         sessionToken: 'a'.repeat(64),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
         createdAt: new Date(),
       };
-      
+
       expect(session.userId).toBeDefined();
       expect(session.sessionToken).toHaveLength(64);
       expect(session.expiresAt.getTime()).toBeGreaterThan(session.createdAt.getTime());
@@ -141,7 +142,7 @@ describe('Shared Package', () => {
         success: true;
         data: T;
       }
-      
+
       interface ErrorResponse {
         success: false;
         error: {
@@ -150,12 +151,12 @@ describe('Shared Package', () => {
           details?: unknown;
         };
       }
-      
+
       const successResponse: SuccessResponse<{ message: string }> = {
         success: true,
         data: { message: 'Operation completed successfully' },
       };
-      
+
       const errorResponse: ErrorResponse = {
         success: false,
         error: {
@@ -164,7 +165,7 @@ describe('Shared Package', () => {
           details: { field: 'email', reason: 'Invalid format' },
         },
       };
-      
+
       expect(successResponse.success).toBe(true);
       expect(successResponse.data.message).toBeTruthy();
       expect(errorResponse.success).toBe(false);
@@ -194,7 +195,7 @@ describe('Shared Package', () => {
 
       const token1 = generateToken(32);
       const token2 = generateToken(32);
-      
+
       expect(token1).toHaveLength(32);
       expect(token2).toHaveLength(32);
       expect(token1).not.toBe(token2); // Should be different

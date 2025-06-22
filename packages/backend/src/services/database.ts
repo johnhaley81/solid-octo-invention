@@ -6,7 +6,10 @@ import { envVars } from '../config/index.js';
  * Database service interface
  */
 export interface DatabaseService {
-  readonly query: <T = any>(_text: string, _params?: any[]) => E.Effect<{ rows: T[]; rowCount: number }, DatabaseError>;
+  readonly query: <T = any>(
+    _text: string,
+    _params?: any[],
+  ) => E.Effect<{ rows: T[]; rowCount: number }, DatabaseError>;
   readonly getClient: () => E.Effect<PoolClient, DatabaseError>;
   readonly transaction: <T>(
     _fn: (_client: PoolClient) => E.Effect<T, DatabaseError>,

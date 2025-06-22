@@ -16,27 +16,27 @@ describe('Frontend Utilities', () => {
     it('should validate password strength', () => {
       const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
         const errors: string[] = [];
-        
+
         if (password.length < 8) {
           errors.push('Password must be at least 8 characters long');
         }
-        
+
         if (!/[A-Z]/.test(password)) {
           errors.push('Password must contain at least one uppercase letter');
         }
-        
+
         if (!/[a-z]/.test(password)) {
           errors.push('Password must contain at least one lowercase letter');
         }
-        
+
         if (!/\d/.test(password)) {
           errors.push('Password must contain at least one number');
         }
-        
+
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
           errors.push('Password must contain at least one special character');
         }
-        
+
         return { valid: errors.length === 0, errors };
       };
 
@@ -85,11 +85,11 @@ describe('Frontend Utilities', () => {
         return error.message;
       };
 
-      expect(formatErrorMessage({ message: 'Invalid email', code: 'VALIDATION_ERROR' }))
-        .toBe('Validation Error: Invalid email');
-      
-      expect(formatErrorMessage({ message: 'Server error' }))
-        .toBe('Server error');
+      expect(formatErrorMessage({ message: 'Invalid email', code: 'VALIDATION_ERROR' })).toBe(
+        'Validation Error: Invalid email',
+      );
+
+      expect(formatErrorMessage({ message: 'Server error' })).toBe('Server error');
     });
   });
 
@@ -111,12 +111,12 @@ describe('Frontend Utilities', () => {
         const now = new Date();
         const diffMs = expiresAt.getTime() - now.getTime();
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        
+
         if (diffHours < 1) {
           const diffMinutes = Math.floor(diffMs / (1000 * 60));
           return `${diffMinutes} minutes`;
         }
-        
+
         return `${diffHours} hours`;
       };
 
@@ -133,10 +133,12 @@ describe('Frontend Utilities', () => {
   describe('WebAuthn Helpers', () => {
     it('should check WebAuthn support', () => {
       const isWebAuthnSupported = (): boolean => {
-        return typeof window !== 'undefined' && 
-               'navigator' in window && 
-               'credentials' in navigator &&
-               'create' in navigator.credentials;
+        return (
+          typeof window !== 'undefined' &&
+          'navigator' in window &&
+          'credentials' in navigator &&
+          'create' in navigator.credentials
+        );
       };
 
       // In test environment, window is not available
@@ -155,7 +157,9 @@ describe('Frontend Utilities', () => {
         }
       };
 
-      expect(formatAuthenticatorType('platform')).toBe('Built-in (Touch ID, Face ID, Windows Hello)');
+      expect(formatAuthenticatorType('platform')).toBe(
+        'Built-in (Touch ID, Face ID, Windows Hello)',
+      );
       expect(formatAuthenticatorType('cross-platform')).toBe('Security Key (USB, NFC, Bluetooth)');
     });
   });

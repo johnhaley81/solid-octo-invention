@@ -3,7 +3,9 @@ import pg from 'pg';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-const TEST_DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/solid_octo_invention_test';
+const TEST_DATABASE_URL =
+  process.env.DATABASE_URL ||
+  'postgresql://postgres:postgres@localhost:5432/solid_octo_invention_test';
 
 let pool: pg.Pool;
 
@@ -27,14 +29,14 @@ beforeAll(async () => {
     `);
 
     const existingSchemas = schemaCheck.rows.map(row => row.schema_name);
-    
+
     if (!existingSchemas.includes('app_private')) {
       console.log('🔧 Setting up test database schema...');
-      
+
       // Read and execute the migration file
       const migrationPath = join(process.cwd(), 'migrations', 'current.sql');
       const migrationSQL = readFileSync(migrationPath, 'utf8');
-      
+
       // Execute migration
       await pool.query(migrationSQL);
       console.log('✅ Test database schema created');
@@ -54,10 +56,16 @@ beforeAll(async () => {
     `);
 
     const existingTables = tableCheck.rows.map(row => row.table_name);
-    const requiredTables = ['users', 'password_credentials', 'webauthn_credentials', 'otp_tokens', 'user_sessions'];
-    
+    const requiredTables = [
+      'users',
+      'password_credentials',
+      'webauthn_credentials',
+      'otp_tokens',
+      'user_sessions',
+    ];
+
     const missingTables = requiredTables.filter(table => !existingTables.includes(table));
-    
+
     if (missingTables.length > 0) {
       throw new Error(`Missing required tables: ${missingTables.join(', ')}`);
     }
@@ -73,16 +81,22 @@ beforeAll(async () => {
     `);
 
     const existingFunctions = functionCheck.rows.map(row => row.routine_name);
-    const requiredFunctions = ['register_user', 'verify_email', 'login_with_password', 'switch_auth_method', 'current_user_from_session', 'logout'];
-    
+    const requiredFunctions = [
+      'register_user',
+      'verify_email',
+      'login_with_password',
+      'switch_auth_method',
+      'current_user_from_session',
+      'logout',
+    ];
+
     const missingFunctions = requiredFunctions.filter(func => !existingFunctions.includes(func));
-    
+
     if (missingFunctions.length > 0) {
       throw new Error(`Missing required functions: ${missingFunctions.join(', ')}`);
     }
 
     console.log('✅ All required functions exist');
-
   } catch (error) {
     console.error('❌ Test database setup failed:', error);
     throw error;
@@ -98,4 +112,3 @@ afterAll(async () => {
 
 // Export pool for use in tests
 export { pool };
-

@@ -19,15 +19,9 @@ export const Password = Schema.String.pipe(
 
 export const AuthMethod = Schema.Literal('password', 'webauthn');
 
-export const OtpToken = Schema.String.pipe(
-  Schema.pattern(/^\d{6}$/),
-  Schema.brand('OtpToken'),
-);
+export const OtpToken = Schema.String.pipe(Schema.pattern(/^\d{6}$/), Schema.brand('OtpToken'));
 
-export const SessionToken = Schema.String.pipe(
-  Schema.minLength(32),
-  Schema.brand('SessionToken'),
-);
+export const SessionToken = Schema.String.pipe(Schema.minLength(32), Schema.brand('SessionToken'));
 
 // User schema
 export const User = Schema.Struct({
@@ -245,16 +239,26 @@ export type UserSessionType = Schema.Schema.Type<typeof UserSession>;
 
 export type RegisterRequestType = Schema.Schema.Type<typeof RegisterRequest>;
 export type LoginRequestType = Schema.Schema.Type<typeof LoginRequest>;
-export type WebAuthnRegistrationRequestType = Schema.Schema.Type<typeof WebAuthnRegistrationRequest>;
-export type WebAuthnAuthenticationRequestType = Schema.Schema.Type<typeof WebAuthnAuthenticationRequest>;
+export type WebAuthnRegistrationRequestType = Schema.Schema.Type<
+  typeof WebAuthnRegistrationRequest
+>;
+export type WebAuthnAuthenticationRequestType = Schema.Schema.Type<
+  typeof WebAuthnAuthenticationRequest
+>;
 export type PasswordResetRequestType = Schema.Schema.Type<typeof PasswordResetRequest>;
-export type PasswordResetConfirmRequestType = Schema.Schema.Type<typeof PasswordResetConfirmRequest>;
+export type PasswordResetConfirmRequestType = Schema.Schema.Type<
+  typeof PasswordResetConfirmRequest
+>;
 export type EmailVerificationRequestType = Schema.Schema.Type<typeof EmailVerificationRequest>;
 export type AuthSwitchRequestType = Schema.Schema.Type<typeof AuthSwitchRequest>;
 
 export type LoginResponseType = Schema.Schema.Type<typeof LoginResponse>;
-export type WebAuthnRegistrationResponseType = Schema.Schema.Type<typeof WebAuthnRegistrationResponse>;
-export type WebAuthnAuthenticationResponseType = Schema.Schema.Type<typeof WebAuthnAuthenticationResponse>;
+export type WebAuthnRegistrationResponseType = Schema.Schema.Type<
+  typeof WebAuthnRegistrationResponse
+>;
+export type WebAuthnAuthenticationResponseType = Schema.Schema.Type<
+  typeof WebAuthnAuthenticationResponse
+>;
 export type PasswordResetResponseType = Schema.Schema.Type<typeof PasswordResetResponse>;
 export type AuthSwitchResponseType = Schema.Schema.Type<typeof AuthSwitchResponse>;
 
@@ -265,5 +269,9 @@ export type AuthContextType = Schema.Schema.Type<typeof AuthContext>;
 export type SessionInfoType = Schema.Schema.Type<typeof SessionInfo>;
 export type AuthStateType = Schema.Schema.Type<typeof AuthState>;
 
-export type WebAuthnRegistrationCredentialType = Schema.Schema.Type<typeof WebAuthnRegistrationCredential>;
-export type WebAuthnAuthenticationCredentialType = Schema.Schema.Type<typeof WebAuthnAuthenticationCredential>;
+export type WebAuthnRegistrationCredentialType = Schema.Schema.Type<
+  typeof WebAuthnRegistrationCredential
+>;
+export type WebAuthnAuthenticationCredentialType = Schema.Schema.Type<
+  typeof WebAuthnAuthenticationCredential
+>;

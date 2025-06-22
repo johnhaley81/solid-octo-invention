@@ -171,17 +171,23 @@ export const createAuthError = (code: string, message: string, details?: Record<
 export const createInvalidCredentialsError = (message = 'Invalid email or password') =>
   new InvalidCredentialsError({ message });
 
-export const createEmailNotVerifiedError = (email: string, message = 'Email address must be verified before login') =>
-  new EmailNotVerifiedError({ message, email });
+export const createEmailNotVerifiedError = (
+  email: string,
+  message = 'Email address must be verified before login',
+) => new EmailNotVerifiedError({ message, email });
 
-export const createAccountLockedError = (lockedUntil: Date, message = 'Account is temporarily locked due to too many failed login attempts') =>
-  new AccountLockedError({ message, lockedUntil });
+export const createAccountLockedError = (
+  lockedUntil: Date,
+  message = 'Account is temporarily locked due to too many failed login attempts',
+) => new AccountLockedError({ message, lockedUntil });
 
 export const createOtpRequiredError = (message = 'One-time password is required') =>
   new OtpRequiredError({ message });
 
-export const createOtpInvalidError = (attemptsRemaining: number, message = 'Invalid one-time password') =>
-  new OtpInvalidError({ message, attemptsRemaining });
+export const createOtpInvalidError = (
+  attemptsRemaining: number,
+  message = 'Invalid one-time password',
+) => new OtpInvalidError({ message, attemptsRemaining });
 
 export const createOtpExpiredError = (message = 'One-time password has expired') =>
   new OtpExpiredError({ message });
@@ -195,20 +201,31 @@ export const createTokenExpiredError = (tokenType: string, message = 'Token has 
 export const createUserNotFoundError = (email?: string, message = 'User not found') =>
   new UserNotFoundError({ message, ...(email && { email }) });
 
-export const createUserExistsError = (email: string, message = 'User with this email already exists') =>
-  new UserExistsError({ message, email });
+export const createUserExistsError = (
+  email: string,
+  message = 'User with this email already exists',
+) => new UserExistsError({ message, email });
 
-export const createWebAuthnNotSupportedError = (message = 'WebAuthn is not supported in this environment') =>
-  new WebAuthnNotSupportedError({ message });
+export const createWebAuthnNotSupportedError = (
+  message = 'WebAuthn is not supported in this environment',
+) => new WebAuthnNotSupportedError({ message });
 
-export const createWebAuthnFailedError = (reason: string, message = 'WebAuthn authentication failed') =>
-  new WebAuthnFailedError({ message, reason });
+export const createWebAuthnFailedError = (
+  reason: string,
+  message = 'WebAuthn authentication failed',
+) => new WebAuthnFailedError({ message, reason });
 
-export const createAuthMethodMismatchError = (expectedMethod: string, actualMethod: string, message = 'Authentication method mismatch') =>
-  new AuthMethodMismatchError({ message, expectedMethod, actualMethod });
+export const createAuthMethodMismatchError = (
+  expectedMethod: string,
+  actualMethod: string,
+  message = 'Authentication method mismatch',
+) => new AuthMethodMismatchError({ message, expectedMethod, actualMethod });
 
-export const createValidationError = (field: string, errors: string[], message = 'Validation failed') =>
-  new ValidationError({ message, field, errors });
+export const createValidationError = (
+  field: string,
+  errors: string[],
+  message = 'Validation failed',
+) => new ValidationError({ message, field, errors });
 
 export const createRateLimitExceededError = (retryAfter: number, message = 'Rate limit exceeded') =>
   new RateLimitExceededError({ message, retryAfter });
