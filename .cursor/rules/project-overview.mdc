@@ -48,6 +48,21 @@ packages/
 - Use semicolons in all TypeScript/JavaScript code
 - Follow functional programming principles with Effect-TS
 
+## Database Migration Rules
+
+**CRITICAL**: Database migrations must follow the Graphile Migrate workflow:
+
+1. **Never manually edit committed migration files** in `migrations/committed/`
+2. **Always use the proper migration workflow**:
+   - Add new schema changes to `migrations/current.sql`
+   - Run `pnpm migrate:commit` to commit the migration
+   - This automatically creates properly formatted migration files with headers
+3. **Migration files require specific format**:
+   - Must have `--! Previous:` and `--! Hash:` headers
+   - Must have exactly two newlines after headers
+   - Only `migrate:commit` command generates this format correctly
+4. **Never manually create or edit migration files** - always use Graphile Migrate commands
+
 ## Architecture Layers
 
 1. **Domain Layer**: Pure business logic with Effect-TS
@@ -56,4 +71,3 @@ packages/
 4. **Presentation Layer**: React components and Apollo Client integration
 
 Always prioritize type safety, functional programming principles, and maintainable code structure.
-
