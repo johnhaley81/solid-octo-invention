@@ -7,7 +7,7 @@ import { DatabaseService } from './database.js';
  */
 const createMockDatabaseService = () => {
   const mockRecords = new Map<string, { id: string; deleted_at: string | null }>();
-  
+
   // Add some test records
   mockRecords.set('users:user-1', { id: 'user-1', deleted_at: null });
   mockRecords.set('users:user-2', { id: 'user-2', deleted_at: null });
@@ -20,58 +20,58 @@ const createMockDatabaseService = () => {
         const [tableName, recordId] = params || [];
         const key = `${tableName}:${recordId}`;
         const record = mockRecords.get(key);
-        
+
         if (record && record.deleted_at === null) {
           record.deleted_at = new Date().toISOString();
           return E.succeed([{ soft_delete_record: true }] as T[]);
         }
         return E.succeed([{ soft_delete_record: false }] as T[]);
       }
-      
+
       if (text.includes('restore_record')) {
         const [tableName, recordId] = params || [];
         const key = `${tableName}:${recordId}`;
         const record = mockRecords.get(key);
-        
+
         if (record && record.deleted_at !== null) {
           record.deleted_at = null;
           return E.succeed([{ restore_record: true }] as T[]);
         }
         return E.succeed([{ restore_record: false }] as T[]);
       }
-      
+
       return E.succeed([] as T[]);
     },
     getClient: () => E.die('MockDatabaseService.getClient not implemented'),
     transaction: (_fn: any) => E.die('MockDatabaseService.transaction not implemented'),
     close: () => E.succeed(undefined),
-    
+
     softDelete: (tableName: string, recordId: string) => {
       const key = `${tableName}:${recordId}`;
       const record = mockRecords.get(key);
-      
+
       if (record && record.deleted_at === null) {
         record.deleted_at = new Date().toISOString();
         return E.succeed(true);
       }
       return E.succeed(false);
     },
-    
+
     restore: (tableName: string, recordId: string) => {
       const key = `${tableName}:${recordId}`;
       const record = mockRecords.get(key);
-      
+
       if (record && record.deleted_at !== null) {
         record.deleted_at = null;
         return E.succeed(true);
       }
       return E.succeed(false);
     },
-    
+
     permanentDelete: (tableName: string, recordId: string) => {
       const key = `${tableName}:${recordId}`;
       const record = mockRecords.get(key);
-      
+
       if (record && record.deleted_at !== null) {
         mockRecords.delete(key);
         return E.succeed(true);
@@ -186,19 +186,19 @@ describe('Soft Delete Functionality', () => {
     it('should support complete soft delete workflow', async () => {
       const program = E.gen(function* () {
         const db = yield* DatabaseService;
-        
+
         // 1. Soft delete an active record
         const softDeleteResult = yield* db.softDelete('users', 'user-2');
-        
+
         // 2. Try to soft delete again (should fail)
         const softDeleteAgainResult = yield* db.softDelete('users', 'user-2');
-        
+
         // 3. Restore the record
         const restoreResult = yield* db.restore('users', 'user-2');
-        
+
         // 4. Try to restore again (should fail)
         const restoreAgainResult = yield* db.restore('users', 'user-2');
-        
+
         return {
           softDeleteResult,
           softDeleteAgainResult,
@@ -208,7 +208,7 @@ describe('Soft Delete Functionality', () => {
       });
 
       const result = await E.runPromise(program.pipe(E.provide(mockLayer)));
-      
+
       expect(result.softDeleteResult).toBe(true);
       expect(result.softDeleteAgainResult).toBe(false);
       expect(result.restoreResult).toBe(true);

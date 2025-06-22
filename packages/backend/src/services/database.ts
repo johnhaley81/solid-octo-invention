@@ -18,7 +18,10 @@ export interface DatabaseService {
   // Soft delete operations
   readonly softDelete: (_tableName: string, _recordId: string) => E.Effect<boolean, DatabaseError>;
   readonly restore: (_tableName: string, _recordId: string) => E.Effect<boolean, DatabaseError>;
-  readonly permanentDelete: (_tableName: string, _recordId: string) => E.Effect<boolean, DatabaseError>;
+  readonly permanentDelete: (
+    _tableName: string,
+    _recordId: string,
+  ) => E.Effect<boolean, DatabaseError>;
 }
 
 /**
@@ -161,7 +164,8 @@ const makeDatabaseService = E.gen(function* () {
         );
         return (result.rowCount ?? 0) > 0;
       },
-      catch: error => new DatabaseError(`Permanent delete failed for ${tableName}:${recordId}`, error),
+      catch: error =>
+        new DatabaseError(`Permanent delete failed for ${tableName}:${recordId}`, error),
     }).pipe(
       E.tapError(error => E.logError('Permanent delete failed', { tableName, recordId, error })),
       E.withSpan('database-permanent-delete', { attributes: { tableName, recordId } }),
