@@ -1,7 +1,7 @@
 ---
 description: Frontend architecture and development guidelines for React + Apollo + Tailwind
 globs: ["packages/frontend/**/*"]
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Frontend Development Guidelines
@@ -113,4 +113,3 @@ src/
 - Lazy load routes with React.lazy
 - Optimize images and assets
 - Use Vite's code splitting features
-

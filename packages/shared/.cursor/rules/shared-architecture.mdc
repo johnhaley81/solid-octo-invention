@@ -1,7 +1,7 @@
 ---
 description: Shared package guidelines for types, schemas, and utilities
 globs: ["packages/shared/**/*"]
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Shared Package Guidelines
@@ -126,4 +126,3 @@ src/
 - Write comprehensive tests for all utilities
 - Avoid any dependencies on backend or frontend code
 - Use functional programming principles throughout
-

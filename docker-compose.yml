@@ -1,4 +1,4 @@
-version: '3.8'
+# Docker Compose v2 format (no version field needed)
 
 services:
   # PostgreSQL database
@@ -120,4 +120,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-

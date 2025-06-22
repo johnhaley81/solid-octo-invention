@@ -1,0 +1,44 @@
+---
+description: Rules for using Tailwind CSS for styling in React components
+globs: ["**/*.tsx"]
+alwaysApply: true
+---
+
+# Tailwind CSS Styling Rules
+
+## Core Styling Principles
+
+### 🎨 Exclusive Tailwind Usage
+- **Utilize Tailwind CSS classes exclusively for styling. Avoid inline styles.**
+- Use Tailwind utility classes for all visual styling needs
+- Leverage Tailwind's design system for consistent spacing, colors, and typography
+- Avoid custom CSS files or inline style attributes
+
+### 📱 Responsive Design
+- Use Tailwind's responsive prefixes: `sm:`, `md:`, `lg:`, `xl:`, `2xl:`
+- Design mobile-first with responsive breakpoints
+- Test components across different screen sizes
+
+### 🎯 Component Styling Best Practices
+- Group related classes logically (layout, spacing, colors, typography)
+- Use Tailwind's semantic color palette (gray, blue, green, red, etc.)
+- Leverage hover and focus states with `hover:` and `focus:` prefixes
+- Use transitions for smooth interactions: `transition-colors`, `transition-transform`
+
+### 🔧 Utility-First Approach
+- Prefer utility classes over custom component classes
+- Use Tailwind's spacing scale (p-4, m-2, space-x-4, etc.)
+- Leverage flexbox and grid utilities for layouts
+- Use Tailwind's typography utilities for text styling
+
+### 🚫 Avoid These Patterns
+- ❌ Inline styles: `style={{ color: 'red' }}`
+- ❌ Custom CSS files for component styling
+- ❌ Hardcoded pixel values
+- ❌ Non-Tailwind color values
+
+### ✅ Preferred Patterns
+- ✅ `className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"`
+- ✅ Responsive design: `className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"`
+- ✅ State variants: `className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"`
+

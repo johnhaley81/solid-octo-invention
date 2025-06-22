@@ -1,7 +1,7 @@
 ---
 description: Backend architecture and development guidelines for PostGraphile + Effect-TS
 globs: ["packages/backend/**/*"]
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Backend Development Guidelines
@@ -80,4 +80,3 @@ src/
 ├── utils/           # Utility functions
 └── server.ts        # Express server setup
 ```
-
