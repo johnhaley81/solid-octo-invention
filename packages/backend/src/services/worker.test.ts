@@ -23,7 +23,7 @@ describe('WorkerService', () => {
         const jobPayload = {
           email: 'test@example.com',
           name: 'Test User',
-          token: 'verification-token-123'
+          token: 'verification-token-123',
         };
         
         const result = yield* worker.addJob('send-verification-email', jobPayload);
@@ -38,8 +38,8 @@ describe('WorkerService', () => {
         payload: {
           email: 'test@example.com',
           name: 'Test User',
-          token: 'verification-token-123'
-        }
+          token: 'verification-token-123',
+        },
       });
     });
 
@@ -50,7 +50,7 @@ describe('WorkerService', () => {
         const jobPayload = {
           email: 'test@example.com',
           name: 'Test User',
-          otp: '123456'
+          otp: '123456',
         };
         
         const result = yield* worker.addJob('send-login-otp', jobPayload);
@@ -65,8 +65,8 @@ describe('WorkerService', () => {
         payload: {
           email: 'test@example.com',
           name: 'Test User',
-          otp: '123456'
-        }
+          otp: '123456',
+        },
       });
     });
 
@@ -77,7 +77,7 @@ describe('WorkerService', () => {
         const jobPayload = {
           email: 'test@example.com',
           name: 'Test User',
-          token: 'reset-token-456'
+          token: 'reset-token-456',
         };
         
         const result = yield* worker.addJob('send-password-reset-email', jobPayload);
@@ -92,8 +92,8 @@ describe('WorkerService', () => {
         payload: {
           email: 'test@example.com',
           name: 'Test User',
-          token: 'reset-token-456'
-        }
+          token: 'reset-token-456',
+        },
       });
     });
 
@@ -105,7 +105,7 @@ describe('WorkerService', () => {
           email: 'test@example.com',
           name: 'Test User',
           oldMethod: 'password' as const,
-          newMethod: 'webauthn' as const
+          newMethod: 'webauthn' as const,
         };
         
         const result = yield* worker.addJob('send-auth-method-change-notification', jobPayload);
@@ -121,8 +121,8 @@ describe('WorkerService', () => {
           email: 'test@example.com',
           name: 'Test User',
           oldMethod: 'password',
-          newMethod: 'webauthn'
-        }
+          newMethod: 'webauthn',
+        },
       });
     });
   });
@@ -141,7 +141,7 @@ describe('WorkerService', () => {
       expect(result).toMatchObject({
         id: expect.any(String),
         task_identifier: 'cleanup-expired-auth-data',
-        payload: {}
+        payload: {},
       });
     });
   });
@@ -154,7 +154,7 @@ describe('WorkerService', () => {
         // Schedule cleanup to run every hour
         const result = yield* worker.addJob('cleanup-expired-auth-data', {}, {
           runAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
-          maxAttempts: 3
+          maxAttempts: 3,
         });
         
         return result;
@@ -165,7 +165,7 @@ describe('WorkerService', () => {
       expect(result).toMatchObject({
         id: expect.any(String),
         task_identifier: 'cleanup-expired-auth-data',
-        max_attempts: 3
+        max_attempts: 3,
       });
       expect(new Date(result.run_at).getTime()).toBeGreaterThan(Date.now());
     });
@@ -177,10 +177,10 @@ describe('WorkerService', () => {
         const result = yield* worker.addJob('send-verification-email', {
           email: 'test@example.com',
           name: 'Test User',
-          token: 'token-123'
+          token: 'token-123',
         }, {
           maxAttempts: 5,
-          backoffDelay: 1000
+          backoffDelay: 1000,
         });
         
         return result;
@@ -191,7 +191,7 @@ describe('WorkerService', () => {
       expect(result).toMatchObject({
         id: expect.any(String),
         task_identifier: 'send-verification-email',
-        max_attempts: 5
+        max_attempts: 5,
       });
     });
   });
@@ -206,7 +206,7 @@ describe('WorkerService', () => {
       });
 
       await expect(
-        E.runPromise(program.pipe(E.provide(TestWorkerService)))
+        E.runPromise(program.pipe(E.provide(TestWorkerService))),
       ).rejects.toThrow();
     });
 
@@ -219,7 +219,7 @@ describe('WorkerService', () => {
       });
 
       await expect(
-        E.runPromise(program.pipe(E.provide(TestWorkerService)))
+        E.runPromise(program.pipe(E.provide(TestWorkerService))),
       ).rejects.toThrow();
     });
   });
@@ -233,13 +233,13 @@ describe('WorkerService', () => {
         const job1 = yield* worker.addJob('send-verification-email', {
           email: 'user1@example.com',
           name: 'User 1',
-          token: 'token-1'
+          token: 'token-1',
         });
         
         const job2 = yield* worker.addJob('send-login-otp', {
           email: 'user2@example.com',
           name: 'User 2',
-          otp: '123456'
+          otp: '123456',
         });
         
         const job3 = yield* worker.addJob('cleanup-expired-auth-data', {});
@@ -264,18 +264,18 @@ describe('WorkerService', () => {
           worker.addJob('send-verification-email', {
             email: 'user1@example.com',
             name: 'User 1',
-            token: 'token-1'
+            token: 'token-1',
           }),
           worker.addJob('send-verification-email', {
             email: 'user2@example.com',
             name: 'User 2',
-            token: 'token-2'
+            token: 'token-2',
           }),
           worker.addJob('send-verification-email', {
             email: 'user3@example.com',
             name: 'User 3',
-            token: 'token-3'
-          })
+            token: 'token-3',
+          }),
         ], { concurrency: 'unbounded' });
         
         return jobs;
@@ -307,7 +307,7 @@ describe('WorkerService', () => {
       
       expect(result).toMatchObject({
         task_identifier: 'cleanup-expired-auth-data',
-        payload: {}
+        payload: {},
       });
     });
 
@@ -319,7 +319,7 @@ describe('WorkerService', () => {
         const result = yield* worker.addJob('send-verification-email', {
           email: 'integration@example.com',
           name: 'Integration Test',
-          token: 'integration-token'
+          token: 'integration-token',
         });
         
         return result;
@@ -332,8 +332,8 @@ describe('WorkerService', () => {
         payload: {
           email: 'integration@example.com',
           name: 'Integration Test',
-          token: 'integration-token'
-        }
+          token: 'integration-token',
+        },
       });
     });
   });

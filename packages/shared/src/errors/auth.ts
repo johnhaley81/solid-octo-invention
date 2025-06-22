@@ -166,7 +166,7 @@ export const AuthErrorCodes = {
 
 // Helper functions to create errors
 export const createAuthError = (code: string, message: string, details?: Record<string, unknown>) =>
-  new AuthError({ code, message, details });
+  new AuthError({ code, message, ...(details && { details }) });
 
 export const createInvalidCredentialsError = (message = 'Invalid email or password') =>
   new InvalidCredentialsError({ message });
@@ -193,7 +193,7 @@ export const createTokenExpiredError = (tokenType: string, message = 'Token has 
   new TokenExpiredError({ message, tokenType });
 
 export const createUserNotFoundError = (email?: string, message = 'User not found') =>
-  new UserNotFoundError({ message, email });
+  new UserNotFoundError({ message, ...(email && { email }) });
 
 export const createUserExistsError = (email: string, message = 'User with this email already exists') =>
   new UserExistsError({ message, email });
@@ -230,4 +230,3 @@ export const createEmailServiceError = (emailType: string, message = 'Email serv
 
 export const createConfigurationError = (setting: string, message = 'Configuration error') =>
   new ConfigurationError({ message, setting });
-

@@ -8,25 +8,25 @@ import { Schema } from '@effect/schema';
 // Basic validation schemas
 export const Email = Schema.String.pipe(
   Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
-  Schema.brand('Email')
+  Schema.brand('Email'),
 );
 
 export const Password = Schema.String.pipe(
   Schema.minLength(8),
   Schema.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])/),
-  Schema.brand('Password')
+  Schema.brand('Password'),
 );
 
 export const AuthMethod = Schema.Literal('password', 'webauthn');
 
 export const OtpToken = Schema.String.pipe(
   Schema.pattern(/^\d{6}$/),
-  Schema.brand('OtpToken')
+  Schema.brand('OtpToken'),
 );
 
 export const SessionToken = Schema.String.pipe(
   Schema.minLength(32),
-  Schema.brand('SessionToken')
+  Schema.brand('SessionToken'),
 );
 
 // User schema

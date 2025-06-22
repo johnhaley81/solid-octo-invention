@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import pg from 'pg';
 
 const TEST_DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/solid_octo_invention_test';
@@ -86,20 +86,20 @@ describe('Authentication Integration Tests', () => {
       // 1. Register user
       const registerResult = await pool.query(
         'SELECT register_user($1, $2, $3) as user_data',
-        ['integration@example.com', 'Integration Test', 'SecurePassword123!']
+        ['integration@example.com', 'Integration Test', 'SecurePassword123!'],
       );
 
       const user = registerResult.rows[0].user_data;
       expect(user).toMatchObject({
         email: 'integration@example.com',
         name: 'Integration Test',
-        auth_method: 'password'
+        auth_method: 'password',
       });
 
       // 2. Get verification token
       const tokenResult = await pool.query(
         'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-        [user.id, 'email_verification']
+        [user.id, 'email_verification'],
       );
 
       expect(tokenResult.rows).toHaveLength(1);
@@ -108,7 +108,7 @@ describe('Authentication Integration Tests', () => {
       // 3. Verify email
       const verifyResult = await pool.query(
         'SELECT verify_email($1) as verified',
-        [verificationToken]
+        [verificationToken],
       );
 
       expect(verifyResult.rows[0].verified).toBe(true);
@@ -116,7 +116,7 @@ describe('Authentication Integration Tests', () => {
       // 4. Login
       const loginResult = await pool.query(
         'SELECT * FROM login_with_password($1, $2)',
-        ['integration@example.com', 'SecurePassword123!']
+        ['integration@example.com', 'SecurePassword123!'],
       );
 
       expect(loginResult.rows).toHaveLength(1);
@@ -124,25 +124,25 @@ describe('Authentication Integration Tests', () => {
       expect(session).toMatchObject({
         user_id: user.id,
         session_token: expect.any(String),
-        expires_at: expect.any(Date)
+        expires_at: expect.any(Date),
       });
 
       // 5. Get current user from session
       const currentUserResult = await pool.query(
         'SELECT current_user_from_session($1) as user_data',
-        [session.session_token]
+        [session.session_token],
       );
 
       expect(currentUserResult.rows[0].user_data).toMatchObject({
         id: user.id,
         email: 'integration@example.com',
-        name: 'Integration Test'
+        name: 'Integration Test',
       });
 
       // 6. Logout
       const logoutResult = await pool.query(
         'SELECT logout($1) as success',
-        [session.session_token]
+        [session.session_token],
       );
 
       expect(logoutResult.rows[0].success).toBe(true);
@@ -150,7 +150,7 @@ describe('Authentication Integration Tests', () => {
       // 7. Verify session is invalid
       const invalidSessionResult = await pool.query(
         'SELECT current_user_from_session($1) as user_data',
-        [session.session_token]
+        [session.session_token],
       );
 
       expect(invalidSessionResult.rows[0].user_data).toBeNull();
@@ -160,7 +160,7 @@ describe('Authentication Integration Tests', () => {
       // Register user with password auth
       const registerResult = await pool.query(
         'SELECT register_user($1, $2, $3) as user_data',
-        ['switch@example.com', 'Switch Test', 'SecurePassword123!']
+        ['switch@example.com', 'Switch Test', 'SecurePassword123!'],
       );
 
       const user = registerResult.rows[0].user_data;
@@ -168,7 +168,7 @@ describe('Authentication Integration Tests', () => {
       // Verify password credentials exist
       const passwordCredResult = await pool.query(
         'SELECT * FROM app_private.password_credentials WHERE user_id = $1',
-        [user.id]
+        [user.id],
       );
 
       expect(passwordCredResult.rows).toHaveLength(1);
@@ -176,7 +176,7 @@ describe('Authentication Integration Tests', () => {
       // Switch to WebAuthn
       const switchResult = await pool.query(
         'SELECT switch_auth_method($1, $2) as user_data',
-        [user.id, 'webauthn']
+        [user.id, 'webauthn'],
       );
 
       expect(switchResult.rows[0].user_data.auth_method).toBe('webauthn');
@@ -184,7 +184,7 @@ describe('Authentication Integration Tests', () => {
       // Verify password credentials were cleaned up
       const cleanedCredResult = await pool.query(
         'SELECT * FROM app_private.password_credentials WHERE user_id = $1',
-        [user.id]
+        [user.id],
       );
 
       expect(cleanedCredResult.rows).toHaveLength(0);
@@ -192,7 +192,7 @@ describe('Authentication Integration Tests', () => {
       // Switch back to password
       const switchBackResult = await pool.query(
         'SELECT switch_auth_method($1, $2) as user_data',
-        [user.id, 'password']
+        [user.id, 'password'],
       );
 
       expect(switchBackResult.rows[0].user_data.auth_method).toBe('password');
@@ -204,15 +204,15 @@ describe('Authentication Integration Tests', () => {
       // Register first user
       await pool.query(
         'SELECT register_user($1, $2, $3)',
-        ['duplicate@example.com', 'First User', 'Password123!']
+        ['duplicate@example.com', 'First User', 'Password123!'],
       );
 
       // Try to register with same email
       await expect(
         pool.query(
           'SELECT register_user($1, $2, $3)',
-          ['duplicate@example.com', 'Second User', 'Password456!']
-        )
+          ['duplicate@example.com', 'Second User', 'Password456!'],
+        ),
       ).rejects.toThrow();
     });
 
@@ -220,22 +220,22 @@ describe('Authentication Integration Tests', () => {
       // Register user but don't verify
       await pool.query(
         'SELECT register_user($1, $2, $3)',
-        ['unverified@example.com', 'Unverified User', 'Password123!']
+        ['unverified@example.com', 'Unverified User', 'Password123!'],
       );
 
       // Try to login without verification
       await expect(
         pool.query(
           'SELECT * FROM login_with_password($1, $2)',
-          ['unverified@example.com', 'Password123!']
-        )
+          ['unverified@example.com', 'Password123!'],
+        ),
       ).rejects.toThrow();
     });
 
     it('should reject invalid verification tokens', async () => {
       const result = await pool.query(
         'SELECT verify_email($1) as verified',
-        ['invalid-token-12345']
+        ['invalid-token-12345'],
       );
 
       expect(result.rows[0].verified).toBe(false);
@@ -245,14 +245,14 @@ describe('Authentication Integration Tests', () => {
       // Register and verify user
       const registerResult = await pool.query(
         'SELECT register_user($1, $2, $3) as user_data',
-        ['failedlogin@example.com', 'Failed Login Test', 'CorrectPassword123!']
+        ['failedlogin@example.com', 'Failed Login Test', 'CorrectPassword123!'],
       );
 
       const user = registerResult.rows[0].user_data;
 
       const tokenResult = await pool.query(
         'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-        [user.id, 'email_verification']
+        [user.id, 'email_verification'],
       );
 
       await pool.query('SELECT verify_email($1)', [tokenResult.rows[0].token]);
@@ -262,7 +262,7 @@ describe('Authentication Integration Tests', () => {
         try {
           await pool.query(
             'SELECT * FROM login_with_password($1, $2)',
-            ['failedlogin@example.com', 'WrongPassword']
+            ['failedlogin@example.com', 'WrongPassword'],
           );
         } catch {
           // Expected to fail
@@ -272,7 +272,7 @@ describe('Authentication Integration Tests', () => {
       // Check failed attempts count
       const credResult = await pool.query(
         'SELECT failed_login_attempts FROM app_private.password_credentials WHERE user_id = $1',
-        [user.id]
+        [user.id],
       );
 
       expect(credResult.rows[0].failed_login_attempts).toBe(3);
@@ -284,7 +284,7 @@ describe('Authentication Integration Tests', () => {
       // Register user
       const registerResult = await pool.query(
         'SELECT register_user($1, $2, $3) as user_data',
-        ['integrity@example.com', 'Integrity Test', 'Password123!']
+        ['integrity@example.com', 'Integrity Test', 'Password123!'],
       );
 
       const user = registerResult.rows[0].user_data;
@@ -292,12 +292,12 @@ describe('Authentication Integration Tests', () => {
       // Verify related records were created
       const passwordCredResult = await pool.query(
         'SELECT * FROM app_private.password_credentials WHERE user_id = $1',
-        [user.id]
+        [user.id],
       );
 
       const otpTokenResult = await pool.query(
         'SELECT * FROM app_private.otp_tokens WHERE user_id = $1',
-        [user.id]
+        [user.id],
       );
 
       expect(passwordCredResult.rows).toHaveLength(1);
@@ -305,7 +305,7 @@ describe('Authentication Integration Tests', () => {
 
       // Try to delete user (should fail due to foreign key constraints)
       await expect(
-        pool.query('DELETE FROM public.users WHERE id = $1', [user.id])
+        pool.query('DELETE FROM public.users WHERE id = $1', [user.id]),
       ).rejects.toThrow();
     });
 
@@ -313,7 +313,7 @@ describe('Authentication Integration Tests', () => {
       // Register user
       const registerResult = await pool.query(
         'SELECT register_user($1, $2, $3) as user_data',
-        ['exclusivity@example.com', 'Exclusivity Test', 'Password123!']
+        ['exclusivity@example.com', 'Exclusivity Test', 'Password123!'],
       );
 
       const user = registerResult.rows[0].user_data;
@@ -321,13 +321,13 @@ describe('Authentication Integration Tests', () => {
       // Switch to WebAuthn (should clean up password credentials)
       await pool.query(
         'SELECT switch_auth_method($1, $2)',
-        [user.id, 'webauthn']
+        [user.id, 'webauthn'],
       );
 
       // Verify password credentials were removed
       const passwordCredResult = await pool.query(
         'SELECT * FROM app_private.password_credentials WHERE user_id = $1',
-        [user.id]
+        [user.id],
       );
 
       expect(passwordCredResult.rows).toHaveLength(0);
@@ -337,23 +337,22 @@ describe('Authentication Integration Tests', () => {
         `INSERT INTO app_private.webauthn_credentials 
          (user_id, credential_id, public_key, counter, device_type) 
          VALUES ($1, $2, $3, $4, $5)`,
-        [user.id, 'test-cred-id', 'test-public-key', 0, 'platform']
+        [user.id, 'test-cred-id', 'test-public-key', 0, 'platform'],
       );
 
       // Switch back to password (should clean up WebAuthn credentials)
       await pool.query(
         'SELECT switch_auth_method($1, $2)',
-        [user.id, 'password']
+        [user.id, 'password'],
       );
 
       // Verify WebAuthn credentials were removed
       const webauthnCredResult = await pool.query(
         'SELECT * FROM app_private.webauthn_credentials WHERE user_id = $1',
-        [user.id]
+        [user.id],
       );
 
       expect(webauthnCredResult.rows).toHaveLength(0);
     });
   });
 });
-

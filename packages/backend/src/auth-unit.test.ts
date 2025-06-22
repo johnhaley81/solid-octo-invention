@@ -79,7 +79,7 @@ describe('Authentication Unit Tests', () => {
         errors.push('Password must contain at least one number');
       }
       
-      if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password)) {
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
         errors.push('Password must contain at least one special character');
       }
       
@@ -91,7 +91,7 @@ describe('Authentication Unit Tests', () => {
         'SecurePassword123!',
         'MyP@ssw0rd2024',
         'C0mpl3x!P@ssw0rd',
-        'Str0ng#Passw0rd!'
+        'Str0ng#Passw0rd!',
       ];
 
       strongPasswords.forEach(password => {
@@ -131,7 +131,7 @@ describe('Authentication Unit Tests', () => {
         'test.email@domain.co.uk',
         'user+tag@example.org',
         'firstname.lastname@company.com',
-        'user123@test-domain.com'
+        'user123@test-domain.com',
       ];
 
       validEmails.forEach(email => {
@@ -148,7 +148,7 @@ describe('Authentication Unit Tests', () => {
         'user..double.dot@example.com',
         'user@example',
         'user name@example.com', // Space in email
-        ''
+        '',
       ];
 
       invalidEmails.forEach(email => {
@@ -167,7 +167,7 @@ describe('Authentication Unit Tests', () => {
       const validTokens = [
         crypto.randomBytes(32).toString('hex'),
         'a'.repeat(64), // All 'a's but correct length and format
-        '1234567890abcdef'.repeat(4) // Repeating pattern but valid format
+        '1234567890abcdef'.repeat(4), // Repeating pattern but valid format
       ];
 
       validTokens.forEach(token => {
@@ -182,7 +182,7 @@ describe('Authentication Unit Tests', () => {
         'a'.repeat(65), // One character too long
         'invalid-chars-!@#$'.padEnd(64, 'a'), // Invalid characters
         '', // Empty string
-        'ABCDEF'.repeat(10) + 'ABCD' // Uppercase (should be lowercase hex)
+        `${'ABCDEF'.repeat(10)}ABCD`, // Uppercase (should be lowercase hex)
       ];
 
       invalidTokens.forEach(token => {
@@ -214,7 +214,7 @@ describe('Authentication Unit Tests', () => {
         'biometric',
         '',
         'PASSWORD', // Wrong case
-        'WEBAUTHN' // Wrong case
+        'WEBAUTHN', // Wrong case
       ];
 
       invalidMethods.forEach(method => {
@@ -245,7 +245,7 @@ describe('Authentication Unit Tests', () => {
         'two_factor',
         '',
         'EMAIL_VERIFICATION', // Wrong case
-        'login-otp' // Wrong separator
+        'login-otp', // Wrong separator
       ];
 
       invalidTypes.forEach(type => {
@@ -320,7 +320,7 @@ describe('Authentication Unit Tests', () => {
     it('should allow requests under rate limit', () => {
       const state: RateLimitState = {
         attempts: 2,
-        lastAttempt: new Date()
+        lastAttempt: new Date(),
       };
 
       const result = checkRateLimit(state, 5, 15);
@@ -332,7 +332,7 @@ describe('Authentication Unit Tests', () => {
     it('should block requests over rate limit', () => {
       const state: RateLimitState = {
         attempts: 5,
-        lastAttempt: new Date()
+        lastAttempt: new Date(),
       };
 
       const result = checkRateLimit(state, 5, 15);
@@ -347,7 +347,7 @@ describe('Authentication Unit Tests', () => {
       const state: RateLimitState = {
         attempts: 5,
         lastAttempt: new Date(),
-        lockedUntil: pastLockout
+        lockedUntil: pastLockout,
       };
 
       const result = checkRateLimit(state, 5, 15);

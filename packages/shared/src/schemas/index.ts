@@ -184,5 +184,4 @@ export const SchemaUtils = {
   isArchivedPost: (post: Post): post is ArchivedPost => post.status === 'archived',
 };
 
-// Re-export authentication schemas
-export * from './auth.js';
+// Authentication schemas are exported separately to avoid conflicts

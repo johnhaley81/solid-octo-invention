@@ -42,7 +42,7 @@ describe('Shared Types', () => {
         name: 'Test User',
         authMethod: 'password',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       
       expect(user.id).toBeDefined();
@@ -65,7 +65,7 @@ describe('Shared Types', () => {
         userId: '123e4567-e89b-12d3-a456-426614174000',
         sessionToken: 'a'.repeat(64),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       
       expect(session.userId).toBeDefined();
@@ -83,7 +83,7 @@ describe('Shared Types', () => {
       
       const response: SuccessResponse<{ message: string }> = {
         success: true,
-        data: { message: 'Operation completed successfully' }
+        data: { message: 'Operation completed successfully' },
       };
       
       expect(response.success).toBe(true);
@@ -105,8 +105,8 @@ describe('Shared Types', () => {
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Invalid input provided',
-          details: { field: 'email', reason: 'Invalid format' }
-        }
+          details: { field: 'email', reason: 'Invalid format' },
+        },
       };
       
       expect(response.success).toBe(false);
@@ -124,12 +124,12 @@ describe('Shared Types', () => {
       
       const validResult: ValidationResult = {
         valid: true,
-        errors: []
+        errors: [],
       };
       
       const invalidResult: ValidationResult = {
         valid: false,
-        errors: ['Password too short', 'Missing special character']
+        errors: ['Password too short', 'Missing special character'],
       };
       
       expect(validResult.valid).toBe(true);

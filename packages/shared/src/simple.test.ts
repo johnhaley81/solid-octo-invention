@@ -71,7 +71,7 @@ describe('Shared Package', () => {
           errors.push('Password must contain at least one number');
         }
         
-        if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password)) {
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
           errors.push('Password must contain at least one special character');
         }
         
@@ -105,7 +105,7 @@ describe('Shared Package', () => {
         name: 'Test User',
         authMethod: 'password',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       
       expect(user.id).toBeDefined();
@@ -128,7 +128,7 @@ describe('Shared Package', () => {
         userId: '123e4567-e89b-12d3-a456-426614174000',
         sessionToken: 'a'.repeat(64),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       
       expect(session.userId).toBeDefined();
@@ -153,7 +153,7 @@ describe('Shared Package', () => {
       
       const successResponse: SuccessResponse<{ message: string }> = {
         success: true,
-        data: { message: 'Operation completed successfully' }
+        data: { message: 'Operation completed successfully' },
       };
       
       const errorResponse: ErrorResponse = {
@@ -161,8 +161,8 @@ describe('Shared Package', () => {
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Invalid input provided',
-          details: { field: 'email', reason: 'Invalid format' }
-        }
+          details: { field: 'email', reason: 'Invalid format' },
+        },
       };
       
       expect(successResponse.success).toBe(true);
@@ -211,4 +211,3 @@ describe('Shared Package', () => {
     });
   });
 });
-

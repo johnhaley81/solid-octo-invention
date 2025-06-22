@@ -3,6 +3,50 @@
  * Shared between frontend and backend
  */
 
+// WebAuthn type definitions (for environments without DOM types)
+export interface PublicKeyCredentialCreationOptions {
+  challenge: ArrayBuffer;
+  rp: {
+    name: string;
+    id?: string;
+  };
+  user: {
+    id: ArrayBuffer;
+    name: string;
+    displayName: string;
+  };
+  pubKeyCredParams: Array<{
+    type: 'public-key';
+    alg: number;
+  }>;
+  authenticatorSelection?: {
+    authenticatorAttachment?: 'platform' | 'cross-platform';
+    userVerification?: 'required' | 'preferred' | 'discouraged';
+    requireResidentKey?: boolean;
+  };
+  timeout?: number;
+  excludeCredentials?: Array<{
+    type: 'public-key';
+    id: ArrayBuffer;
+    transports?: AuthenticatorTransport[];
+  }>;
+  attestation?: 'none' | 'indirect' | 'direct' | 'enterprise';
+}
+
+export interface PublicKeyCredentialRequestOptions {
+  challenge: ArrayBuffer;
+  timeout?: number;
+  rpId?: string;
+  allowCredentials?: Array<{
+    type: 'public-key';
+    id: ArrayBuffer;
+    transports?: AuthenticatorTransport[];
+  }>;
+  userVerification?: 'required' | 'preferred' | 'discouraged';
+}
+
+export type AuthenticatorTransport = 'usb' | 'nfc' | 'ble' | 'internal';
+
 export type AuthMethod = 'password' | 'webauthn';
 
 export interface User {
@@ -217,4 +261,3 @@ export interface AuthState {
   isLoading: boolean;
   error: AuthError | null;
 }
-

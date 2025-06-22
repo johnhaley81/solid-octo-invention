@@ -33,7 +33,7 @@ describe('Frontend Utilities', () => {
           errors.push('Password must contain at least one number');
         }
         
-        if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password)) {
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
           errors.push('Password must contain at least one special character');
         }
         
@@ -120,8 +120,8 @@ describe('Frontend Utilities', () => {
         return `${diffHours} hours`;
       };
 
-      const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
-      const twoHoursFromNow = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      const oneHourFromNow = new Date(Date.now() + 61 * 60 * 1000); // 61 minutes to ensure it rounds to 1 hour
+      const twoHoursFromNow = new Date(Date.now() + 121 * 60 * 1000); // 121 minutes to ensure it rounds to 2 hours
       const thirtyMinutesFromNow = new Date(Date.now() + 30 * 60 * 1000);
 
       expect(formatExpiryTime(oneHourFromNow)).toBe('1 hours');
@@ -171,25 +171,25 @@ describe('Frontend Utilities', () => {
       const initialState: LoadingState = {
         isLoading: false,
         error: null,
-        data: null
+        data: null,
       };
 
       const loadingState: LoadingState = {
         isLoading: true,
         error: null,
-        data: null
+        data: null,
       };
 
       const successState: LoadingState = {
         isLoading: false,
         error: null,
-        data: { message: 'Success' }
+        data: { message: 'Success' },
       };
 
       const errorState: LoadingState = {
         isLoading: false,
         error: 'Something went wrong',
-        data: null
+        data: null,
       };
 
       expect(initialState.isLoading).toBe(false);
@@ -199,4 +199,3 @@ describe('Frontend Utilities', () => {
     });
   });
 });
-

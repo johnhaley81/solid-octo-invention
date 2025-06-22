@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Effect as E, Context } from 'effect';
-import { DatabaseService, TestDatabaseService } from './database';
-import { WorkerService, TestWorkerService } from './worker';
+import { DatabaseService } from './database';
 import pg from 'pg';
 
 // Test database configuration
@@ -72,7 +71,7 @@ describe('Authentication System', () => {
         // Register user
         const result = yield* db.query(
           'SELECT register_user($1, $2, $3) as user_data',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         return result[0].user_data;
@@ -83,7 +82,7 @@ describe('Authentication System', () => {
       expect(result).toMatchObject({
         email: 'test@example.com',
         name: 'Test User',
-        auth_method: 'password'
+        auth_method: 'password',
       });
       expect(result.id).toBeDefined();
       expect(result.created_at).toBeDefined();
@@ -96,18 +95,18 @@ describe('Authentication System', () => {
         // Register first user
         yield* db.query(
           'SELECT register_user($1, $2, $3)',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         // Try to register with same email
         yield* db.query(
           'SELECT register_user($1, $2, $3)',
-          ['test@example.com', 'Another User', 'AnotherPassword123!']
+          ['test@example.com', 'Another User', 'AnotherPassword123!'],
         );
       });
 
       await expect(
-        E.runPromise(program.pipe(E.provide(RealDatabaseService.of(realDbService))))
+        E.runPromise(program.pipe(E.provide(RealDatabaseService.of(realDbService)))),
       ).rejects.toThrow();
     });
 
@@ -118,7 +117,7 @@ describe('Authentication System', () => {
         // Register user
         const userResult = yield* db.query(
           'SELECT register_user($1, $2, $3) as user_data',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         const userId = userResult[0].user_data.id;
@@ -126,13 +125,13 @@ describe('Authentication System', () => {
         // Check password credentials were created
         const credResult = yield* db.query(
           'SELECT * FROM app_private.password_credentials WHERE user_id = $1',
-          [userId]
+          [userId],
         );
         
         // Check OTP token was created for email verification
         const tokenResult = yield* db.query(
           'SELECT * FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-          [userId, 'email_verification']
+          [userId, 'email_verification'],
         );
         
         return { credentials: credResult[0], token: tokenResult[0] };
@@ -142,14 +141,14 @@ describe('Authentication System', () => {
       
       expect(result.credentials).toMatchObject({
         email_verified_at: null,
-        failed_login_attempts: 0
+        failed_login_attempts: 0,
       });
       expect(result.credentials.password_hash).toBeDefined();
       expect(result.credentials.password_hash).not.toBe('SecurePassword123!'); // Should be hashed
       
       expect(result.token).toMatchObject({
         token_type: 'email_verification',
-        used_at: null
+        used_at: null,
       });
       expect(result.token.token).toBeDefined();
       expect(result.token.expires_at).toBeDefined();
@@ -164,7 +163,7 @@ describe('Authentication System', () => {
         // Register user
         const userResult = yield* db.query(
           'SELECT register_user($1, $2, $3) as user_data',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         const userId = userResult[0].user_data.id;
@@ -172,7 +171,7 @@ describe('Authentication System', () => {
         // Get verification token
         const tokenResult = yield* db.query(
           'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-          [userId, 'email_verification']
+          [userId, 'email_verification'],
         );
         
         const token = tokenResult[0].token;
@@ -180,13 +179,13 @@ describe('Authentication System', () => {
         // Verify email
         const verifyResult = yield* db.query(
           'SELECT verify_email($1) as verified',
-          [token]
+          [token],
         );
         
         // Check credentials are now verified
         const credResult = yield* db.query(
           'SELECT email_verified_at FROM app_private.password_credentials WHERE user_id = $1',
-          [userId]
+          [userId],
         );
         
         return { verified: verifyResult[0].verified, credentials: credResult[0] };
@@ -205,7 +204,7 @@ describe('Authentication System', () => {
         // Try to verify with invalid token
         const result = yield* db.query(
           'SELECT verify_email($1) as verified',
-          ['invalid-token']
+          ['invalid-token'],
         );
         
         return result[0].verified;
@@ -224,7 +223,7 @@ describe('Authentication System', () => {
         // Register and verify user
         const userResult = yield* db.query(
           'SELECT register_user($1, $2, $3) as user_data',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         const userId = userResult[0].user_data.id;
@@ -232,7 +231,7 @@ describe('Authentication System', () => {
         // Get and use verification token
         const tokenResult = yield* db.query(
           'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-          [userId, 'email_verification']
+          [userId, 'email_verification'],
         );
         
         yield* db.query('SELECT verify_email($1)', [tokenResult[0].token]);
@@ -240,7 +239,7 @@ describe('Authentication System', () => {
         // Now try to login
         const loginResult = yield* db.query(
           'SELECT * FROM login_with_password($1, $2)',
-          ['test@example.com', 'SecurePassword123!']
+          ['test@example.com', 'SecurePassword123!'],
         );
         
         return loginResult[0];
@@ -251,7 +250,7 @@ describe('Authentication System', () => {
       expect(result).toMatchObject({
         user_id: expect.any(String),
         session_token: expect.any(String),
-        expires_at: expect.any(Date)
+        expires_at: expect.any(Date),
       });
     });
 
@@ -262,18 +261,18 @@ describe('Authentication System', () => {
         // Register user but don't verify email
         yield* db.query(
           'SELECT register_user($1, $2, $3)',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         // Try to login without verification
         yield* db.query(
           'SELECT * FROM login_with_password($1, $2)',
-          ['test@example.com', 'SecurePassword123!']
+          ['test@example.com', 'SecurePassword123!'],
         );
       });
 
       await expect(
-        E.runPromise(program.pipe(E.provide(RealDatabaseService.of(realDbService))))
+        E.runPromise(program.pipe(E.provide(RealDatabaseService.of(realDbService)))),
       ).rejects.toThrow();
     });
 
@@ -284,14 +283,14 @@ describe('Authentication System', () => {
         // Register and verify user
         const userResult = yield* db.query(
           'SELECT register_user($1, $2, $3) as user_data',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         const userId = userResult[0].user_data.id;
         
         const tokenResult = yield* db.query(
           'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-          [userId, 'email_verification']
+          [userId, 'email_verification'],
         );
         
         yield* db.query('SELECT verify_email($1)', [tokenResult[0].token]);
@@ -299,12 +298,12 @@ describe('Authentication System', () => {
         // Try to login with wrong password
         yield* db.query(
           'SELECT * FROM login_with_password($1, $2)',
-          ['test@example.com', 'WrongPassword']
+          ['test@example.com', 'WrongPassword'],
         );
       });
 
       await expect(
-        E.runPromise(program.pipe(E.provide(RealDatabaseService.of(realDbService))))
+        E.runPromise(program.pipe(E.provide(RealDatabaseService.of(realDbService)))),
       ).rejects.toThrow();
     });
 
@@ -315,14 +314,14 @@ describe('Authentication System', () => {
         // Register and verify user
         const userResult = yield* db.query(
           'SELECT register_user($1, $2, $3) as user_data',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         const userId = userResult[0].user_data.id;
         
         const tokenResult = yield* db.query(
           'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-          [userId, 'email_verification']
+          [userId, 'email_verification'],
         );
         
         yield* db.query('SELECT verify_email($1)', [tokenResult[0].token]);
@@ -331,21 +330,25 @@ describe('Authentication System', () => {
         try {
           yield* db.query(
             'SELECT * FROM login_with_password($1, $2)',
-            ['test@example.com', 'WrongPassword1']
+            ['test@example.com', 'WrongPassword1'],
           );
-        } catch {}
+        } catch {
+          // Expected to fail
+        }
         
         try {
           yield* db.query(
             'SELECT * FROM login_with_password($1, $2)',
-            ['test@example.com', 'WrongPassword2']
+            ['test@example.com', 'WrongPassword2'],
           );
-        } catch {}
+        } catch {
+          // Expected to fail
+        }
         
         // Check failed attempts count
         const credResult = yield* db.query(
           'SELECT failed_login_attempts FROM app_private.password_credentials WHERE user_id = $1',
-          [userId]
+          [userId],
         );
         
         return credResult[0].failed_login_attempts;
@@ -364,7 +367,7 @@ describe('Authentication System', () => {
         // Register user with password auth
         const userResult = yield* db.query(
           'SELECT register_user($1, $2, $3) as user_data',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         const userId = userResult[0].user_data.id;
@@ -372,13 +375,13 @@ describe('Authentication System', () => {
         // Switch to WebAuthn
         const switchResult = yield* db.query(
           'SELECT switch_auth_method($1, $2) as user_data',
-          [userId, 'webauthn']
+          [userId, 'webauthn'],
         );
         
         // Check password credentials were cleaned up
         const credResult = yield* db.query(
           'SELECT * FROM app_private.password_credentials WHERE user_id = $1',
-          [userId]
+          [userId],
         );
         
         return { user: switchResult[0].user_data, credentials: credResult };
@@ -397,14 +400,14 @@ describe('Authentication System', () => {
         // Register user with password auth then switch to webauthn
         const userResult = yield* db.query(
           'SELECT register_user($1, $2, $3) as user_data',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         const userId = userResult[0].user_data.id;
         
         yield* db.query(
           'SELECT switch_auth_method($1, $2)',
-          [userId, 'webauthn']
+          [userId, 'webauthn'],
         );
         
         // Add a mock webauthn credential
@@ -412,19 +415,19 @@ describe('Authentication System', () => {
           `INSERT INTO app_private.webauthn_credentials 
            (user_id, credential_id, public_key, counter, device_type) 
            VALUES ($1, $2, $3, $4, $5)`,
-          [userId, 'test-cred-id', 'test-public-key', 0, 'platform']
+          [userId, 'test-cred-id', 'test-public-key', 0, 'platform'],
         );
         
         // Switch back to password
         const switchResult = yield* db.query(
           'SELECT switch_auth_method($1, $2) as user_data',
-          [userId, 'password']
+          [userId, 'password'],
         );
         
         // Check webauthn credentials were cleaned up
         const credResult = yield* db.query(
           'SELECT * FROM app_private.webauthn_credentials WHERE user_id = $1',
-          [userId]
+          [userId],
         );
         
         return { user: switchResult[0].user_data, credentials: credResult };
@@ -445,21 +448,21 @@ describe('Authentication System', () => {
         // Register, verify, and login user
         const userResult = yield* db.query(
           'SELECT register_user($1, $2, $3) as user_data',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         const userId = userResult[0].user_data.id;
         
         const tokenResult = yield* db.query(
           'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-          [userId, 'email_verification']
+          [userId, 'email_verification'],
         );
         
         yield* db.query('SELECT verify_email($1)', [tokenResult[0].token]);
         
         const loginResult = yield* db.query(
           'SELECT * FROM login_with_password($1, $2)',
-          ['test@example.com', 'SecurePassword123!']
+          ['test@example.com', 'SecurePassword123!'],
         );
         
         const sessionToken = loginResult[0].session_token;
@@ -467,7 +470,7 @@ describe('Authentication System', () => {
         // Retrieve user from session
         const sessionResult = yield* db.query(
           'SELECT current_user_from_session($1) as user_data',
-          [sessionToken]
+          [sessionToken],
         );
         
         return sessionResult[0].user_data;
@@ -478,7 +481,7 @@ describe('Authentication System', () => {
       expect(result).toMatchObject({
         email: 'test@example.com',
         name: 'Test User',
-        auth_method: 'password'
+        auth_method: 'password',
       });
     });
 
@@ -489,21 +492,21 @@ describe('Authentication System', () => {
         // Register, verify, and login user
         const userResult = yield* db.query(
           'SELECT register_user($1, $2, $3) as user_data',
-          ['test@example.com', 'Test User', 'SecurePassword123!']
+          ['test@example.com', 'Test User', 'SecurePassword123!'],
         );
         
         const userId = userResult[0].user_data.id;
         
         const tokenResult = yield* db.query(
           'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-          [userId, 'email_verification']
+          [userId, 'email_verification'],
         );
         
         yield* db.query('SELECT verify_email($1)', [tokenResult[0].token]);
         
         const loginResult = yield* db.query(
           'SELECT * FROM login_with_password($1, $2)',
-          ['test@example.com', 'SecurePassword123!']
+          ['test@example.com', 'SecurePassword123!'],
         );
         
         const sessionToken = loginResult[0].session_token;
@@ -511,13 +514,13 @@ describe('Authentication System', () => {
         // Logout
         const logoutResult = yield* db.query(
           'SELECT logout($1) as success',
-          [sessionToken]
+          [sessionToken],
         );
         
         // Try to use session after logout
         const sessionResult = yield* db.query(
           'SELECT current_user_from_session($1) as user_data',
-          [sessionToken]
+          [sessionToken],
         );
         
         return { logoutSuccess: logoutResult[0].success, user: sessionResult[0].user_data };
@@ -537,17 +540,17 @@ describe('Authentication System', () => {
         
         // Check auth_method enum
         const authMethodResult = yield* db.query(
-          `SELECT unnest(enum_range(NULL::auth_method)) as auth_method`
+          'SELECT unnest(enum_range(NULL::auth_method)) as auth_method',
         );
         
         // Check otp_token_type enum
         const tokenTypeResult = yield* db.query(
-          `SELECT unnest(enum_range(NULL::otp_token_type)) as token_type`
+          'SELECT unnest(enum_range(NULL::otp_token_type)) as token_type',
         );
         
         return {
           authMethods: authMethodResult.map(r => r.auth_method),
-          tokenTypes: tokenTypeResult.map(r => r.token_type)
+          tokenTypes: tokenTypeResult.map(r => r.token_type),
         };
       });
 
@@ -577,4 +580,3 @@ describe('Authentication System', () => {
     });
   });
 });
-

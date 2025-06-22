@@ -219,5 +219,4 @@ export const ErrorUtils = {
   },
 };
 
-// Re-export authentication errors
-export * from './auth.js';
+// Authentication errors are exported separately to avoid conflicts

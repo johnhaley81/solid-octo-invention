@@ -220,5 +220,4 @@ export type Either<L, R> =
   | { readonly _tag: 'Left'; readonly left: L }
   | { readonly _tag: 'Right'; readonly right: R };
 
-// Re-export authentication types
-export * from './auth.js';
+// Authentication types are exported separately from schemas

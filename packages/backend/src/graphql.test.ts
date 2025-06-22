@@ -1,6 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Effect as E } from 'effect';
-import { DatabaseService } from './services/database';
 import pg from 'pg';
 import request from 'supertest';
 import express from 'express';
@@ -34,7 +32,7 @@ const createTestApp = () => {
       pgSettings: {
         statement_timeout: '30s',
       },
-    })
+    }),
   );
   
   return app;
@@ -86,7 +84,7 @@ describe('GraphQL Authentication API', () => {
       const variables = {
         email: 'test@example.com',
         name: 'Test User',
-        password: 'SecurePassword123!'
+        password: 'SecurePassword123!',
       };
 
       const response = await request(app)
@@ -98,7 +96,7 @@ describe('GraphQL Authentication API', () => {
       expect(response.body.data.registerUser).toMatchObject({
         email: 'test@example.com',
         name: 'Test User',
-        authMethod: 'PASSWORD'
+        authMethod: 'PASSWORD',
       });
       expect(response.body.data.registerUser.id).toBeDefined();
       expect(response.body.data.registerUser.createdAt).toBeDefined();
@@ -117,7 +115,7 @@ describe('GraphQL Authentication API', () => {
       const variables = {
         email: 'duplicate@example.com',
         name: 'Test User',
-        password: 'SecurePassword123!'
+        password: 'SecurePassword123!',
       };
 
       // First registration should succeed
@@ -148,7 +146,7 @@ describe('GraphQL Authentication API', () => {
       const variables = {
         email: 'weak@example.com',
         name: 'Test User',
-        password: 'weak' // Too weak
+        password: 'weak', // Too weak
       };
 
       const response = await request(app)
@@ -179,8 +177,8 @@ describe('GraphQL Authentication API', () => {
           variables: {
             email: 'verify@example.com',
             name: 'Verify User',
-            password: 'SecurePassword123!'
-          }
+            password: 'SecurePassword123!',
+          },
         })
         .expect(200);
 
@@ -189,7 +187,7 @@ describe('GraphQL Authentication API', () => {
       // Get the verification token from database
       const tokenResult = await pool.query(
         'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-        [userId, 'email_verification']
+        [userId, 'email_verification'],
       );
 
       const token = tokenResult.rows[0].token;
@@ -205,7 +203,7 @@ describe('GraphQL Authentication API', () => {
         .post('/graphql')
         .send({
           query: verifyMutation,
-          variables: { token }
+          variables: { token },
         })
         .expect(200);
 
@@ -224,7 +222,7 @@ describe('GraphQL Authentication API', () => {
         .post('/graphql')
         .send({
           query: mutation,
-          variables: { token: 'invalid-token' }
+          variables: { token: 'invalid-token' },
         })
         .expect(200);
 
@@ -251,8 +249,8 @@ describe('GraphQL Authentication API', () => {
           variables: {
             email: 'login@example.com',
             name: 'Login User',
-            password: 'SecurePassword123!'
-          }
+            password: 'SecurePassword123!',
+          },
         })
         .expect(200);
 
@@ -261,7 +259,7 @@ describe('GraphQL Authentication API', () => {
       // Get and use verification token
       const tokenResult = await pool.query(
         'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-        [userId, 'email_verification']
+        [userId, 'email_verification'],
       );
 
       await pool.query('SELECT verify_email($1)', [tokenResult.rows[0].token]);
@@ -283,8 +281,8 @@ describe('GraphQL Authentication API', () => {
           query: loginMutation,
           variables: {
             email: 'login@example.com',
-            password: 'SecurePassword123!'
-          }
+            password: 'SecurePassword123!',
+          },
         })
         .expect(200);
 
@@ -292,7 +290,7 @@ describe('GraphQL Authentication API', () => {
       expect(loginResponse.body.data.loginWithPassword).toMatchObject({
         userId: expect.any(String),
         sessionToken: expect.any(String),
-        expiresAt: expect.any(String)
+        expiresAt: expect.any(String),
       });
     });
 
@@ -313,8 +311,8 @@ describe('GraphQL Authentication API', () => {
           variables: {
             email: 'unverified@example.com',
             name: 'Unverified User',
-            password: 'SecurePassword123!'
-          }
+            password: 'SecurePassword123!',
+          },
         })
         .expect(200);
 
@@ -333,8 +331,8 @@ describe('GraphQL Authentication API', () => {
           query: loginMutation,
           variables: {
             email: 'unverified@example.com',
-            password: 'SecurePassword123!'
-          }
+            password: 'SecurePassword123!',
+          },
         })
         .expect(200);
 
@@ -359,8 +357,8 @@ describe('GraphQL Authentication API', () => {
           variables: {
             email: 'wrongpass@example.com',
             name: 'Wrong Pass User',
-            password: 'SecurePassword123!'
-          }
+            password: 'SecurePassword123!',
+          },
         })
         .expect(200);
 
@@ -368,7 +366,7 @@ describe('GraphQL Authentication API', () => {
 
       const tokenResult = await pool.query(
         'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-        [userId, 'email_verification']
+        [userId, 'email_verification'],
       );
 
       await pool.query('SELECT verify_email($1)', [tokenResult.rows[0].token]);
@@ -388,8 +386,8 @@ describe('GraphQL Authentication API', () => {
           query: loginMutation,
           variables: {
             email: 'wrongpass@example.com',
-            password: 'WrongPassword!'
-          }
+            password: 'WrongPassword!',
+          },
         })
         .expect(200);
 
@@ -416,8 +414,8 @@ describe('GraphQL Authentication API', () => {
           variables: {
             email: 'switch@example.com',
             name: 'Switch User',
-            password: 'SecurePassword123!'
-          }
+            password: 'SecurePassword123!',
+          },
         })
         .expect(200);
 
@@ -439,15 +437,15 @@ describe('GraphQL Authentication API', () => {
           query: switchMutation,
           variables: {
             userId,
-            newMethod: 'WEBAUTHN'
-          }
+            newMethod: 'WEBAUTHN',
+          },
         })
         .expect(200);
 
       expect(switchResponse.body.errors).toBeUndefined();
       expect(switchResponse.body.data.switchAuthMethod).toMatchObject({
         id: userId,
-        authMethod: 'WEBAUTHN'
+        authMethod: 'WEBAUTHN',
       });
     });
   });
@@ -470,8 +468,8 @@ describe('GraphQL Authentication API', () => {
           variables: {
             email: 'session@example.com',
             name: 'Session User',
-            password: 'SecurePassword123!'
-          }
+            password: 'SecurePassword123!',
+          },
         })
         .expect(200);
 
@@ -479,7 +477,7 @@ describe('GraphQL Authentication API', () => {
 
       const tokenResult = await pool.query(
         'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-        [userId, 'email_verification']
+        [userId, 'email_verification'],
       );
 
       await pool.query('SELECT verify_email($1)', [tokenResult.rows[0].token]);
@@ -498,8 +496,8 @@ describe('GraphQL Authentication API', () => {
           query: loginMutation,
           variables: {
             email: 'session@example.com',
-            password: 'SecurePassword123!'
-          }
+            password: 'SecurePassword123!',
+          },
         })
         .expect(200);
 
@@ -521,7 +519,7 @@ describe('GraphQL Authentication API', () => {
         .post('/graphql')
         .send({
           query: currentUserMutation,
-          variables: { sessionToken }
+          variables: { sessionToken },
         })
         .expect(200);
 
@@ -530,7 +528,7 @@ describe('GraphQL Authentication API', () => {
         id: userId,
         email: 'session@example.com',
         name: 'Session User',
-        authMethod: 'PASSWORD'
+        authMethod: 'PASSWORD',
       });
     });
 
@@ -551,8 +549,8 @@ describe('GraphQL Authentication API', () => {
           variables: {
             email: 'logout@example.com',
             name: 'Logout User',
-            password: 'SecurePassword123!'
-          }
+            password: 'SecurePassword123!',
+          },
         })
         .expect(200);
 
@@ -560,7 +558,7 @@ describe('GraphQL Authentication API', () => {
 
       const tokenResult = await pool.query(
         'SELECT token FROM app_private.otp_tokens WHERE user_id = $1 AND token_type = $2',
-        [userId, 'email_verification']
+        [userId, 'email_verification'],
       );
 
       await pool.query('SELECT verify_email($1)', [tokenResult.rows[0].token]);
@@ -579,8 +577,8 @@ describe('GraphQL Authentication API', () => {
           query: loginMutation,
           variables: {
             email: 'logout@example.com',
-            password: 'SecurePassword123!'
-          }
+            password: 'SecurePassword123!',
+          },
         })
         .expect(200);
 
@@ -597,7 +595,7 @@ describe('GraphQL Authentication API', () => {
         .post('/graphql')
         .send({
           query: logoutMutation,
-          variables: { sessionToken }
+          variables: { sessionToken },
         })
         .expect(200);
 
@@ -617,7 +615,7 @@ describe('GraphQL Authentication API', () => {
         .post('/graphql')
         .send({
           query: currentUserMutation,
-          variables: { sessionToken }
+          variables: { sessionToken },
         })
         .expect(200);
 
@@ -658,7 +656,7 @@ describe('GraphQL Authentication API', () => {
       const mutations = response.body.data.__schema.mutationType.fields;
       const authMutations = mutations.filter((field: any) => 
         ['registerUser', 'verifyEmail', 'loginWithPassword', 'switchAuthMethod', 'logout', 'currentUserFromSession']
-          .includes(field.name)
+          .includes(field.name),
       );
 
       expect(authMutations.length).toBeGreaterThan(0);
@@ -668,8 +666,8 @@ describe('GraphQL Authentication API', () => {
       expect(registerUser).toBeDefined();
       expect(registerUser.args).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ name: 'input' })
-        ])
+          expect.objectContaining({ name: 'input' }),
+        ]),
       );
     });
 
@@ -703,10 +701,9 @@ describe('GraphQL Authentication API', () => {
       expect(authMethodEnum.enumValues).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ name: 'PASSWORD' }),
-          expect.objectContaining({ name: 'WEBAUTHN' })
-        ])
+          expect.objectContaining({ name: 'WEBAUTHN' }),
+        ]),
       );
     });
   });
 });
-

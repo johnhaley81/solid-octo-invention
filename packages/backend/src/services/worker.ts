@@ -97,7 +97,7 @@ const taskHandlers = {
     };
     console.log('Sending auth method change notification:', { 
       email: typedPayload.email, 
-      change: `${typedPayload.oldMethod} -> ${typedPayload.newMethod}` 
+      change: `${typedPayload.oldMethod} -> ${typedPayload.newMethod}`, 
     });
     // TODO: Implement security notification email
   },
