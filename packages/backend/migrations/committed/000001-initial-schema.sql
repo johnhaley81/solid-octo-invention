@@ -1,5 +1,9 @@
+--! Previous: -
+--! Hash: sha1:adc83b19e793491b1c6ea0fd8b46cd9f32e592fc
+
 -- Initial database schema for Solid Octo Invention
 -- This file contains the current state of the database schema
+
 
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
