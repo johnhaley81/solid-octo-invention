@@ -161,20 +161,57 @@ pnpm test
 
 ## 🔍 Code Quality
 
-### Linting
+### Pre-Push Hook
+
+This project includes a comprehensive pre-push git hook that automatically runs quality checks before allowing pushes:
+
+- **Type Checking**: Ensures TypeScript types are valid across all packages
+- **Linting**: Runs ESLint to catch code quality issues
+- **Formatting**: Verifies code formatting with Prettier
+- **Building**: Ensures all packages build successfully
+- **Testing**: Runs unit tests to verify functionality
+- **Secret Scanning**: Uses trufflehog to detect potential secrets
+
+The hook runs automatically on `git push`. Configure it via `.pre-push-config`:
+
+```bash
+# Enable/disable specific checks
+ENABLE_BUILD_CHECKS=true
+ENABLE_LINT_CHECKS=true
+ENABLE_TYPE_CHECKS=true
+ENABLE_TEST_CHECKS=true
+ENABLE_SECRET_SCANNING=true
+
+# Skip checks for emergency branches
+SKIP_BRANCHES="hotfix/*,release/*"
+
+# Adjust timeout for large projects
+CHECK_TIMEOUT=600
+```
+
+To bypass the hook in emergencies:
+```bash
+git push --no-verify
+```
+
+### Manual Quality Checks
+
+You can also run quality checks manually:
+
+#### Linting
 
 ```bash
 pnpm lint
 pnpm lint:fix
 ```
 
-### Type Checking
+#### Type Checking
 
 ```bash
 pnpm type-check
 ```
 
-### Formatting
+#### Formatting
 
 ```bash
 pnpm format

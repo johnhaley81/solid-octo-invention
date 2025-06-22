@@ -1,0 +1,30 @@
+# Pre-push hook configuration for solid-octo-invention
+# This file allows you to customize the behavior of the pre-push git hook
+
+# Enable/disable specific checks (true/false)
+ENABLE_BUILD_CHECKS=true
+ENABLE_LINT_CHECKS=true
+ENABLE_TYPE_CHECKS=true
+ENABLE_TEST_CHECKS=true
+ENABLE_SECRET_SCANNING=true
+
+# Skip dependency installation if dependencies are already up to date
+# Set to true if you're confident dependencies are installed and current
+SKIP_DEPENDENCY_INSTALL=false
+
+# Skip checks for specific branches (comma-separated list)
+# Useful for emergency hotfixes or automated branches
+# Example: SKIP_BRANCHES="hotfix/*,release/*,dependabot/*"
+SKIP_BRANCHES=""
+
+# Timeout for each check in seconds (default: 600 = 10 minutes)
+# Increase this for large projects or slow CI environments
+CHECK_TIMEOUT=600
+
+# Advanced: Override specific commands (leave empty to use defaults)
+# These will replace the default pnpm workspace commands
+CUSTOM_LINT_COMMAND=""
+CUSTOM_BUILD_COMMAND=""
+CUSTOM_TEST_COMMAND=""
+CUSTOM_TYPE_CHECK_COMMAND=""
+

@@ -1,0 +1,65 @@
+# Trufflehog ignore patterns for solid-octo-invention
+# Add patterns for files that should be excluded from secret scanning
+
+# Lock files and generated files (often contain hashes that trigger false positives)
+pnpm-lock\.yaml$
+package-lock\.json$
+yarn\.lock$
+
+# Build artifacts and dependencies
+node_modules/.*
+dist/.*
+build/.*
+\.next/.*
+\.nuxt/.*
+
+# Test fixtures and mock data
+test/fixtures/.*
+tests/fixtures/.*
+__tests__/fixtures/.*
+.*\.test\.ts$
+.*\.test\.tsx$
+.*\.spec\.ts$
+.*\.spec\.tsx$
+
+# Configuration templates and examples
+.*\.example$
+.*\.template$
+.*\.sample$
+config/.*\.example$
+config/.*\.template$
+
+# Documentation files
+.*\.md$
+.*\.txt$
+docs/.*
+README.*
+
+# Environment and configuration files that might contain example values
+\.env\.example$
+\.env\.template$
+\.env\.sample$
+
+# Database schema dumps and migrations (may contain example data)
+schema-dump\.sql$
+migrations/.*\.sql$
+
+# Generated GraphQL files
+.*\.generated\.ts$
+.*\.generated\.tsx$
+
+# Cursor AI rules and configuration
+\.cursor/.*
+\.cursorrules$
+
+# Docker and CI configuration
+Dockerfile.*
+docker-compose.*\.yml$
+\.github/workflows/.*
+
+# TypeScript and build configuration
+tsconfig.*\.json$
+vite\.config\.ts$
+vitest\.config\.ts$
+playwright\.config\.ts$
+
