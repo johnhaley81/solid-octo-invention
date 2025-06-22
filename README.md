@@ -167,9 +167,11 @@ This will automatically detect common problems and suggest fixes.
 
 #### "Error: Missing data at DATABASE_URL"
 
-This error occurs when the backend cannot find the `DATABASE_URL` environment variable.
+This error occurs when the backend cannot find the `DATABASE_URL` environment
+variable.
 
 **Solution:**
+
 1. Make sure you've copied the environment file:
    ```bash
    cp .env.example .env
@@ -188,15 +190,19 @@ This error occurs when the backend cannot find the `DATABASE_URL` environment va
 This error occurs when Docker is not running or not installed.
 
 **Solutions:**
-- **Install Docker**: Download Docker Desktop from [docker.com](https://docker.com)
+
+- **Install Docker**: Download Docker Desktop from
+  [docker.com](https://docker.com)
 - **Start Docker**: Make sure Docker Desktop is running
-- **Alternative**: Set up a local PostgreSQL instance and update the `DATABASE_URL` in your `.env` file
+- **Alternative**: Set up a local PostgreSQL instance and update the
+  `DATABASE_URL` in your `.env` file
 
 #### "ECONNREFUSED" or Database Connection Errors
 
 This happens when the database service is not accessible.
 
 **Solutions:**
+
 1. Check if Docker containers are running:
    ```bash
    docker ps
@@ -217,6 +223,7 @@ This happens when the database service is not accessible.
 If you get port conflicts (3000, 5173, 5432, 6379):
 
 **Solutions:**
+
 1. Stop conflicting services
 2. Or modify ports in `.env` and `docker-compose.yml`
 3. Or use different ports:

@@ -171,10 +171,10 @@ const program = ServerProgram.pipe(
   E.provide(MainLayer),
   E.provide(LoggerLayer),
   Logger.withMinimumLogLevel(LogLevel.Info),
-  E.catchAll(error => 
+  E.catchAll(error =>
     E.gen(function* () {
       yield* E.logError('Failed to start server', { error });
-      
+
       // Check if it's a database connection error
       if (error instanceof Error && error.message.includes('DATABASE_URL')) {
         console.error('\n🚨 DATABASE_URL Error:');
@@ -187,11 +187,12 @@ const program = ServerProgram.pipe(
         console.error('3. Run database migrations:');
         console.error('   pnpm migrate:up');
         console.error('4. Then try running pnpm dev again');
-      } else if (error instanceof Error && (
-        error.message.includes('connect') || 
-        error.message.includes('ECONNREFUSED') ||
-        error.message.includes('database')
-      )) {
+      } else if (
+        error instanceof Error &&
+        (error.message.includes('connect') ||
+          error.message.includes('ECONNREFUSED') ||
+          error.message.includes('database'))
+      ) {
         console.error('\n🚨 Database Connection Error:');
         console.error('Cannot connect to the PostgreSQL database.');
         console.error('\n📋 To fix this:');
@@ -201,11 +202,11 @@ const program = ServerProgram.pipe(
         console.error('3. Wait for the database to be ready, then run:');
         console.error('   pnpm migrate:up');
         console.error('4. Then try running pnpm dev again');
-        console.error('\n💡 If you don\'t have Docker, you can:');
+        console.error("\n💡 If you don't have Docker, you can:");
         console.error('- Install Docker Desktop from https://docker.com');
         console.error('- Or set up a local PostgreSQL instance and update DATABASE_URL in .env');
       }
-      
+
       process.exit(1);
     }),
   ),

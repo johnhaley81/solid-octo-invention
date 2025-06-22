@@ -59,15 +59,18 @@ function checkFile(filePath, name, instructions) {
  */
 function checkDockerServices() {
   try {
-    const output = execSync('docker ps --format "table {{.Names}}"', { 
-      stdio: 'pipe', 
-      encoding: 'utf8' 
+    const output = execSync('docker ps --format "table {{.Names}}"', {
+      stdio: 'pipe',
+      encoding: 'utf8',
     });
-    
-    const runningContainers = output.split('\n').slice(1).filter(line => line.trim());
+
+    const runningContainers = output
+      .split('\n')
+      .slice(1)
+      .filter(line => line.trim());
     const hasPostgres = runningContainers.some(name => name.includes('postgres'));
     const hasRedis = runningContainers.some(name => name.includes('redis'));
-    
+
     if (hasPostgres && hasRedis) {
       console.log('✅ Database services are running');
       return true;
@@ -138,4 +141,3 @@ if (hasErrors) {
   console.log('✅ All prerequisites are met! You can run: pnpm dev');
   process.exit(0);
 }
-
