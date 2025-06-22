@@ -24,12 +24,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@effect/schema": "^0.60.0",
-    "effect": "^2.19.0"
+    "@effect/schema": "^0.75.5",
+    "effect": "^3.16.8"
   },
   "devDependencies": {},
   "engines": {
     "node": ">=18.0.0"
   }
 }
-
