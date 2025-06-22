@@ -50,18 +50,21 @@ packages/
 
 ## Database Migration Rules
 
-**CRITICAL**: Database migrations must follow the Graphile Migrate workflow:
+**CRITICAL**: Database migrations must NEVER be committed in development:
 
-1. **Never manually edit committed migration files** in `migrations/committed/`
-2. **Always use the proper migration workflow**:
-   - Add new schema changes to `migrations/current.sql`
-   - Run `pnpm migrate:commit` to commit the migration
-   - This automatically creates properly formatted migration files with headers
-3. **Migration files require specific format**:
-   - Must have `--! Previous:` and `--! Hash:` headers
-   - Must have exactly two newlines after headers
-   - Only `migrate:commit` command generates this format correctly
-4. **Never manually create or edit migration files** - always use Graphile Migrate commands
+1. **NEVER commit migrations** - migrations are only committed on `prod` branch
+2. **Always work with `current.sql`**:
+   - Add all schema changes to `migrations/current.sql`
+   - Never run `pnpm migrate:commit` in development
+   - Keep all changes in `current.sql` until production deployment
+3. **Migration workflow**:
+   - Development: Work only with `migrations/current.sql`
+   - Production: Only `prod` branch commits migrations automatically
+   - CI validates schema consistency via schema dumps
+4. **Schema validation**:
+   - Post-migration script generates schema dumps
+   - CI ensures schema dump matches expected state
+   - Any schema drift causes CI failure
 
 ## Architecture Layers
 

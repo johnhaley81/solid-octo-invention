@@ -441,7 +441,7 @@ jobs:
       - name: Check for committed migrations (prod branch only)
         if: github.base_ref == 'prod' || github.ref == 'refs/heads/prod'
         run: |
-          echo "🔍 Checking for uncommitted database migrations on prod branch..."
+          echo "🔍 Checking for uncommitted database migrations..."
 
           # Check if current.sql exists and has non-whitespace content
           if [ -f "packages/backend/migrations/current.sql" ] && [ -n "$(grep -v '^[[:space:]]*$' packages/backend/migrations/current.sql)" ]; then
@@ -449,66 +449,39 @@ jobs:
             echo "📋 Content of current.sql:"
             cat packages/backend/migrations/current.sql
             echo ""
-            echo "🚨 All database schema changes must be committed using Graphile Migrate before merging to prod."
+            echo "🚨 All database schema changes must be committed using Graphile Migrate before PR is ready for review."
+            echo "📖 Run 'pnpm migrate:commit' to commit your migrations."
+            echo "📚 See: https://github.com/graphile/migrate#committing-migrations"
+            exit 1
+          fi
+
+          # Check if there are any .sql files in current/ directory
+          if [ -d "packages/backend/migrations/current" ] && [ "$(ls -A packages/backend/migrations/current 2>/dev/null)" ]; then
+            echo "❌ ERROR: Uncommitted migration files found in current/ directory"
+            echo "📁 Files found:"
+            ls -la packages/backend/migrations/current/
+            echo ""
+            echo "���� All migration files must be committed before PR is ready for review."
             echo "📖 Run 'pnpm migrate:commit' to commit your migrations."
             exit 1
           fi
 
-          echo "✅ Migration validation passed for prod branch!"
+          # Check for schema changes without migrations
+          echo "🔍 Checking for potential schema changes in committed files..."
 
-      - name: Validate schema consistency
-        run: |
-          echo "🔍 Validating database schema consistency..."
-          
-          cd packages/backend
-          
-          # Create test database configuration
-          cat > .gmrc << EOF
-          {
-            "connectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_migration_test",
-            "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_migration_test_shadow", 
-            "rootConnectionString": "postgresql://postgres:postgres@localhost:5432/postgres",
-            "pgSettings": {
-              "search_path": "public"
-            },
-            "afterReset": [],
-            "afterAllMigrations": [],
-            "afterCurrent": ["node scripts/dump-schema.js"]
-          }
-          EOF
-          
-          # Run migrations (this will also generate schema dump via afterCurrent hook)
-          echo "📦 Running migrations..."
-          pnpm migrate:up
-          
-          # Check if schema dump was generated
-          if [ ! -f "schema-dump.sql" ]; then
-            echo "❌ ERROR: Schema dump was not generated"
-            exit 1
+          # Get list of changed files in this PR
+          git fetch origin ${{ github.base_ref }}
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+
+          # Check if any SQL files were modified outside of committed migrations
+          if echo "$CHANGED_FILES" | grep -E "\.(sql)$" | grep -v "packages/backend/migrations/committed/" | grep -q .; then
+            echo "⚠️  WARNING: SQL files were modified outside of committed migrations directory"
+            echo "📁 Modified SQL files:"
+            echo "$CHANGED_FILES" | grep -E "\.(sql)$" | grep -v "packages/backend/migrations/committed/" || true
+            echo ""
+            echo "💡 If these are schema changes, ensure they are properly migrated using Graphile Migrate."
           fi
-          
-          echo "📊 Generated schema dump size: $(wc -c < schema-dump.sql) bytes"
-          
-          # Compare with committed schema dump (if it exists)
-          if git show HEAD:packages/backend/schema-dump.sql > committed-schema-dump.sql 2>/dev/null; then
-            echo "🔍 Comparing schema dump with committed version..."
-            
-            # Check if there are differences (ignoring whitespace)
-            if ! diff -w committed-schema-dump.sql schema-dump.sql; then
-              echo "❌ ERROR: Schema dump differs from committed version"
-              echo "📋 Differences found between expected and actual schema"
-              echo ""
-              echo "🚨 This indicates the database schema has changed but the schema dump wasn't updated."
-              echo "📝 Please run 'pnpm migrate:dump-schema' and commit the updated schema-dump.sql file."
-              exit 1
-            else
-              echo "✅ Schema dump matches committed version"
-            fi
-          else
-            echo "⚠️  No committed schema dump found - this is expected for new projects"
-          fi
-          
-          echo "✅ Schema validation completed successfully!"
+
           echo "✅ Migration validation passed! All migrations appear to be committed."
 
   # Job 9: PR status check

@@ -21,6 +21,7 @@
     "migrate:reset": "graphile-migrate reset --erase && graphile-migrate migrate",
     "migrate:commit": "graphile-migrate commit",
     "migrate:watch": "graphile-migrate watch",
+    "migrate:dump-schema": "node scripts/dump-schema.js",
     "worker:start": "tsx src/worker/index.ts",
     "db:seed": "tsx scripts/seed.ts"
   },
