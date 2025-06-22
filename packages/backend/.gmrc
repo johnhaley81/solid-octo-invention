@@ -1,14 +1,9 @@
 {
-  "connectionString": ":DATABASE_URL",
-  "shadowConnectionString": ":SHADOW_DATABASE_URL", 
-  "rootConnectionString": ":ROOT_DATABASE_URL",
+  "connectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention",
+  "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_shadow", 
+  "rootConnectionString": "postgresql://postgres:postgres@localhost:5432/postgres",
   "pgSettings": {
     "search_path": "public"
-  },
-  "placeholders": {
-    ":DATABASE_URL": "!ENV",
-    ":SHADOW_DATABASE_URL": "!ENV",
-    ":ROOT_DATABASE_URL": "!ENV"
   },
   "afterReset": [],
   "afterAllMigrations": [],

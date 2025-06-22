@@ -317,11 +317,23 @@ jobs:
           ROOT_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
 
       - name: Run database migrations
-        run: cd packages/backend && pnpm migrate:up
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e
-          SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e_shadow
-          ROOT_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+        run: |
+          cd packages/backend
+          # Override .gmrc with E2E database URLs
+          cat > .gmrc << EOF
+          {
+            "connectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e",
+            "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e_shadow", 
+            "rootConnectionString": "postgresql://postgres:postgres@localhost:5432/postgres",
+            "pgSettings": {
+              "search_path": "public"
+            },
+            "afterReset": [],
+            "afterAllMigrations": [],
+            "afterCurrent": []
+          }
+          EOF
+          pnpm migrate:up
 
       - name: Start backend server
         run: pnpm --filter backend start &
