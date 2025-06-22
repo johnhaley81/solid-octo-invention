@@ -64,6 +64,37 @@ export class DatabaseError extends Error {
 - Add automatic timestamps with triggers
 - Keep schema simple and focused on core domain
 
+### Soft Delete Pattern (REQUIRED)
+
+**All tables MUST implement soft deletes using `deleted_at TIMESTAMPTZ` instead of hard deletes:**
+
+```sql
+-- Every table must include this column
+deleted_at TIMESTAMPTZ DEFAULT NULL
+```
+
+**Key principles:**
+- Hard deletes are prohibited - use `deleted_at = NOW()` instead
+- All tables have triggers that prevent accidental hard deletes
+- Use `@graphile-contrib/pg-omit-archived` for automatic GraphQL filtering
+- RLS policies must respect soft delete status
+- Create partial indexes for performance: `WHERE deleted_at IS NULL`
+
+**Database functions available:**
+- `soft_delete_record(table_name, record_id)` - Soft delete a record
+- `restore_record(table_name, record_id)` - Restore a soft deleted record
+- `setup_soft_delete_for_table(table_name)` - Set up infrastructure for new tables
+
+**Effect-TS service methods:**
+- `databaseService.softDelete(tableName, recordId)` - Soft delete via service
+- `databaseService.restore(tableName, recordId)` - Restore via service
+- `databaseService.permanentDelete(tableName, recordId)` - Permanent delete (admin only)
+
+**When creating new tables:**
+1. Include `deleted_at TIMESTAMPTZ DEFAULT NULL` column
+2. Run `SELECT setup_soft_delete_for_table('your_table_name')` to add infrastructure
+3. Or manually follow the template in `packages/migrate/migrations/table-template.sql`
+
 ## 🚫 PROHIBITED PATTERNS
 
 ### REST API Endpoints

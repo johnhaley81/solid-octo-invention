@@ -6,6 +6,7 @@ config({ path: '../../.env' });
 import cors from 'cors';
 import helmet from 'helmet';
 import { postgraphile } from 'postgraphile';
+import PgOmitArchivedPlugin from '@graphile-contrib/pg-omit-archived';
 import { Effect as E, Layer, Logger, LogLevel, Redacted } from 'effect';
 import { NodeRuntime } from '@effect/platform-node';
 import { envVars } from './config/index.js';
@@ -73,7 +74,8 @@ const ServerProgram = E.gen(function* () {
       showErrorStack: nodeEnv === 'development' ? 'json' : false,
       extendedErrors: nodeEnv === 'development' ? ['hint', 'detail', 'errcode'] : ['errcode'],
       appendPlugins: [
-        // Add PostGraphile plugins here as needed
+        // Soft delete support - automatically omits records where deleted_at IS NOT NULL
+        PgOmitArchivedPlugin,
       ],
       ...(nodeEnv === 'development' && { exportGqlSchemaPath: 'schema.graphql' }),
       sortExport: true,
