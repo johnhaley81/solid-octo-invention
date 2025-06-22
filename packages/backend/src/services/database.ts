@@ -6,7 +6,7 @@ import { envVars } from '../config/index.js';
  * Database service interface
  */
 export interface DatabaseService {
-  readonly query: <T = any>(_text: string, _params?: any[]) => E.Effect<T[], DatabaseError>;
+  readonly query: <T = any>(_text: string, _params?: any[]) => E.Effect<{ rows: T[]; rowCount: number }, DatabaseError>;
   readonly getClient: () => E.Effect<PoolClient, DatabaseError>;
   readonly transaction: <T>(
     _fn: (_client: PoolClient) => E.Effect<T, DatabaseError>,
@@ -59,7 +59,7 @@ const makeDatabaseService = E.gen(function* () {
     E.tryPromise({
       try: async () => {
         const result = await pool.query(text, params);
-        return result.rows as T[];
+        return { rows: result.rows as T[], rowCount: result.rowCount || 0 };
       },
       catch: error => new DatabaseError(`Query failed: ${text}`, error),
     }).pipe(
