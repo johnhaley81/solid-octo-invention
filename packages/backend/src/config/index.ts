@@ -1,4 +1,4 @@
-import { Config, ConfigProvider, Layer } from 'effect'
+import { Config, ConfigProvider, Layer } from 'effect';
 
 /**
  * Environment variables configuration using Effect Config system
@@ -25,7 +25,7 @@ export const envVars = {
   // Security configuration
   JWT_SECRET: Config.redacted('JWT_SECRET'),
   CORS_ORIGIN: Config.string('CORS_ORIGIN').pipe(Config.withDefault('http://localhost:5173')),
-} as const
+} as const;
 
 /**
  * Mock configuration provider for testing
@@ -40,12 +40,12 @@ const mockConfigProvider = ConfigProvider.fromJson({
   REDIS_URL: 'redis://localhost:6379',
   JWT_SECRET: 'test-jwt-secret-key',
   CORS_ORIGIN: 'http://localhost:3000',
-})
+});
 
 /**
  * Test configuration layer for use in tests
  */
-export const MockConfigLayer = Layer.setConfigProvider(mockConfigProvider)
+export const MockConfigLayer = Layer.setConfigProvider(mockConfigProvider);
 
 /**
  * Database connection configuration

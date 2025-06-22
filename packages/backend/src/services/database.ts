@@ -1,6 +1,6 @@
-import { Effect as E, Layer, Context, Redacted } from 'effect'
-import { Pool, type PoolClient } from 'pg'
-import { envVars } from '../config/index.js'
+import { Effect as E, Layer, Context, Redacted } from 'effect';
+import { Pool, type PoolClient } from 'pg';
+import { envVars } from '../config/index.js';
 
 /**
  * Database service interface
@@ -18,60 +18,60 @@ export interface DatabaseService {
  * Database error types
  */
 export class DatabaseError extends Error {
-  readonly _tag = 'DatabaseError'
-  public readonly errorCause?: unknown
+  readonly _tag = 'DatabaseError';
+  public readonly errorCause?: unknown;
 
   constructor(message: string, cause?: unknown) {
-    super(message)
-    this.errorCause = cause
+    super(message);
+    this.errorCause = cause;
   }
 }
 
 /**
  * Database service tag for dependency injection
  */
-export const DatabaseService = Context.GenericTag<DatabaseService>('DatabaseService')
+export const DatabaseService = Context.GenericTag<DatabaseService>('DatabaseService');
 
 /**
  * Create database service implementation
  */
 const makeDatabaseService = E.gen(function* () {
-  const databaseUrl = yield* envVars.DATABASE_URL
+  const databaseUrl = yield* envVars.DATABASE_URL;
 
-  yield* E.logInfo('Initializing database connection pool')
+  yield* E.logInfo('Initializing database connection pool');
 
   const pool = new Pool({
     connectionString: Redacted.value(databaseUrl),
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
-  })
+  });
 
   // Test the connection
   yield* E.tryPromise({
     try: () => pool.query('SELECT NOW()'),
     catch: error => new DatabaseError('Failed to connect to database', error),
-  })
+  });
 
-  yield* E.logInfo('Database connection pool initialized successfully')
+  yield* E.logInfo('Database connection pool initialized successfully');
 
   const query = <T = any>(text: string, params?: any[]) =>
     E.tryPromise({
       try: async () => {
-        const result = await pool.query(text, params)
-        return result.rows as T[]
+        const result = await pool.query(text, params);
+        return result.rows as T[];
       },
       catch: error => new DatabaseError(`Query failed: ${text}`, error),
     }).pipe(
       E.tapError(error => E.logError('Database query failed', { text, params, error })),
       E.withSpan('database-query', { attributes: { query: text } }),
-    )
+    );
 
   const getClient = () =>
     E.tryPromise({
       try: () => pool.connect(),
       catch: error => new DatabaseError('Failed to get database client', error),
-    })
+    });
 
   const transaction = <T>(
     fn: (_client: PoolClient) => E.Effect<T, DatabaseError>,
@@ -80,13 +80,13 @@ const makeDatabaseService = E.gen(function* () {
       E.gen(function* () {
         const client = yield* E.acquireRelease(getClient(), _client =>
           E.sync(() => _client.release()),
-        )
+        );
 
         // Begin transaction
         yield* E.tryPromise({
           try: () => client.query('BEGIN'),
           catch: error => new DatabaseError('Failed to begin transaction', error),
-        })
+        });
 
         // Execute the function and handle commit/rollback
         const result = yield* fn(client).pipe(
@@ -103,39 +103,39 @@ const makeDatabaseService = E.gen(function* () {
                 new DatabaseError('Failed to rollback transaction', rollbackError),
             }).pipe(E.ignore),
           ),
-        )
+        );
 
-        return result
+        return result;
       }).pipe(E.withSpan('database-transaction')),
-    )
+    );
 
   const close = () =>
     E.gen(function* () {
-      yield* E.logInfo('Closing database connection pool')
+      yield* E.logInfo('Closing database connection pool');
       yield* E.tryPromise({
         try: () => pool.end(),
         catch: error => new DatabaseError('Failed to close database connection pool', error),
-      })
-      yield* E.logInfo('Database connection pool closed')
-    }).pipe(E.ignore)
+      });
+      yield* E.logInfo('Database connection pool closed');
+    }).pipe(E.ignore);
 
   return {
     query,
     getClient,
     transaction,
     close,
-  } satisfies DatabaseService
-})
+  } satisfies DatabaseService;
+});
 
 /**
  * Database service layer
  */
-export const DatabaseServiceLive = Layer.effect(DatabaseService, makeDatabaseService)
+export const DatabaseServiceLive = Layer.effect(DatabaseService, makeDatabaseService);
 
 /**
  * Default database service layer
  */
-export const DefaultDatabaseService = DatabaseServiceLive
+export const DefaultDatabaseService = DatabaseServiceLive;
 
 /**
  * Test database service for testing
@@ -146,4 +146,4 @@ export const TestDatabaseService = Layer.succeed(DatabaseService, {
   transaction: <T>(_fn: (_client: PoolClient) => E.Effect<T, DatabaseError>) =>
     E.die('TestDatabaseService.transaction not implemented'),
   close: () => E.succeed(undefined),
-} satisfies DatabaseService)
+} satisfies DatabaseService);

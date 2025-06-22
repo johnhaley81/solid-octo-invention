@@ -284,6 +284,8 @@ jobs:
         run: cd packages/backend && pnpm migrate:up
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e
+          SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e_shadow
+          ROOT_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
 
       - name: Start backend server
         run: pnpm --filter backend start &

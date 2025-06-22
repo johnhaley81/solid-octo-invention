@@ -1,12 +1,12 @@
-import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client'
-import { setContext } from '@apollo/client/link/context'
+import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
 
 /**
  * GraphQL endpoint configuration
  */
 const httpLink = createHttpLink({
   uri: import.meta.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql',
-})
+});
 
 /**
  * Authentication link for adding JWT tokens to requests
@@ -14,7 +14,7 @@ const httpLink = createHttpLink({
  */
 const authLink = setContext((_, { headers }) => {
   // Get the authentication token from local storage if it exists
-  const token = localStorage.getItem('auth-token')
+  const token = localStorage.getItem('auth-token');
 
   // Return the headers to the context so httpLink can read them
   return {
@@ -22,8 +22,8 @@ const authLink = setContext((_, { headers }) => {
       ...headers,
       authorization: token ? `Bearer ${token}` : '',
     },
-  }
-})
+  };
+});
 
 /**
  * Apollo Client configuration with caching and error handling
@@ -41,7 +41,7 @@ export const apolloClient = new ApolloClient({
               return {
                 ...incoming,
                 nodes: [...existing.nodes, ...incoming.nodes],
-              }
+              };
             },
           },
           // Configure pagination for comments
@@ -51,7 +51,7 @@ export const apolloClient = new ApolloClient({
               return {
                 ...incoming,
                 nodes: [...existing.nodes, ...incoming.nodes],
-              }
+              };
             },
           },
         },
@@ -63,7 +63,7 @@ export const apolloClient = new ApolloClient({
               return {
                 ...incoming,
                 nodes: [...existing.nodes, ...incoming.nodes],
-              }
+              };
             },
           },
         },
@@ -83,4 +83,4 @@ export const apolloClient = new ApolloClient({
     },
   },
   connectToDevTools: import.meta.env.DEV,
-})
+});

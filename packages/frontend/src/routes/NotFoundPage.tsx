@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 
 /**
  * 404 Not Found page component
@@ -29,5 +29,5 @@ export function NotFoundPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

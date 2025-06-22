@@ -1,9 +1,9 @@
-import { Routes, Route } from 'react-router-dom'
-import { Layout } from './components/Layout.js'
-import { HomePage } from './routes/HomePage.js'
-import { PostsPage } from './routes/PostsPage.js'
-import { PostDetailPage } from './routes/PostDetailPage.js'
-import { NotFoundPage } from './routes/NotFoundPage.js'
+import { Routes, Route } from 'react-router-dom';
+import { Layout } from './components/Layout.js';
+import { HomePage } from './routes/HomePage.js';
+import { PostsPage } from './routes/PostsPage.js';
+import { PostDetailPage } from './routes/PostDetailPage.js';
+import { NotFoundPage } from './routes/NotFoundPage.js';
 
 /**
  * Main application component with routing
@@ -19,5 +19,5 @@ export function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Layout>
-  )
+  );
 }
