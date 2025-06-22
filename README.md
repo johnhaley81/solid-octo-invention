@@ -102,19 +102,31 @@ This application follows a clean architecture approach with:
    pnpm install
    ```
 
-3. **Start local services**
+3. **Set up environment**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+4. **Check prerequisites (optional but recommended)**
+
+   ```bash
+   pnpm check
+   ```
+
+5. **Start local services**
 
    ```bash
    pnpm db:up
    ```
 
-4. **Run database migrations**
+6. **Run database migrations**
 
    ```bash
    pnpm migrate:up
    ```
 
-5. **Start development servers**
+7. **Start development servers**
    ```bash
    pnpm dev
    ```
@@ -138,6 +150,85 @@ Key variables:
 - `DATABASE_URL` - PostgreSQL connection string
 - `REDIS_URL` - Redis connection string
 - `VITE_GRAPHQL_ENDPOINT` - GraphQL endpoint for frontend
+
+## 🔧 Troubleshooting
+
+### Quick Diagnosis
+
+If you're having issues, run the prerequisites checker first:
+
+```bash
+pnpm check
+```
+
+This will automatically detect common problems and suggest fixes.
+
+### Common Issues
+
+#### "Error: Missing data at DATABASE_URL"
+
+This error occurs when the backend cannot find the `DATABASE_URL` environment variable.
+
+**Solution:**
+1. Make sure you've copied the environment file:
+   ```bash
+   cp .env.example .env
+   ```
+2. Ensure Docker is running and start the database:
+   ```bash
+   pnpm db:up
+   ```
+3. Run database migrations:
+   ```bash
+   pnpm migrate:up
+   ```
+
+#### "Cannot connect to the Docker daemon"
+
+This error occurs when Docker is not running or not installed.
+
+**Solutions:**
+- **Install Docker**: Download Docker Desktop from [docker.com](https://docker.com)
+- **Start Docker**: Make sure Docker Desktop is running
+- **Alternative**: Set up a local PostgreSQL instance and update the `DATABASE_URL` in your `.env` file
+
+#### "ECONNREFUSED" or Database Connection Errors
+
+This happens when the database service is not accessible.
+
+**Solutions:**
+1. Check if Docker containers are running:
+   ```bash
+   docker ps
+   ```
+2. Restart database services:
+   ```bash
+   pnpm db:down
+   pnpm db:up
+   ```
+3. Wait for services to be healthy before running migrations:
+   ```bash
+   # Wait a few seconds, then:
+   pnpm migrate:up
+   ```
+
+#### Port Already in Use
+
+If you get port conflicts (3000, 5173, 5432, 6379):
+
+**Solutions:**
+1. Stop conflicting services
+2. Or modify ports in `.env` and `docker-compose.yml`
+3. Or use different ports:
+   ```bash
+   PORT=3001 pnpm dev
+   ```
+
+### Development Tips
+
+- Use `pnpm db:reset` to completely reset the database
+- Check logs with `docker compose logs postgres` or `docker compose logs redis`
+- Use `pnpm clean` to clean all build artifacts and node_modules
 
 ## 🧪 Testing
 
