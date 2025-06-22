@@ -303,6 +303,19 @@ jobs:
             pnpm --filter frontend exec playwright install --with-deps
           }
 
+      - name: Debug environment variables
+        run: |
+          echo "DATABASE_URL: $DATABASE_URL"
+          echo "SHADOW_DATABASE_URL: $SHADOW_DATABASE_URL"
+          echo "ROOT_DATABASE_URL: $ROOT_DATABASE_URL"
+          echo "Current directory: $(pwd)"
+          echo "Contents of .gmrc:"
+          cat packages/backend/.gmrc
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e
+          SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e_shadow
+          ROOT_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
       - name: Run database migrations
         run: cd packages/backend && pnpm migrate:up
         env:
