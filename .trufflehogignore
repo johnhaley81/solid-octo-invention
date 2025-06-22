@@ -1,0 +1,28 @@
+# Trufflehog ignore patterns
+# Add patterns for files that should be excluded from secret scanning
+
+# Example patterns:
+# Test fixtures and example files
+test/fixtures/.*
+.*\.example$
+.*\.template$
+.*\.sample$
+
+# Documentation and README files
+.*\.md$
+.*\.txt$
+
+# Configuration templates
+config/.*\.template$
+config/.*\.example$
+
+# Package lock files (often contain hashes that trigger false positives)
+package-lock\.json$
+yarn\.lock$
+pnpm-lock\.yaml$
+
+# Build artifacts
+dist/.*
+build/.*
+node_modules/.*
+

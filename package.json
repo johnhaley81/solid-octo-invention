@@ -1,0 +1,21 @@
+{
+  "name": "solid-octo-invention",
+  "version": "1.0.0",
+  "description": "A project with comprehensive pre-push git hooks",
+  "main": "index.js",
+  "scripts": {
+    "lint": "echo '✅ Linting passed (placeholder)'",
+    "build": "echo '✅ Build completed (placeholder)'",
+    "test": "echo '✅ Tests passed (placeholder)'",
+    "lint:fix": "echo '🔧 Auto-fixing lint issues (placeholder)'"
+  },
+  "keywords": ["git-hooks", "ci", "quality"],
+  "author": "Codegen",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "prettier": "^2.0.0",
+    "jest": "^29.0.0"
+  }
+}
+

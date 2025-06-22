@@ -1,0 +1,24 @@
+# Pre-push hook configuration
+# This file allows you to customize the behavior of the pre-push git hook
+
+# Enable/disable build and lint checks (true/false)
+ENABLE_BUILD_CHECKS=true
+ENABLE_LINT_CHECKS=true
+ENABLE_TEST_CHECKS=true
+
+# Enable/disable secret scanning with trufflehog (true/false)
+ENABLE_SECRET_SCANNING=true
+
+# Skip checks for specific branches (comma-separated list)
+# Example: SKIP_BRANCHES="hotfix/*,emergency/*"
+SKIP_BRANCHES=""
+
+# Custom commands to run (optional)
+# These will be executed in addition to the auto-detected project checks
+CUSTOM_LINT_COMMAND=""
+CUSTOM_BUILD_COMMAND=""
+CUSTOM_TEST_COMMAND=""
+
+# Timeout for each check in seconds (default: 300 = 5 minutes)
+CHECK_TIMEOUT=300
+
