@@ -6,7 +6,7 @@ config({ path: '../../.env' });
 import cors from 'cors';
 import helmet from 'helmet';
 import { postgraphile } from 'postgraphile';
-import { Effect as E, Either, Layer, Logger, LogLevel, Redacted } from 'effect';
+import { Effect as E, Layer, Logger, LogLevel, Redacted } from 'effect';
 import { NodeRuntime } from '@effect/platform-node';
 import { envVars } from './config/index.js';
 import { DatabaseService, DatabaseServiceLive } from './services/database.js';
@@ -76,7 +76,7 @@ const ServerProgram = E.gen(function* () {
   const databaseResult = yield* E.either(DatabaseService.pipe(E.provide(DatabaseServiceLive)));
   const workerResult = yield* E.either(WorkerService.pipe(E.provide(WorkerServiceLive)));
   
-  if (Either.isRight(databaseResult) && Either.isRight(workerResult)) {
+  if (E.isRight(databaseResult) && E.isRight(workerResult)) {
     const databaseService = databaseResult.right;
     const workerService = workerResult.right;
 
@@ -135,12 +135,12 @@ const ServerProgram = E.gen(function* () {
     process.on('SIGINT', () => E.runSync(shutdown()));
     process.on('SIGTERM', () => E.runSync(shutdown()));
   } else {
-    const dbError = Either.isLeft(databaseResult) ? databaseResult.left : null;
-    const workerError = Either.isLeft(workerResult) ? workerResult.left : null;
+    const dbError = E.isLeft(databaseResult) ? databaseResult.left : null;
+    const workerError = E.isLeft(workerResult) ? workerResult.left : null;
     
     yield* E.logWarning('Failed to initialize database services, GraphQL will not be available', { 
-      dbError, 
-      workerError,
+      databaseError: dbError, 
+      workerError: workerError 
     });
     
     // Add a fallback endpoint for GraphQL when database is not available
