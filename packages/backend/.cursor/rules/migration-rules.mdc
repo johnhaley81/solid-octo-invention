@@ -1,0 +1,59 @@
+---
+description: Database migration rules and requirements for Graphile Migrate
+globs: ["packages/backend/migrations/**/*"]
+alwaysApply: true
+---
+
+# Database Migration Rules
+
+## Critical Migration Requirements
+
+### 🚨 IMMUTABLE MIGRATIONS
+- **Committed migrations MUST BE considered immutable and cannot be deleted for any reason ever**
+- Once a migration is committed to the repository, it becomes part of the permanent database history
+- Deleting committed migrations will break database consistency and deployment processes
+- If you need to undo a migration, create a new migration that reverses the changes
+
+### 📋 PR Readiness Requirements
+- **Migrations must be committed before a PR is considered ready for review**
+- All database schema changes must be properly migrated using Graphile Migrate
+- PRs with uncommitted schema changes will be rejected
+- Use `pnpm migrate:up` to apply migrations before committing
+
+### 🔄 Migration Workflow
+1. Create migration files using Graphile Migrate commands
+2. Test migrations locally with `pnpm migrate:up`
+3. Verify rollback capability with `pnpm migrate:down` (if applicable)
+4. Commit migration files to the repository
+5. Only then create or update your PR
+
+### 📁 Migration File Structure
+```
+packages/backend/migrations/
+├── current.sql          # Current schema state
+├── committed/           # Immutable committed migrations
+│   ├── 000001.sql
+│   ├── 000002.sql
+│   └── ...
+└── current/            # Uncommitted changes (if any)
+```
+
+### ⚠️ Migration Best Practices
+- Always test migrations on a copy of production data
+- Write reversible migrations when possible
+- Include proper indexes and constraints
+- Document complex migrations with comments
+- Never modify existing migration files
+- Use descriptive migration names and comments
+
+### 🚫 Forbidden Actions
+- ❌ Deleting committed migration files
+- ❌ Modifying existing migration files
+- ❌ Skipping migration steps
+- ❌ Creating PRs with uncommitted schema changes
+- ❌ Force-pushing over migration history
+
+### 📚 References
+- [Graphile Migrate Documentation](https://github.com/graphile/migrate)
+- [Migration Best Practices](https://github.com/graphile/migrate#best-practices)
+

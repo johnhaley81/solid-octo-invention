@@ -1,0 +1,82 @@
+---
+description: Backend architecture and development guidelines for PostGraphile + Effect-TS
+globs: ["packages/backend/**/*"]
+alwaysApply: true
+---
+
+# Backend Development Guidelines
+
+## Architecture
+
+The backend uses the Graphile stack with Effect-TS for functional programming:
+
+- **PostGraphile**: Automatic GraphQL API generation from PostgreSQL schema
+- **Graphile Worker**: Background job processing
+- **Graphile Migrate**: Database schema management
+- **Effect-TS**: Functional programming and type-safe effects
+
+## Service Layer Pattern
+
+All business logic should be implemented as Effect-TS services:
+
+```typescript
+import { Effect, Context } from 'effect';
+
+// Define service interface
+export interface DatabaseService {
+  readonly query: (text: string, params?: unknown[]) => Effect.Effect<unknown[], DatabaseError>;
+}
+
+// Service tag for dependency injection
+export const DatabaseService = Context.GenericTag<DatabaseService>('DatabaseService');
+
+// Implementation
+export const makeDatabaseService = (): DatabaseService => ({
+  query: (text, params) => 
+    Effect.tryPromise({
+      try: () => pool.query(text, params),
+      catch: (error) => new DatabaseError('Query failed', error),
+    }),
+});
+```
+
+## Error Handling
+
+Use tagged errors with Effect-TS:
+
+```typescript
+export class DatabaseError extends Error {
+  readonly _tag = 'DatabaseError';
+  public readonly errorCause?: unknown;
+  
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.errorCause = cause;
+  }
+}
+```
+
+## Database Guidelines
+
+- Use PostgreSQL with Row Level Security (RLS)
+- Implement proper indexes and constraints
+- Use UUID primary keys for better distribution
+- Add automatic timestamps with triggers
+- Keep schema simple and focused on core domain
+
+## Testing
+
+- Write unit tests for all services
+- Use Vitest for testing framework
+- Mock external dependencies with Effect-TS
+- Test error scenarios and edge cases
+
+## File Organization
+
+```
+src/
+├── services/         # Effect-TS services
+├── types/           # Backend-specific types
+├── utils/           # Utility functions
+└── server.ts        # Express server setup
+```

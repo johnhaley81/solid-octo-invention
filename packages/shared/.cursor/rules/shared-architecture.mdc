@@ -1,0 +1,128 @@
+---
+description: Shared package guidelines for types, schemas, and utilities
+globs: ["packages/shared/**/*"]
+alwaysApply: true
+---
+
+# Shared Package Guidelines
+
+## Purpose
+
+The shared package contains code that is used across both backend and frontend:
+
+- **Types**: Common TypeScript interfaces and types
+- **Schemas**: Effect-TS schemas for validation
+- **Errors**: Tagged error classes
+- **Utilities**: Pure functions and helpers
+
+## Schema Definition
+
+Use Effect-TS Schema for runtime validation and type generation:
+
+```typescript
+import { Schema } from '@effect/schema';
+
+// Define schemas with validation
+export const UserSchema = Schema.Struct({
+  id: Schema.UUID,
+  name: Schema.NonEmptyString,
+  email: Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
+  createdAt: Schema.Date,
+  updatedAt: Schema.Date,
+});
+
+// Extract TypeScript type
+export type User = Schema.Schema.Type<typeof UserSchema>;
+
+// Create validation functions
+export const validateUser = Schema.decodeUnknown(UserSchema);
+export const encodeUser = Schema.encode(UserSchema);
+```
+
+## Error Definitions
+
+Define tagged errors for domain-specific error handling:
+
+```typescript
+export class ValidationError extends Error {
+  readonly _tag = 'ValidationError';
+  public readonly field?: string;
+  
+  constructor(message: string, field?: string) {
+    super(message);
+    this.field = field;
+  }
+}
+
+export class NotFoundError extends Error {
+  readonly _tag = 'NotFoundError';
+  public readonly resource: string;
+  
+  constructor(resource: string, id: string) {
+    super(`${resource} with id ${id} not found`);
+    this.resource = resource;
+  }
+}
+```
+
+## Type Definitions
+
+Use branded types for domain-specific IDs:
+
+```typescript
+import { Brand } from 'effect';
+
+// Branded types for type safety
+export type UserId = string & Brand.Brand<'UserId'>;
+export type Email = string & Brand.Brand<'Email'>;
+
+// Type guards
+export const isUserId = (value: string): value is UserId => 
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+export const isEmail = (value: string): value is Email =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+```
+
+## Utility Functions
+
+Keep utilities pure and functional:
+
+```typescript
+import { pipe } from 'effect';
+
+// Pure utility functions
+export const formatDate = (date: Date): string =>
+  date.toISOString().split('T')[0];
+
+export const capitalize = (str: string): string =>
+  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+// Functional composition
+export const processUserName = (name: string): string =>
+  pipe(
+    name,
+    str => str.trim(),
+    capitalize,
+  );
+```
+
+## File Organization
+
+```
+src/
+├── types/           # TypeScript type definitions
+├── schemas/         # Effect-TS schemas
+├── errors/          # Error class definitions
+└── utils/           # Pure utility functions
+```
+
+## Guidelines
+
+- Keep all code pure and side-effect free
+- Use Effect-TS Schema for all validation
+- Define branded types for domain concepts
+- Export both schemas and derived types
+- Write comprehensive tests for all utilities
+- Avoid any dependencies on backend or frontend code
+- Use functional programming principles throughout

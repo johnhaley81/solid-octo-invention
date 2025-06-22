@@ -1,0 +1,11 @@
+{
+  "connectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention",
+  "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_shadow", 
+  "rootConnectionString": "postgresql://postgres:postgres@localhost:5432/postgres",
+  "pgSettings": {
+    "search_path": "public"
+  },
+  "afterReset": [],
+  "afterAllMigrations": [],
+  "afterCurrent": ["node scripts/dump-schema.js"]
+}

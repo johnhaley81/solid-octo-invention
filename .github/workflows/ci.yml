@@ -1,0 +1,528 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Job 1: Install dependencies and cache
+  setup:
+    name: Setup Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+  # Job 2: Type checking
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check shared package
+        run: pnpm --filter shared type-check
+
+      - name: Type check backend
+        run: pnpm --filter backend type-check
+
+      - name: Type check frontend
+        run: pnpm --filter frontend type-check
+
+  # Job 3: Linting
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache ESLint
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/*/.eslintcache
+            .eslintcache
+          key: eslint-${{ runner.os }}-${{ hashFiles('**/.eslintrc.*', '**/package.json') }}
+          restore-keys: |
+            eslint-${{ runner.os }}-
+
+      - name: Lint all packages
+        run: pnpm lint
+
+      - name: Check formatting
+        run: pnpm format:check
+
+  # Job 4: Unit tests
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: solid_octo_invention_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm test:unit
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_test
+          REDIS_URL: redis://localhost:6379
+
+  # Job 5: Build
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache TypeScript build info
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/*/tsconfig.tsbuildinfo
+            packages/*/.tsbuildinfo
+          key: typescript-${{ runner.os }}-${{ hashFiles('**/tsconfig.json', '**/package.json') }}
+          restore-keys: |
+            typescript-${{ runner.os }}-
+
+      - name: Cache build outputs
+        uses: actions/cache@v4
+        id: build-cache
+        with:
+          path: |
+            packages/*/dist
+            packages/*/build
+          key: build-${{ runner.os }}-${{ hashFiles('**/src/**/*', '**/package.json', '**/tsconfig.json') }}
+          restore-keys: |
+            build-${{ runner.os }}-
+
+      - name: Build shared package
+        if: steps.build-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter shared build
+
+      - name: Build backend
+        if: steps.build-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter backend build
+
+      - name: Build frontend
+        if: steps.build-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter frontend build
+        env:
+          VITE_GRAPHQL_ENDPOINT: /graphql
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            packages/*/dist
+          retention-days: 7
+
+  # Job 6: E2E tests (only on main branch or PRs to main)
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: solid_octo_invention_e2e
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: |
+          VERSION=$(grep '@playwright/test' packages/frontend/package.json | cut -d'"' -f4 | sed 's/\^//')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/Library/Caches/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            playwright-browsers-${{ runner.os }}-
+
+      - name: Debug cache info
+        run: |
+          echo "Cache hit: ${{ steps.playwright-cache.outputs.cache-hit }}"
+          echo "Playwright version: ${{ steps.playwright-version.outputs.version }}"
+          echo "Cache key: playwright-browsers-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}"
+          ls -la ~/.cache/ || echo "No ~/.cache directory"
+          ls -la ~/.cache/ms-playwright/ || echo "No Playwright cache directory"
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "Cache miss - installing Playwright browsers..."
+          pnpm --filter frontend exec playwright install --with-deps
+          echo "Playwright installation complete"
+          ls -la ~/.cache/ms-playwright/ || echo "No Playwright cache directory after install"
+
+      - name: Verify Playwright browsers (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: |
+          echo "Cache hit - verifying browsers..."
+          pnpm --filter frontend exec playwright install --dry-run || {
+            echo "Cache verification failed - reinstalling browsers..."
+            pnpm --filter frontend exec playwright install --with-deps
+          }
+
+      - name: Debug environment variables
+        run: |
+          echo "DATABASE_URL: $DATABASE_URL"
+          echo "SHADOW_DATABASE_URL: $SHADOW_DATABASE_URL"
+          echo "ROOT_DATABASE_URL: $ROOT_DATABASE_URL"
+          echo "Current directory: $(pwd)"
+          echo "Contents of .gmrc:"
+          cat packages/backend/.gmrc
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e
+          SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e_shadow
+          ROOT_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
+      - name: Run database migrations
+        run: |
+          cd packages/backend
+          # Override .gmrc with E2E database URLs
+          cat > .gmrc << EOF
+          {
+            "connectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e",
+            "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e_shadow", 
+            "rootConnectionString": "postgresql://postgres:postgres@localhost:5432/postgres",
+            "pgSettings": {
+              "search_path": "public"
+            },
+            "afterReset": [],
+            "afterAllMigrations": [],
+            "afterCurrent": []
+          }
+          EOF
+          pnpm migrate:up
+
+      - name: Build backend
+        run: pnpm --filter backend build
+
+      - name: Start backend server
+        run: pnpm --filter backend start &
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e
+          REDIS_URL: redis://localhost:6379
+          PORT: 3000
+          NODE_ENV: test
+          JWT_SECRET: test-jwt-secret-for-e2e-testing
+          CORS_ORIGIN: http://localhost:5173
+
+      - name: Wait for backend to be ready
+        run: |
+          timeout 30 bash -c 'until curl -f http://localhost:3000/health; do sleep 1; done'
+
+      - name: Start frontend server
+        run: pnpm --filter frontend dev &
+        env:
+          VITE_GRAPHQL_ENDPOINT: http://localhost:3000/graphql
+
+      - name: Wait for frontend to be ready
+        run: |
+          timeout 30 bash -c 'until curl -f http://localhost:5173; do sleep 1; done'
+
+      - name: Run E2E tests
+        run: pnpm --filter frontend test:e2e
+        env:
+          VITE_GRAPHQL_ENDPOINT: http://localhost:3000/graphql
+
+      - name: Save Playwright cache (always)
+        uses: actions/cache/save@v4
+        if: always() && steps.playwright-cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/Library/Caches/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-test-results
+          path: packages/frontend/test-results/
+          retention-days: 7
+
+  # Job 7: Security audit
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit
+        run: pnpm audit --audit-level moderate
+
+  # Job 8: Migration validation
+  migration-check:
+    name: Validate Migrations
+    runs-on: ubuntu-latest
+    needs: setup
+    if: github.event_name == 'pull_request'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: solid_octo_invention_migration_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history to compare with base branch
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for committed migrations (prod branch only)
+        if: github.base_ref == 'prod' || github.ref == 'refs/heads/prod'
+        run: |
+          echo "🔍 Checking for uncommitted database migrations on prod branch..."
+
+          # Check if current.sql exists and has non-whitespace content
+          if [ -f "packages/backend/migrations/current.sql" ] && [ -n "$(grep -v '^[[:space:]]*$' packages/backend/migrations/current.sql)" ]; then
+            echo "❌ ERROR: Uncommitted migrations found in current.sql"
+            echo "📋 Content of current.sql:"
+            cat packages/backend/migrations/current.sql
+            echo ""
+            echo "🚨 All database schema changes must be committed using Graphile Migrate before merging to prod."
+            echo "📖 Run 'pnpm migrate:commit' to commit your migrations."
+            exit 1
+          fi
+
+          echo "✅ Migration validation passed for prod branch!"
+
+      - name: Validate schema consistency
+        run: |
+          echo "🔍 Validating database schema consistency..."
+
+          cd packages/backend
+
+          # Create test database configuration
+          cat > .gmrc << EOF
+          {
+            "connectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_migration_test",
+            "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_migration_test_shadow", 
+            "rootConnectionString": "postgresql://postgres:postgres@localhost:5432/postgres",
+            "pgSettings": {
+              "search_path": "public"
+            },
+            "afterReset": [],
+            "afterAllMigrations": [],
+            "afterCurrent": ["node scripts/dump-schema.js"]
+          }
+          EOF
+
+          # Run migrations (this will also generate schema dump via afterCurrent hook)
+          echo "📦 Running migrations..."
+          pnpm migrate:up
+
+          # Check if schema dump was generated
+          if [ ! -f "schema-dump.sql" ]; then
+            echo "❌ ERROR: Schema dump was not generated"
+            exit 1
+          fi
+
+          echo "📊 Generated schema dump size: $(wc -c < schema-dump.sql) bytes"
+
+          # Compare with committed schema dump (if it exists)
+          if git show HEAD:packages/backend/schema-dump.sql > committed-schema-dump.sql 2>/dev/null; then
+            echo "🔍 Comparing schema dump with committed version..."
+            
+            # Check if there are differences (ignoring whitespace)
+            if ! diff -w committed-schema-dump.sql schema-dump.sql; then
+              echo "❌ ERROR: Schema dump differs from committed version"
+              echo "📋 Differences found between expected and actual schema"
+              echo ""
+              echo "🚨 This indicates the database schema has changed but the schema dump wasn't updated."
+              echo "📝 Please run 'pnpm migrate:dump-schema' and commit the updated schema-dump.sql file."
+              exit 1
+            else
+              echo "✅ Schema dump matches committed version"
+            fi
+          else
+            echo "⚠️  No committed schema dump found - this is expected for new projects"
+          fi
+
+          echo "✅ Schema validation completed successfully!"
+          echo "✅ Migration validation passed! All migrations appear to be committed."
+
+  # Job 9: PR status check
+  pr-ready:
+    name: PR Ready for Review
+    runs-on: ubuntu-latest
+    needs: [type-check, lint, test, build, migration-check]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: All checks passed
+        run: echo "✅ All CI checks passed! PR is ready for review."

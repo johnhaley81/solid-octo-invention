@@ -1,0 +1,115 @@
+---
+description: Frontend architecture and development guidelines for React + Apollo + Tailwind
+globs: ["packages/frontend/**/*"]
+alwaysApply: true
+---
+
+# Frontend Development Guidelines
+
+## Architecture
+
+The frontend uses modern React with functional programming principles:
+
+- **React 18**: Modern hooks and concurrent features
+- **Apollo Client**: GraphQL data fetching with intelligent caching
+- **React Router**: Client-side routing
+- **Tailwind CSS**: Utility-first CSS framework
+- **Effect-TS**: Business logic and state management
+- **Vite**: Fast development and optimized builds
+
+## Component Guidelines
+
+Use functional components with hooks:
+
+```typescript
+import { useQuery } from '@apollo/client';
+import { Effect } from 'effect';
+
+export const UserProfile: React.FC<{ userId: string }> = ({ userId }) => {
+  const { data, loading, error } = useQuery(GET_USER, {
+    variables: { id: userId },
+  });
+
+  if (loading) return <div className="animate-pulse">Loading...</div>;
+  if (error) return <div className="text-red-500">Error: {error.message}</div>;
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-xl font-semibold text-gray-900">{data.user.name}</h2>
+      <p className="text-gray-600">{data.user.email}</p>
+    </div>
+  );
+};
+```
+
+## Styling with Tailwind CSS
+
+- Use Tailwind utility classes for all styling
+- Avoid custom CSS files
+- Use responsive design utilities (sm:, md:, lg:, xl:)
+- Leverage Tailwind's color palette and spacing scale
+- Use component composition for reusable styles
+
+```typescript
+// Good: Utility classes
+<button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+  Click me
+</button>
+
+// Avoid: Custom CSS
+<button className="custom-button">Click me</button>
+```
+
+## State Management
+
+- Use Apollo Client for server state
+- Use React hooks (useState, useReducer) for local state
+- Implement Effect-TS for complex business logic
+- Avoid prop drilling with React Context when needed
+
+## Apollo Client Integration
+
+```typescript
+import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+
+const httpLink = createHttpLink({
+  uri: 'http://localhost:5000/graphql',
+});
+
+export const client = new ApolloClient({
+  link: httpLink,
+  cache: new InMemoryCache(),
+  defaultOptions: {
+    watchQuery: {
+      errorPolicy: 'all',
+    },
+  },
+});
+```
+
+## Testing
+
+- Use Vitest with React Testing Library
+- Test component behavior, not implementation
+- Mock Apollo queries with MockedProvider
+- Test user interactions and accessibility
+
+## File Organization
+
+```
+src/
+├── components/       # Reusable UI components
+├── routes/          # Page components
+├── apollo/          # GraphQL client setup
+├── hooks/           # Custom React hooks
+├── types/           # Frontend-specific types
+└── utils/           # Utility functions
+```
+
+## Performance
+
+- Use React.memo for expensive components
+- Implement proper Apollo Client caching
+- Lazy load routes with React.lazy
+- Optimize images and assets
+- Use Vite's code splitting features
