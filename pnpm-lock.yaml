@@ -73,9 +73,6 @@ importers:
       express:
         specifier: ^4.18.2
         version: 4.21.2
-      graphile-migrate:
-        specifier: ^1.4.1
-        version: 1.4.1
       graphile-worker:
         specifier: ^0.16.6
         version: 0.16.6(typescript@5.8.3)
@@ -101,6 +98,12 @@ importers:
       tsx:
         specifier: ^4.7.0
         version: 4.20.3
+
+  packages/backend/packages/migrate:
+    dependencies:
+      graphile-migrate:
+        specifier: ^1.4.1
+        version: 1.4.1
 
   packages/frontend:
     dependencies:
