@@ -48,6 +48,19 @@ packages/
 - Use semicolons in all TypeScript/JavaScript code
 - Follow functional programming principles with Effect-TS
 
+## Code Quality Requirements
+
+**CRITICAL: Always run linter and ensure the project compiles before committing**
+
+**See `.cursor/rules/commit-guidelines.mdc` for detailed pre-commit requirements.**
+
+Before any commit, you MUST verify:
+1. `pnpm lint` - passes without errors
+2. `pnpm type-check` - all types are valid
+3. `pnpm build` - project compiles successfully
+4. `pnpm test:unit` - all tests pass
+5. `pnpm format:check` - code is properly formatted
+
 ## Database Migration Rules
 
 **See `packages/backend/.cursorrules` for detailed migration workflow rules.**
