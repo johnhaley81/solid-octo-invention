@@ -163,32 +163,59 @@ pnpm test
 
 ### Pre-Push Hook
 
-This project includes a comprehensive pre-push git hook that automatically runs
-quality checks before allowing pushes:
+This project includes a comprehensive pre-push git hook that runs **CI-equivalent checks locally** before allowing pushes. This ensures code quality and prevents broken builds from reaching the remote repository.
 
-- **Type Checking**: Ensures TypeScript types are valid across all packages
-- **Linting**: Runs ESLint to catch code quality issues
-- **Formatting**: Verifies code formatting with Prettier
-- **Building**: Ensures all packages build successfully
-- **Testing**: Runs unit tests to verify functionality
-- **Secret Scanning**: Uses trufflehog to detect potential secrets
+#### Checks Performed
 
-The hook runs automatically on `git push`. Configure it via `.pre-push-config`:
+The hook runs the same checks as our CI pipeline:
+
+- **Type Checking** (~30-60s): `pnpm type-check` - Validates TypeScript types across all packages
+- **Linting & Formatting** (~15-30s): `pnpm lint && pnpm format:check` - Enforces code style and quality
+- **Unit Tests** (~60-120s): `pnpm test:unit` - Runs all unit tests to verify functionality  
+- **Build** (~90-180s): `pnpm build` - Ensures all packages compile successfully
+- **Secret Scanning** (~5-15s): `trufflehog` - Detects potential secrets in changed files
+
+#### Configuration
+
+The hook runs automatically on `git push` and is fully configurable via `.pre-push-config`:
 
 ```bash
-# Enable/disable specific checks
-ENABLE_BUILD_CHECKS=true
-ENABLE_LINT_CHECKS=true
+# Enable/disable individual checks
 ENABLE_TYPE_CHECKS=true
+ENABLE_LINT_CHECKS=true
 ENABLE_TEST_CHECKS=true
+ENABLE_BUILD_CHECKS=true
 ENABLE_SECRET_SCANNING=true
 
-# Skip checks for emergency branches
-SKIP_BRANCHES="hotfix/*,release/*"
+# Performance optimizations
+SKIP_DEPENDENCY_INSTALL=false  # Skip pnpm install if deps are current
+CHECK_TIMEOUT=600              # Timeout per check (10 minutes)
 
-# Adjust timeout for large projects
-CHECK_TIMEOUT=600
+# Skip all checks for specific branches
+SKIP_BRANCHES="hotfix/*,emergency/*"
+
+# Custom commands (advanced)
+CUSTOM_TEST_COMMAND="pnpm test:unit --changed"  # Run only changed tests
 ```
+
+#### Performance Tips
+
+- **Fast Development**: Disable slower checks during active development:
+  ```bash
+  ENABLE_BUILD_CHECKS=false
+  ENABLE_TEST_CHECKS=false
+  SKIP_DEPENDENCY_INSTALL=true
+  ```
+
+- **Emergency Pushes**: Skip all checks for hotfix branches:
+  ```bash
+  SKIP_BRANCHES="hotfix/*,emergency/*"
+  ```
+
+- **Targeted Testing**: Use custom commands for faster feedback:
+  ```bash
+  CUSTOM_TEST_COMMAND="pnpm --filter backend test:unit"
+  ```
 
 To bypass the hook in emergencies:
 
