@@ -1,0 +1,124 @@
+---
+description: Commit guidelines and pre-commit checks for code quality
+alwaysApply: true
+---
+
+# Commit Guidelines and Quality Checks
+
+## Pre-Commit Requirements
+
+**CRITICAL: Before creating any commit, you MUST ensure the project passes all quality checks:**
+
+### 1. Linting Check
+```bash
+pnpm lint
+```
+- Must pass without errors
+- Fix any linting issues before committing
+- Use `pnpm lint:fix` to automatically fix issues when possible
+
+### 2. Type Checking
+```bash
+pnpm type-check
+```
+- All TypeScript types must be valid across all packages
+- Fix any type errors before committing
+- Ensure no `any` types are introduced without justification
+
+### 3. Build Verification
+```bash
+pnpm build
+```
+- All packages must build successfully
+- Fix any build errors before committing
+- Ensure no breaking changes to build process
+
+### 4. Test Execution
+```bash
+pnpm test:unit
+```
+- All unit tests must pass
+- Add tests for new functionality
+- Update tests for modified functionality
+
+### 5. Format Verification
+```bash
+pnpm format:check
+```
+- Code must be properly formatted
+- Use `pnpm format` to fix formatting issues
+- Ensure consistent code style across the project
+
+## Commit Workflow
+
+1. **Make your changes**
+2. **Run quality checks in order:**
+   ```bash
+   # Check formatting first (fastest)
+   pnpm format:check || pnpm format
+   
+   # Run linting
+   pnpm lint
+   
+   # Verify types
+   pnpm type-check
+   
+   # Run tests
+   pnpm test:unit
+   
+   # Verify build
+   pnpm build
+   ```
+3. **Only commit if ALL checks pass**
+4. **Write descriptive commit messages**
+
+## Quality Check Commands
+
+### Quick Check (recommended before commit)
+```bash
+# Run all essential checks
+pnpm lint && pnpm type-check && pnpm test:unit && pnpm build
+```
+
+### Format and Fix
+```bash
+# Auto-fix formatting and linting issues
+pnpm format && pnpm lint:fix
+```
+
+## Commit Message Format
+
+Use conventional commit format:
+```
+type(scope): description
+
+- feat: new feature
+- fix: bug fix
+- docs: documentation changes
+- style: formatting changes
+- refactor: code refactoring
+- test: adding tests
+- chore: maintenance tasks
+```
+
+## Emergency Situations
+
+If you absolutely must commit without passing all checks (emergency hotfix):
+1. Document why in the commit message
+2. Create a follow-up issue to fix the quality issues
+3. Fix the issues in the next commit
+
+## Integration with Development Tools
+
+- **Cursor AI**: Always run these checks before suggesting commits
+- **Pre-push Hook**: The project has a pre-push hook that will catch issues, but local checking is faster
+- **CI/CD**: These same checks run in CI, so passing them locally prevents CI failures
+
+## Performance Tips
+
+- Run `pnpm format:check` first (fastest check)
+- Use `pnpm lint:fix` to auto-fix many linting issues
+- Keep dependencies up to date to avoid build issues
+- Run tests frequently during development to catch issues early
+
+Remember: **Quality code is committed code. Never commit broken code.**
