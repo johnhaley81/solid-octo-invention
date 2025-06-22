@@ -1,0 +1,21 @@
+{
+  "name": "@solid-octo-invention/migrate",
+  "version": "0.1.0",
+  "description": "Database migration package using Graphile Migrate",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "graphile-migrate watch",
+    "migrate:up": "graphile-migrate migrate",
+    "migrate:down": "graphile-migrate reset --erase",
+    "migrate:reset": "graphile-migrate reset --erase && graphile-migrate migrate",
+    "migrate:commit": "graphile-migrate commit"
+  },
+  "dependencies": {
+    "graphile-migrate": "^1.4.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
