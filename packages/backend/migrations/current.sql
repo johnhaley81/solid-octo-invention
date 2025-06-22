@@ -153,6 +153,11 @@ ALTER TABLE app_private.user_sessions ENABLE ROW LEVEL SECURITY;
 -- Basic RLS policies (can be customized based on authentication needs)
 CREATE POLICY users_select_policy ON users FOR SELECT USING (true);
 
+-- Policy to allow users to only update their own records
+CREATE POLICY users_update_policy ON users FOR UPDATE 
+  USING (id = current_setting('app.current_user_id', true)::UUID)
+  WITH CHECK (id = current_setting('app.current_user_id', true)::UUID);
+
 -- App_private RLS policies - only accessible by the user themselves
 CREATE POLICY password_credentials_policy ON app_private.password_credentials 
   FOR ALL USING (user_id = current_setting('app.current_user_id', true)::UUID);
