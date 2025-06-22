@@ -28,6 +28,7 @@
     "migrate:up": "pnpm --filter backend migrate:up",
     "migrate:down": "pnpm --filter backend migrate:down",
     "migrate:reset": "pnpm --filter backend migrate:reset",
+    "migrate:commit": "pnpm --filter backend migrate:commit",
     "worker:start": "pnpm --filter backend worker:start",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",

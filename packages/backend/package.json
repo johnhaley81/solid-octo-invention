@@ -19,6 +19,7 @@
     "migrate:up": "graphile-migrate migrate",
     "migrate:down": "graphile-migrate reset --erase",
     "migrate:reset": "graphile-migrate reset --erase && graphile-migrate migrate",
+    "migrate:commit": "graphile-migrate commit",
     "migrate:watch": "graphile-migrate watch",
     "worker:start": "tsx src/worker/index.ts",
     "db:seed": "tsx scripts/seed.ts"
