@@ -13,7 +13,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "pnpm --parallel --filter \"./packages/*\" dev",
+    "dev": "pnpm --parallel --filter \"./packages/*\" dev & pnpm --filter backend migrate:watch",
     "build": "pnpm --filter \"./packages/*\" build",
     "test": "pnpm --filter \"./packages/*\" test",
     "test:unit": "pnpm --filter \"./packages/*\" test:unit",
