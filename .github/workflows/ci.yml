@@ -25,11 +25,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
           version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Generate cache key
         id: cache-key
@@ -38,7 +44,7 @@ jobs:
       - name: Cache pnpm dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.pnpm-store
+          path: ${{ env.STORE_PATH }}
           key: ${{ steps.cache-key.outputs.key }}
           restore-keys: |
             pnpm-
@@ -110,6 +116,16 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Cache ESLint
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/*/.eslintcache
+            .eslintcache
+          key: eslint-${{ runner.os }}-${{ hashFiles('**/.eslintrc.*', '**/package.json') }}
+          restore-keys: |
+            eslint-${{ runner.os }}-
 
       - name: Lint all packages
         run: pnpm lint
@@ -203,13 +219,37 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Cache TypeScript build info
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/*/tsconfig.tsbuildinfo
+            packages/*/.tsbuildinfo
+          key: typescript-${{ runner.os }}-${{ hashFiles('**/tsconfig.json', '**/package.json') }}
+          restore-keys: |
+            typescript-${{ runner.os }}-
+
+      - name: Cache build outputs
+        uses: actions/cache@v4
+        id: build-cache
+        with:
+          path: |
+            packages/*/dist
+            packages/*/build
+          key: build-${{ runner.os }}-${{ hashFiles('**/src/**/*', '**/package.json', '**/tsconfig.json') }}
+          restore-keys: |
+            build-${{ runner.os }}-
+
       - name: Build shared package
+        if: steps.build-cache.outputs.cache-hit != 'true'
         run: pnpm --filter shared build
 
       - name: Build backend
+        if: steps.build-cache.outputs.cache-hit != 'true'
         run: pnpm --filter backend build
 
       - name: Build frontend
+        if: steps.build-cache.outputs.cache-hit != 'true'
         run: pnpm --filter frontend build
         env:
           VITE_GRAPHQL_ENDPOINT: /graphql
@@ -280,8 +320,22 @@ jobs:
         with:
           name: build-artifacts
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter frontend exec playwright install --with-deps
+
+      - name: Install Playwright dependencies only (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter frontend exec playwright install-deps
 
       - name: Run database migrations
         run: cd packages/backend && pnpm migrate:up
