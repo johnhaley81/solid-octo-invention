@@ -9,13 +9,13 @@ interface LayoutProps {
  * Provides consistent structure across all pages
  */
 export function Layout({ children }: LayoutProps) {
-  const location = useLocation();
+  const location = useLocation()
   
   const isActive = (path: string) => {
     return location.pathname === path 
       ? 'text-blue-600 font-semibold border-b-2 border-blue-600' 
-      : 'text-gray-600 hover:text-blue-600 transition-colors';
-  };
+      : 'text-gray-600 hover:text-blue-600 transition-colors'
+  }
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -57,5 +57,5 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </footer>
     </div>
-  );
+  )
 }

@@ -36,7 +36,7 @@ jobs:
         run: echo "key=pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
 
       - name: Cache pnpm dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ steps.cache-key.outputs.key }}
@@ -66,7 +66,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Restore pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ needs.setup.outputs.cache-key }}
@@ -103,7 +103,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Restore pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ needs.setup.outputs.cache-key }}
@@ -161,7 +161,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Restore pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ needs.setup.outputs.cache-key }}
@@ -195,7 +195,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Restore pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ needs.setup.outputs.cache-key }}
@@ -215,7 +215,7 @@ jobs:
           VITE_GRAPHQL_ENDPOINT: /graphql
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
@@ -267,7 +267,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Restore pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ needs.setup.outputs.cache-key }}
@@ -276,7 +276,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: build-artifacts
 
@@ -305,7 +305,7 @@ jobs:
           VITE_GRAPHQL_ENDPOINT: http://localhost:3000/graphql
 
       - name: Upload E2E test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: e2e-test-results
@@ -332,7 +332,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Restore pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ needs.setup.outputs.cache-key }}
@@ -366,7 +366,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Restore pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ needs.setup.outputs.cache-key }}

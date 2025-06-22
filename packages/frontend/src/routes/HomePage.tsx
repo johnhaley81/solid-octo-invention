@@ -92,5 +92,5 @@ export function HomePage() {
         </ul>
       </section>
     </div>
-  );
+  )
 }

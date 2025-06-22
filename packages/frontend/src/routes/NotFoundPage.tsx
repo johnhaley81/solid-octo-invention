@@ -29,5 +29,5 @@ export function NotFoundPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
