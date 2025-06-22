@@ -163,7 +163,8 @@ pnpm test
 
 ### Pre-Push Hook
 
-This project includes a comprehensive pre-push git hook that automatically runs quality checks before allowing pushes:
+This project includes a comprehensive pre-push git hook that automatically runs
+quality checks before allowing pushes:
 
 - **Type Checking**: Ensures TypeScript types are valid across all packages
 - **Linting**: Runs ESLint to catch code quality issues
@@ -190,6 +191,7 @@ CHECK_TIMEOUT=600
 ```
 
 To bypass the hook in emergencies:
+
 ```bash
 git push --no-verify
 ```
