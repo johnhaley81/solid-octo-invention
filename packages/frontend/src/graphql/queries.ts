@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from '@apollo/client'
 
 /**
  * GraphQL queries for the application
@@ -35,7 +35,7 @@ export const GET_POSTS = gql`
       totalCount
     }
   }
-`;
+`
 
 /**
  * Get a single post by slug with comments
@@ -73,7 +73,7 @@ export const GET_POST_BY_SLUG = gql`
       }
     }
   }
-`;
+`
 
 /**
  * Get user profile information
@@ -89,7 +89,7 @@ export const GET_USER = gql`
       updatedAt
     }
   }
-`;
+`
 
 /**
  * Get comments for a specific post
@@ -122,4 +122,4 @@ export const GET_COMMENTS = gql`
       totalCount
     }
   }
-`;
+`

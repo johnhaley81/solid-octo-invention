@@ -1,6 +1,6 @@
-import { Effect as E, Layer, Context, Schedule, Redacted } from 'effect';
-import { run } from 'graphile-worker';
-import { envVars } from '../config/index.js';
+import { Effect as E, Layer, Context, Schedule, Redacted } from 'effect'
+import { run } from 'graphile-worker'
+import { envVars } from '../config/index.js'
 
 /**
  * Worker service interface for background job processing
@@ -28,19 +28,19 @@ export interface JobOptions {
  * Worker error types
  */
 export class WorkerError extends Error {
-  readonly _tag = 'WorkerError';
-  public readonly errorCause?: unknown;
+  readonly _tag = 'WorkerError'
+  public readonly errorCause?: unknown
 
   constructor(message: string, cause?: unknown) {
-    super(message);
-    this.errorCause = cause;
+    super(message)
+    this.errorCause = cause
   }
 }
 
 /**
  * Worker service tag for dependency injection
  */
-export const WorkerService = Context.GenericTag<WorkerService>('WorkerService');
+export const WorkerService = Context.GenericTag<WorkerService>('WorkerService')
 
 /**
  * Task handlers registry
@@ -48,31 +48,31 @@ export const WorkerService = Context.GenericTag<WorkerService>('WorkerService');
 const taskHandlers = {
   // Example task handlers
   'send-email': async (payload: unknown) => {
-    const typedPayload = payload as { to: string; subject: string; body: string };
-    console.log('Sending email:', typedPayload);
+    const typedPayload = payload as { to: string; subject: string; body: string }
+    console.log('Sending email:', typedPayload)
     // Implement email sending logic here
   },
 
   'process-image': async (payload: unknown) => {
-    const typedPayload = payload as { imageUrl: string; userId: string };
-    console.log('Processing image:', typedPayload);
+    const typedPayload = payload as { imageUrl: string; userId: string }
+    console.log('Processing image:', typedPayload)
     // Implement image processing logic here
   },
 
   'cleanup-expired-sessions': async (_payload: unknown) => {
-    console.log('Cleaning up expired sessions');
+    console.log('Cleaning up expired sessions')
     // Implement session cleanup logic here
   },
-};
+}
 
 /**
  * Create worker service implementation
  */
 const makeWorkerService = E.gen(function* () {
-  const databaseUrl = yield* envVars.DATABASE_URL;
-  const concurrency = yield* envVars.WORKER_CONCURRENCY;
+  const databaseUrl = yield* envVars.DATABASE_URL
+  const concurrency = yield* envVars.WORKER_CONCURRENCY
 
-  yield* E.logInfo('Initializing Graphile Worker', { concurrency });
+  yield* E.logInfo('Initializing Graphile Worker', { concurrency })
 
   // Start the worker
   const workerPool = yield* E.tryPromise({
@@ -86,13 +86,13 @@ const makeWorkerService = E.gen(function* () {
         noHandleSignals: true,
       }),
     catch: error => new WorkerError('Failed to start worker', error),
-  });
+  })
 
-  yield* E.logInfo('Graphile Worker started successfully');
+  yield* E.logInfo('Graphile Worker started successfully')
 
   const addJob = (taskIdentifier: string, payload?: any, options?: JobOptions) =>
     E.gen(function* () {
-      yield* E.logInfo('Adding job to queue', { taskIdentifier, payload, options });
+      yield* E.logInfo('Adding job to queue', { taskIdentifier, payload, options })
 
       yield* E.tryPromise({
         try: () =>
@@ -103,14 +103,14 @@ const makeWorkerService = E.gen(function* () {
             ...(options?.jobKey && { jobKey: options.jobKey }),
           }),
         catch: error => new WorkerError(`Failed to add job: ${taskIdentifier}`, error),
-      });
+      })
 
-      yield* E.logInfo('Job added successfully', { taskIdentifier });
-    }).pipe(E.withSpan('worker-add-job', { attributes: { taskIdentifier } }));
+      yield* E.logInfo('Job added successfully', { taskIdentifier })
+    }).pipe(E.withSpan('worker-add-job', { attributes: { taskIdentifier } }))
 
   const shutdown = () =>
     E.gen(function* () {
-      yield* E.logInfo('Shutting down Graphile Worker');
+      yield* E.logInfo('Shutting down Graphile Worker')
 
       yield* E.tryPromise({
         try: () => workerPool.stop(), // Use stop() instead of gracefulShutdown
@@ -118,21 +118,21 @@ const makeWorkerService = E.gen(function* () {
       }).pipe(
         E.tapError(error => E.logError('Failed to gracefully shutdown worker', { error })),
         E.ignore,
-      );
+      )
 
-      yield* E.logInfo('Graphile Worker shutdown complete');
-    });
+      yield* E.logInfo('Graphile Worker shutdown complete')
+    })
 
   return {
     addJob,
     shutdown,
-  } satisfies WorkerService;
-});
+  } satisfies WorkerService
+})
 
 /**
  * Worker service layer
  */
-export const WorkerServiceLive = Layer.effect(WorkerService, makeWorkerService);
+export const WorkerServiceLive = Layer.effect(WorkerService, makeWorkerService)
 
 /**
  * Default worker service layer
@@ -146,7 +146,7 @@ export const TestWorkerService = Layer.succeed(WorkerService, {
   addJob: (taskIdentifier: string, payload?: any, options?: JobOptions) =>
     E.logInfo('Test worker: job added', { taskIdentifier, payload, options }),
   shutdown: () => E.succeed(undefined),
-} satisfies WorkerService);
+} satisfies WorkerService)
 
 /**
  * Utility functions for common job patterns
@@ -157,8 +157,8 @@ export const WorkerUtils = {
    */
   scheduleJob: (taskIdentifier: string, payload: any, runAt: Date) =>
     E.gen(function* () {
-      const workerService = yield* WorkerService;
-      yield* workerService.addJob(taskIdentifier, payload, { runAt });
+      const workerService = yield* WorkerService
+      yield* workerService.addJob(taskIdentifier, payload, { runAt })
     }),
 
   /**
@@ -170,10 +170,10 @@ export const WorkerUtils = {
     schedule: Schedule.Schedule<any, any, any>,
   ) =>
     E.gen(function* () {
-      const workerService = yield* WorkerService;
+      const workerService = yield* WorkerService
 
       // This is a simplified example - in practice, you'd want a more sophisticated scheduler
-      yield* E.repeat(workerService.addJob(taskIdentifier, payload), schedule);
+      yield* E.repeat(workerService.addJob(taskIdentifier, payload), schedule)
     }),
 
   /**
@@ -181,7 +181,7 @@ export const WorkerUtils = {
    */
   addUrgentJob: (taskIdentifier: string, payload: any) =>
     E.gen(function* () {
-      const workerService = yield* WorkerService;
-      yield* workerService.addJob(taskIdentifier, payload, { priority: 100 });
+      const workerService = yield* WorkerService
+      yield* workerService.addJob(taskIdentifier, payload, { priority: 100 })
     }),
-};
+}

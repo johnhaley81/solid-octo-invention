@@ -1,18 +1,18 @@
-import { useQuery } from '@apollo/client';
-import { useParams, Link } from 'react-router-dom';
-import { GET_POST_BY_SLUG } from '../graphql/queries.js';
+import { useQuery } from '@apollo/client'
+import { useParams, Link } from 'react-router-dom'
+import { GET_POST_BY_SLUG } from '../graphql/queries.js'
 
 /**
  * Post detail page component
  * Displays a single post with its content and comments
  */
 export function PostDetailPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug } = useParams<{ slug: string }>()
 
   const { loading, error, data } = useQuery(GET_POST_BY_SLUG, {
     variables: { slug },
     skip: !slug,
-  });
+  })
 
   if (loading) {
     return (
@@ -21,7 +21,7 @@ export function PostDetailPage() {
           <p>Loading post...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -35,10 +35,10 @@ export function PostDetailPage() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
-  const post = data?.posts?.nodes?.[0];
+  const post = data?.posts?.nodes?.[0]
 
   if (!post) {
     return (
@@ -51,10 +51,10 @@ export function PostDetailPage() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
-  const comments = post.commentsByPostId?.nodes || [];
+  const comments = post.commentsByPostId?.nodes || []
 
   return (
     <div className="post-detail-page">
@@ -119,5 +119,5 @@ export function PostDetailPage() {
         )}
       </section>
     </div>
-  );
+  )
 }

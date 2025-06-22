@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'
 
 /**
  * Home page component
@@ -89,5 +89,5 @@ export function HomePage() {
         </ul>
       </section>
     </div>
-  );
+  )
 }

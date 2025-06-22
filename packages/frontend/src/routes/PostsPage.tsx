@@ -1,6 +1,6 @@
-import { useQuery } from '@apollo/client';
-import { Link } from 'react-router-dom';
-import { GET_POSTS } from '../graphql/queries.js';
+import { useQuery } from '@apollo/client'
+import { Link } from 'react-router-dom'
+import { GET_POSTS } from '../graphql/queries.js'
 
 /**
  * Posts listing page component
@@ -12,7 +12,7 @@ export function PostsPage() {
       first: 10,
       condition: { status: 'published' },
     },
-  });
+  })
 
   if (loading) {
     return (
@@ -21,7 +21,7 @@ export function PostsPage() {
           <p>Loading posts...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -32,10 +32,10 @@ export function PostsPage() {
           <p>{error.message}</p>
         </div>
       </div>
-    );
+    )
   }
 
-  const posts = data?.posts?.nodes || [];
+  const posts = data?.posts?.nodes || []
 
   return (
     <div className="posts-page">
@@ -85,5 +85,5 @@ export function PostsPage() {
         </div>
       )}
     </div>
-  );
+  )
 }
