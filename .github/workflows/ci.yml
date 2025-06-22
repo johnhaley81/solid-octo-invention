@@ -486,11 +486,12 @@ jobs:
 
           # Run migrations (this will also generate schema dump via afterCurrent hook)
           echo "📦 Running migrations..."
-          cd ../../../
+          ROOT_DIR=$(pwd)/../../../
+          cd "$ROOT_DIR"
           pnpm migrate:up
 
           # Check if schema dump was generated
-          cd packages/backend/packages/migrate
+          cd "$ROOT_DIR/packages/backend/packages/migrate"
           if [ ! -f "schema-dump.sql" ]; then
             echo "❌ ERROR: Schema dump was not generated"
             exit 1
