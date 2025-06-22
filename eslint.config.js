@@ -40,7 +40,7 @@ export default [
       'template-curly-spacing': 'error',
       'arrow-spacing': 'error',
       'comma-dangle': ['error', 'always-multiline'],
-      semi: ['error', 'never'],
+      semi: ['error', 'always'],
       quotes: ['error', 'single', { avoidEscape: true }],
 
       // Effect-TS specific rules
