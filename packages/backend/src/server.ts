@@ -29,7 +29,11 @@ const ServerProgram = E.gen(function* () {
     enableGraphiQL,
   });
 
-  // Create Express app first
+  // Initialize services
+  const databaseService = yield* DatabaseService;
+  const workerService = yield* WorkerService;
+
+  // Create Express app
   const app = express();
 
   // Security middleware
@@ -57,7 +61,41 @@ const ServerProgram = E.gen(function* () {
     });
   });
 
-  // Start the server first (before database initialization)
+  // PostGraphile middleware
+  app.use(
+    postgraphile(Redacted.value(databaseUrl), 'public', {
+      watchPg: nodeEnv === 'development',
+      graphiql: enableGraphiQL,
+      enhanceGraphiql: true,
+      dynamicJson: true,
+      setofFunctionsContainNulls: false,
+      ignoreRBAC: false,
+      showErrorStack: nodeEnv === 'development' ? 'json' : false,
+      extendedErrors: nodeEnv === 'development' ? ['hint', 'detail', 'errcode'] : ['errcode'],
+      appendPlugins: [
+        // Add PostGraphile plugins here as needed
+      ],
+      ...(nodeEnv === 'development' && { exportGqlSchemaPath: 'schema.graphql' }),
+      sortExport: true,
+      legacyRelations: 'omit',
+      pgSettings: _req => ({
+        // Set PostgreSQL settings based on request context
+        role: 'postgres', // This should be dynamic based on authentication
+      }),
+    }),
+  );
+
+  // Error handling middleware
+  app.use(
+    (err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+      console.error('Express error:', err.message, err.stack);
+      res.status(500).json({
+        error: nodeEnv === 'development' ? err.message : 'Internal server error',
+      });
+    },
+  );
+
+  // Start the server
   const server = app.listen(port, () => {
     console.log('Server started successfully', {
       port,
@@ -72,118 +110,39 @@ const ServerProgram = E.gen(function* () {
     healthEndpoint: `http://localhost:${port}/health`,
   });
 
-  // Now try to initialize database services
-  const databaseResult = yield* E.either(DatabaseService);
-  const workerResult = yield* E.either(WorkerService);
-  
-  if (E.isRight(databaseResult) && E.isRight(workerResult)) {
-    const databaseService = databaseResult.right;
-    const workerService = workerResult.right;
+  // Graceful shutdown
+  const shutdown = () =>
+    E.gen(function* () {
+      yield* E.logInfo('Shutting down server...');
 
-    // Add PostGraphile middleware after database is ready
-    app.use(
-      postgraphile(Redacted.value(databaseUrl), 'public', {
-        watchPg: nodeEnv === 'development',
-        graphiql: enableGraphiQL,
-        enhanceGraphiql: true,
-        dynamicJson: true,
-        setofFunctionsContainNulls: false,
-        ignoreRBAC: false,
-        showErrorStack: nodeEnv === 'development' ? 'json' : false,
-        extendedErrors: nodeEnv === 'development' ? ['hint', 'detail', 'errcode'] : ['errcode'],
-        appendPlugins: [
-          // Add PostGraphile plugins here as needed
-        ],
-        ...(nodeEnv === 'development' && { exportGqlSchemaPath: 'schema.graphql' }),
-        sortExport: true,
-        legacyRelations: 'omit',
-        pgSettings: _req => ({
-          // Set PostgreSQL settings based on request context
-          role: 'postgres', // This should be dynamic based on authentication
-        }),
-      }),
-    );
+      // Close worker connections
+      yield* workerService.shutdown();
 
-    yield* E.logInfo('PostGraphile middleware initialized successfully');
-    
-    // Store services for shutdown
-    const shutdown = () =>
-      E.gen(function* () {
-        yield* E.logInfo('Shutting down server...');
+      // Close database connections
+      yield* databaseService.close();
 
-        // Close worker connections
-        yield* workerService.shutdown();
-
-        // Close database connections
-        yield* databaseService.close();
-
-        // Close HTTP server
-        yield* E.async<void>(resume => {
-          server.close(err => {
-            if (err) {
-              resume(E.die(err));
-            } else {
-              resume(E.succeed(undefined));
-            }
-          });
+      // Close HTTP server
+      yield* E.async<void>(resume => {
+        server.close(err => {
+          if (err) {
+            resume(E.die(err));
+          } else {
+            resume(E.succeed(undefined));
+          }
         });
-
-        yield* E.logInfo('Server shutdown complete');
       });
 
-    // Handle shutdown signals
-    process.on('SIGINT', () => E.runSync(shutdown()));
-    process.on('SIGTERM', () => E.runSync(shutdown()));
-  } else {
-    const dbError = E.isLeft(databaseResult) ? databaseResult.left : null;
-    const workerError = E.isLeft(workerResult) ? workerResult.left : null;
-    
-    yield* E.logWarning('Failed to initialize database services, GraphQL will not be available', { 
-      databaseError: dbError, 
-      workerError: workerError 
+      yield* E.logInfo('Server shutdown complete');
     });
-    
-    // Add a fallback endpoint for GraphQL when database is not available
-    app.use('/graphql', (_req, res) => {
-      res.status(503).json({
-        error: 'Database not available',
-        message: 'Please ensure the database is running and try again',
-      });
-    });
-    
-    // Simple shutdown for server-only mode
-    const shutdown = () =>
-      E.gen(function* () {
-        yield* E.logInfo('Shutting down server...');
 
-        // Close HTTP server
-        yield* E.async<void>(resume => {
-          server.close(err => {
-            if (err) {
-              resume(E.die(err));
-            } else {
-              resume(E.succeed(undefined));
-            }
-          });
-        });
+  // Handle shutdown signals
+  process.on('SIGTERM', () => {
+    E.runPromise(shutdown()).catch(console.error);
+  });
 
-        yield* E.logInfo('Server shutdown complete');
-      });
-
-    // Handle shutdown signals
-    process.on('SIGINT', () => E.runSync(shutdown()));
-    process.on('SIGTERM', () => E.runSync(shutdown()));
-  }
-
-  // Error handling middleware
-  app.use(
-    (err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-      console.error('Express error:', err.message, err.stack);
-      res.status(500).json({
-        error: nodeEnv === 'development' ? err.message : 'Internal server error',
-      });
-    },
-  );
+  process.on('SIGINT', () => {
+    E.runPromise(shutdown()).catch(console.error);
+  });
 
   return server;
 }).pipe(
