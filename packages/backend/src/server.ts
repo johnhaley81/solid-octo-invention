@@ -207,7 +207,7 @@ const program = ServerProgram.pipe(
       }
       
       process.exit(1);
-    })
+    }),
   ),
 );
 
