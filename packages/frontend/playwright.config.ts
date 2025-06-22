@@ -48,10 +48,11 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'] },
     },
 
-    {
+    // Skip WebKit in CI due to dependency issues
+    ...(process.env.CI ? [] : [{
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-    },
+    }]),
 
     /* Test against mobile viewports. */
     // {
