@@ -14,12 +14,10 @@ test.describe('Basic Application Tests', () => {
   test('should navigate to posts page', async ({ page }) => {
     await page.goto('/');
 
-    // Look for navigation link to posts
-    const postsLink = page.locator('a[href="/posts"]');
-    if (await postsLink.isVisible()) {
-      await postsLink.click();
-      await expect(page).toHaveURL('/posts');
-    }
+    // Look for navigation link to posts (use first() to handle multiple links)
+    const postsLink = page.locator('a[href="/posts"]').first();
+    await postsLink.click();
+    await expect(page).toHaveURL('/posts');
   });
 
   test('should handle 404 page', async ({ page }) => {
