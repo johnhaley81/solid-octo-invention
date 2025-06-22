@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication System</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 Authentication System</h1>
+            <p>Secure authentication with Email/Password + OTP and WebAuthn Passkeys</p>
+        </header>
+
+        <!-- Not authenticated view -->
+        <div id="guest-view" class="auth-section">
+            <div class="auth-methods">
+                <div class="auth-method">
+                    <h2>🔑 Traditional Authentication</h2>
+                    <p>Email/Password with mandatory email verification and login OTP</p>
+                    <div class="button-group">
+                        <button onclick="showLogin()" class="btn btn-primary">Login</button>
+                        <button onclick="showRegister()" class="btn btn-secondary">Register</button>
+                    </div>
+                </div>
+
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+
+                <div class="auth-method">
+                    <h2>🚀 Modern Authentication</h2>
+                    <p>WebAuthn Passkeys with biometric authentication</p>
+                    <div class="button-group">
+                        <button onclick="showWebAuthnLogin()" class="btn btn-primary">Login with Passkey</button>
+                        <button onclick="showWebAuthnRegister()" class="btn btn-secondary">Register with Passkey</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form" class="form-container" style="display: none;">
+                <h3>Login with Email/Password</h3>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Email:</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password:</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <div id="otp-section" style="display: none;">
+                        <div class="form-group">
+                            <label for="loginOtp">Enter OTP from your email:</label>
+                            <input type="text" id="loginOtp" maxlength="6" pattern="[0-9]{6}">
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                        <button type="button" onclick="hideAllForms()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+                <p class="form-links">
+                    <a href="#" onclick="showPasswordReset()">Forgot Password?</a>
+                </p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="form-container" style="display: none;">
+                <h3>Register with Email/Password</h3>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="registerEmail">Email:</label>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Password:</label>
+                        <input type="password" id="registerPassword" required>
+                        <small>Must contain uppercase, lowercase, number, and special character</small>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">Register</button>
+                        <button type="button" onclick="hideAllForms()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- WebAuthn Login -->
+            <div id="webauthn-login" class="form-container" style="display: none;">
+                <h3>Login with Passkey</h3>
+                <form id="webauthnLoginForm">
+                    <div class="form-group">
+                        <label for="webauthnLoginEmail">Email:</label>
+                        <input type="email" id="webauthnLoginEmail" required>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">🔐 Authenticate with Passkey</button>
+                        <button type="button" onclick="hideAllForms()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- WebAuthn Register -->
+            <div id="webauthn-register" class="form-container" style="display: none;">
+                <h3>Register with Passkey</h3>
+                <form id="webauthnRegisterForm">
+                    <div class="form-group">
+                        <label for="webauthnRegisterEmail">Email:</label>
+                        <input type="email" id="webauthnRegisterEmail" required>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">🚀 Create Passkey</button>
+                        <button type="button" onclick="hideAllForms()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Password Reset -->
+            <div id="password-reset" class="form-container" style="display: none;">
+                <h3>Reset Password</h3>
+                <form id="passwordResetForm">
+                    <div class="form-group">
+                        <label for="resetEmail">Email:</label>
+                        <input type="email" id="resetEmail" required>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">Send Reset Link</button>
+                        <button type="button" onclick="hideAllForms()" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Authenticated user view -->
+        <div id="user-view" class="auth-section" style="display: none;">
+            <div class="user-info">
+                <h2>Welcome! 👋</h2>
+                <div id="user-details"></div>
+            </div>
+
+            <div class="user-actions">
+                <h3>Account Management</h3>
+                <div class="button-group">
+                    <button onclick="showProfile()" class="btn btn-secondary">View Profile</button>
+                    <button onclick="showAuthMethodSwitch()" class="btn btn-secondary">Switch Auth Method</button>
+                    <button onclick="logout()" class="btn btn-danger">Logout</button>
+                </div>
+            </div>
+
+            <!-- Profile View -->
+            <div id="profile-view" class="form-container" style="display: none;">
+                <h3>User Profile</h3>
+                <div id="profile-details"></div>
+                <button onclick="hideProfile()" class="btn btn-secondary">Close</button>
+            </div>
+
+            <!-- Auth Method Switch -->
+            <div id="auth-switch" class="form-container" style="display: none;">
+                <h3>Switch Authentication Method</h3>
+                <div id="switch-options"></div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="messages" class="messages"></div>
+
+        <!-- Loading indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/webauthn.js"></script>
+    <script>
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+        });
+    </script>
+</body>
+</html>
+
