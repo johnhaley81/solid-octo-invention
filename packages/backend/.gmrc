@@ -1,0 +1,16 @@
+{
+  "connectionString": ":DATABASE_URL",
+  "shadowConnectionString": ":SHADOW_DATABASE_URL", 
+  "rootConnectionString": ":ROOT_DATABASE_URL",
+  "pgSettings": {
+    "search_path": "public"
+  },
+  "placeholders": {
+    ":DATABASE_URL": "!ENV",
+    ":SHADOW_DATABASE_URL": "!ENV",
+    ":ROOT_DATABASE_URL": "!ENV"
+  },
+  "afterReset": [],
+  "afterAllMigrations": [],
+  "afterCurrent": []
+}

@@ -143,5 +143,4 @@ schema.graphql
 introspection.json
 
 # Graphile
-.gmrc
-
+# .gmrc - Included in scaffolding since it uses environment variables
