@@ -26,6 +26,7 @@ export const User = S.Struct({
   email: S.String.pipe(S.minLength(1), S.maxLength(255)),
   name: S.String.pipe(S.minLength(1), S.maxLength(100)),
   avatarUrl: S.optional(S.String),
+  authMethod: S.Literal('password', 'webauthn'),
   createdAt: S.Date,
   updatedAt: S.Date,
 });
@@ -182,3 +183,6 @@ export const SchemaUtils = {
    */
   isArchivedPost: (post: Post): post is ArchivedPost => post.status === 'archived',
 };
+
+// Re-export authentication schemas
+export * from './auth.js';

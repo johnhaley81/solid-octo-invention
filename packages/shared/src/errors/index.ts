@@ -218,3 +218,6 @@ export const ErrorUtils = {
     });
   },
 };
+
+// Re-export authentication errors
+export * from './auth.js';
