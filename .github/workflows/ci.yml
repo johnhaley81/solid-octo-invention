@@ -378,8 +378,8 @@ jobs:
         run: |
           echo "🔍 Checking for uncommitted database migrations..."
 
-          # Check if current.sql exists and has content
-          if [ -f "packages/backend/migrations/current.sql" ] && [ -s "packages/backend/migrations/current.sql" ]; then
+          # Check if current.sql exists and has non-whitespace content
+          if [ -f "packages/backend/migrations/current.sql" ] && [ -n "$(grep -v '^[[:space:]]*$' packages/backend/migrations/current.sql)" ]; then
             echo "❌ ERROR: Uncommitted migrations found in current.sql"
             echo "📋 Content of current.sql:"
             cat packages/backend/migrations/current.sql
