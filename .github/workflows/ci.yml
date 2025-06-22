@@ -263,22 +263,46 @@ jobs:
         with:
           name: build-artifacts
 
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm --filter frontend list @playwright/test --depth=0 --parseable | head -1 | cut -d: -f2)" >> $GITHUB_OUTPUT
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('**/package.json') }}
+          path: |
+            ~/.cache/ms-playwright
+            ~/Library/Caches/ms-playwright
+            %USERPROFILE%\AppData\Local\ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
           restore-keys: |
-            playwright-${{ runner.os }}-
+            playwright-browsers-${{ runner.os }}-
+
+      - name: Debug cache info
+        run: |
+          echo "Cache hit: ${{ steps.playwright-cache.outputs.cache-hit }}"
+          echo "Playwright version: ${{ steps.playwright-version.outputs.version }}"
+          echo "Cache key: playwright-browsers-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}"
+          ls -la ~/.cache/ || echo "No ~/.cache directory"
+          ls -la ~/.cache/ms-playwright/ || echo "No Playwright cache directory"
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter frontend exec playwright install --with-deps
+        run: |
+          echo "Cache miss - installing Playwright browsers..."
+          pnpm --filter frontend exec playwright install --with-deps
+          echo "Playwright installation complete"
+          ls -la ~/.cache/ms-playwright/ || echo "No Playwright cache directory after install"
 
-      - name: Install Playwright dependencies only (if cached)
+      - name: Verify Playwright browsers (if cached)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm --filter frontend exec playwright install-deps
+        run: |
+          echo "Cache hit - verifying browsers..."
+          pnpm --filter frontend exec playwright install --dry-run || {
+            echo "Cache verification failed - reinstalling browsers..."
+            pnpm --filter frontend exec playwright install --with-deps
+          }
 
       - name: Run database migrations
         run: cd packages/backend && pnpm migrate:up
@@ -297,6 +321,15 @@ jobs:
       - name: Wait for backend to be ready
         run: |
           timeout 30 bash -c 'until curl -f http://localhost:3000/health; do sleep 1; done'
+
+      - name: Start frontend server
+        run: pnpm --filter frontend dev &
+        env:
+          VITE_GRAPHQL_ENDPOINT: http://localhost:3000/graphql
+
+      - name: Wait for frontend to be ready
+        run: |
+          timeout 30 bash -c 'until curl -f http://localhost:5173; do sleep 1; done'
 
       - name: Run E2E tests
         run: pnpm --filter frontend test:e2e
