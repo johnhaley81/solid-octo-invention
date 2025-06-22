@@ -310,7 +310,7 @@ jobs:
           echo "ROOT_DATABASE_URL: $ROOT_DATABASE_URL"
           echo "Current directory: $(pwd)"
           echo "Contents of .gmrc:"
-          cat packages/backend/.gmrc
+          cat packages/backend/packages/migrate/.gmrc
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e
           SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e_shadow
@@ -318,7 +318,7 @@ jobs:
 
       - name: Run database migrations
         run: |
-          cd packages/backend
+          cd packages/backend/packages/migrate
           # Override .gmrc with E2E database URLs
           cat > .gmrc << EOF
           {
@@ -333,6 +333,7 @@ jobs:
             "afterCurrent": []
           }
           EOF
+          cd ../../../
           pnpm migrate:up
 
       - name: Build backend
@@ -450,10 +451,10 @@ jobs:
           echo "🔍 Checking for uncommitted database migrations on prod branch..."
 
           # Check if current.sql exists and has non-whitespace content
-          if [ -f "packages/backend/migrations/current.sql" ] && [ -n "$(grep -v '^[[:space:]]*$' packages/backend/migrations/current.sql)" ]; then
+          if [ -f "packages/backend/packages/migrate/migrations/current.sql" ] && [ -n "$(grep -v '^[[:space:]]*$' packages/backend/packages/migrate/migrations/current.sql)" ]; then
             echo "❌ ERROR: Uncommitted migrations found in current.sql"
             echo "📋 Content of current.sql:"
-            cat packages/backend/migrations/current.sql
+            cat packages/backend/packages/migrate/migrations/current.sql
             echo ""
             echo "🚨 All database schema changes must be committed using Graphile Migrate before merging to prod."
             echo "📖 Run 'pnpm migrate:commit' to commit your migrations."
@@ -466,7 +467,7 @@ jobs:
         run: |
           echo "🔍 Validating database schema consistency..."
 
-          cd packages/backend
+          cd packages/backend/packages/migrate
 
           # Create test database configuration
           cat > .gmrc << EOF
@@ -479,15 +480,17 @@ jobs:
             },
             "afterReset": [],
             "afterAllMigrations": [],
-            "afterCurrent": ["node scripts/dump-schema.js"]
+            "afterCurrent": ["node dump-schema.js"]
           }
           EOF
 
           # Run migrations (this will also generate schema dump via afterCurrent hook)
           echo "📦 Running migrations..."
+          cd ../../../
           pnpm migrate:up
 
           # Check if schema dump was generated
+          cd packages/backend/packages/migrate
           if [ ! -f "schema-dump.sql" ]; then
             echo "❌ ERROR: Schema dump was not generated"
             exit 1
@@ -496,7 +499,7 @@ jobs:
           echo "📊 Generated schema dump size: $(wc -c < schema-dump.sql) bytes"
 
           # Compare with committed schema dump (if it exists)
-          if git show HEAD:packages/backend/schema-dump.sql > committed-schema-dump.sql 2>/dev/null; then
+          if git show HEAD:packages/backend/packages/migrate/schema-dump.sql > committed-schema-dump.sql 2>/dev/null; then
             echo "🔍 Comparing schema dump with committed version..."
             
             # Check if there are differences (ignoring whitespace)
