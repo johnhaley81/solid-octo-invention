@@ -23,7 +23,9 @@ function DashboardPage() {
           </div>
           <div className="bg-green-50 p-4 rounded-lg border border-green-200">
             <h3 className="font-semibold text-green-900 mb-2">Activity</h3>
-            <p className="text-green-700 text-sm">View your recent activity and usage statistics.</p>
+            <p className="text-green-700 text-sm">
+              View your recent activity and usage statistics.
+            </p>
           </div>
         </div>
       </div>

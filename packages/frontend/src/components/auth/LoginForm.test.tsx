@@ -99,15 +99,17 @@ describe('LoginForm', () => {
           query: LOGIN_WITH_PASSWORD,
           variables: {
             email: 'test@example.com',
-            password: 'password123',
+            password: 'Password123',
           },
         },
         result: {
           data: {
             loginWithPassword: {
-              userId: '1',
-              sessionToken: 'mock-session-token',
-              expiresAt: new Date(Date.now() + 3600000).toISOString(),
+              results: {
+                userId: '1',
+                sessionToken: 'mock-session-token',
+                expiresAt: new Date(Date.now() + 3600000).toISOString(),
+              },
             },
           },
         },
@@ -140,7 +142,7 @@ describe('LoginForm', () => {
     const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     await user.type(emailInput, 'test@example.com');
-    await user.type(passwordInput, 'password123');
+    await user.type(passwordInput, 'Password123');
     await user.click(submitButton);
 
     // Should show loading state
@@ -162,7 +164,7 @@ describe('LoginForm', () => {
           query: LOGIN_WITH_PASSWORD,
           variables: {
             email: 'test@example.com',
-            password: 'wrongpassword',
+            password: 'WrongPassword123',
           },
         },
         error: new Error('Invalid email or password'),
@@ -176,7 +178,7 @@ describe('LoginForm', () => {
     const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     await user.type(emailInput, 'test@example.com');
-    await user.type(passwordInput, 'wrongpassword');
+    await user.type(passwordInput, 'WrongPassword123');
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -192,7 +194,7 @@ describe('LoginForm', () => {
           query: LOGIN_WITH_PASSWORD,
           variables: {
             email: 'test@example.com',
-            password: 'password123',
+            password: 'Password123',
           },
         },
         error: new Error('Please verify your email address'),
@@ -206,7 +208,7 @@ describe('LoginForm', () => {
     const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     await user.type(emailInput, 'test@example.com');
-    await user.type(passwordInput, 'password123');
+    await user.type(passwordInput, 'Password123');
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -240,16 +242,18 @@ describe('LoginForm', () => {
           query: LOGIN_WITH_PASSWORD,
           variables: {
             email: 'test@example.com',
-            password: 'password123',
+            password: 'Password123',
           },
         },
         delay: 1000, // Simulate slow response
         result: {
           data: {
             loginWithPassword: {
-              userId: '1',
-              sessionToken: 'mock-session-token',
-              expiresAt: new Date(Date.now() + 3600000).toISOString(),
+              results: {
+                userId: '1',
+                sessionToken: 'mock-session-token',
+                expiresAt: new Date(Date.now() + 3600000).toISOString(),
+              },
             },
           },
         },
@@ -263,7 +267,7 @@ describe('LoginForm', () => {
     const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     await user.type(emailInput, 'test@example.com');
-    await user.type(passwordInput, 'password123');
+    await user.type(passwordInput, 'Password123');
     await user.click(submitButton);
 
     // Wait for loading state to be set

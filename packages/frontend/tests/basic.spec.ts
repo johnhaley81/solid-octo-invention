@@ -11,7 +11,9 @@ test.describe('Basic Application Tests', () => {
     await expect(page.locator('h1')).toBeVisible();
   });
 
-  test('should navigate to dashboard and redirect to login when not authenticated', async ({ page }) => {
+  test('should navigate to dashboard and redirect to login when not authenticated', async ({
+    page,
+  }) => {
     await page.goto('/');
 
     // Look for navigation link to dashboard

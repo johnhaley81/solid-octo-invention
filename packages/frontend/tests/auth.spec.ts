@@ -85,14 +85,12 @@ test.describe('Authentication Flow', () => {
     await page.fill('#confirmPassword', testUser.password);
 
     // Submit form and wait for network request
-    const responsePromise = page.waitForResponse(
-      response => {
-        const postData = response.request().postData();
-        return response.url().includes('graphql') &&
-               postData !== null &&
-               postData.includes('registerUser');
-      },
-    );
+    const responsePromise = page.waitForResponse(response => {
+      const postData = response.request().postData();
+      return (
+        response.url().includes('graphql') && postData !== null && postData.includes('registerUser')
+      );
+    });
 
     await page.click('button[type="submit"]');
 
