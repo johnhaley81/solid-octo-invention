@@ -22,7 +22,7 @@ export function LoginForm() {
   const [loginWithPassword] = useMutation(LOGIN_WITH_PASSWORD);
   const [loginWithPasskey] = useMutation(LOGIN_WITH_PASSKEY);
   const [getPasskeyChallenge] = useLazyQuery(GET_PASSKEY_CHALLENGE);
-  const [getCurrentUser] = useMutation(CURRENT_USER_FROM_SESSION);
+  const [getCurrentUser] = useLazyQuery(CURRENT_USER_FROM_SESSION);
 
   // Get the intended destination or default to home
   const from = (location.state as any)?.from?.pathname || '/';

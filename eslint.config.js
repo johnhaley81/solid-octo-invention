@@ -38,6 +38,8 @@ export default [
         // WebAuthn APIs
         PublicKeyCredential: 'readonly',
         PublicKeyCredentialType: 'readonly',
+        PublicKeyCredentialCreationOptions: 'readonly',
+        PublicKeyCredentialRequestOptions: 'readonly',
         AuthenticatorTransport: 'readonly',
         AuthenticatorAttestationResponse: 'readonly',
         AuthenticatorAssertionResponse: 'readonly',

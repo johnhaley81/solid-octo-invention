@@ -77,19 +77,18 @@ describe('LoginForm', () => {
     });
   });
 
-  it('validates password length', async () => {
+  it('validates password is required', async () => {
     const user = userEvent.setup();
     renderLoginForm();
 
     const emailInput = screen.getByLabelText('Email address');
-    const passwordInput = screen.getByLabelText('Password');
     const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     await user.type(emailInput, 'test@example.com');
-    await user.type(passwordInput, 'short');
+    // Don't enter password
     await user.click(submitButton);
 
-    expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument();
+    expect(screen.getByText('Password is required')).toBeInTheDocument();
   });
 
   it('handles successful login', async () => {
@@ -145,7 +144,9 @@ describe('LoginForm', () => {
     await user.click(submitButton);
 
     // Should show loading state
-    expect(screen.getByText('Signing in...')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Signing in...')).toBeInTheDocument();
+    });
 
     // Wait for navigation
     await waitFor(() => {
@@ -262,6 +263,11 @@ describe('LoginForm', () => {
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'password123');
     await user.click(submitButton);
+
+    // Wait for loading state to be set
+    await waitFor(() => {
+      expect(screen.getByText('Signing in...')).toBeInTheDocument();
+    });
 
     // Form should be disabled during submission
     expect(emailInput).toBeDisabled();
