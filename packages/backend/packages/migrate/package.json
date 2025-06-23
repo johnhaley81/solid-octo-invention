@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "graphile-migrate watch",
-    "migrate:up": "graphile-migrate migrate",
+    "migrate:up": "graphile-migrate watch --once",
     "migrate:down": "graphile-migrate reset --erase",
-    "migrate:reset": "graphile-migrate reset --erase && graphile-migrate migrate",
+    "migrate:reset": "graphile-migrate reset --erase && graphile-migrate watch --once",
     "migrate:commit": "graphile-migrate commit"
   },
   "dependencies": {
