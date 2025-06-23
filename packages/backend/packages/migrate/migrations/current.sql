@@ -565,7 +565,7 @@ COMMENT ON FUNCTION app_private.setup_soft_delete_for_table(TEXT) IS 'Helper fun
 -- Replace 'example_table' with your actual table name
 
 /*
-CREATE TABLE example_table (
+CREATE TABLE IF NOT EXISTS example_table (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   
   -- Your table-specific columns here
@@ -580,7 +580,8 @@ CREATE TABLE example_table (
   deleted_at TIMESTAMPTZ DEFAULT NULL
 );
 
--- Create updated_at trigger
+-- Create updated_at trigger (idempotent)
+DROP TRIGGER IF EXISTS update_example_table_updated_at ON example_table;
 CREATE TRIGGER update_example_table_updated_at 
   BEFORE UPDATE ON example_table
   FOR EACH ROW 
@@ -596,7 +597,8 @@ CREATE INDEX IF NOT EXISTS example_table_deleted_idx ON example_table (deleted_a
 -- Add any additional indexes your table needs
 -- CREATE INDEX example_table_name_idx ON example_table (name) WHERE deleted_at IS NULL;
 
--- Prevent hard deletes with trigger
+-- Prevent hard deletes with trigger (idempotent)
+DROP TRIGGER IF EXISTS prevent_example_table_hard_delete ON example_table;
 CREATE TRIGGER prevent_example_table_hard_delete
   BEFORE DELETE ON example_table
   FOR EACH ROW
@@ -605,12 +607,14 @@ CREATE TRIGGER prevent_example_table_hard_delete
 -- Enable Row Level Security
 ALTER TABLE example_table ENABLE ROW LEVEL SECURITY;
 
--- RLS Policy for regular users - only see active records
+-- RLS Policy for regular users - only see active records (idempotent)
+DROP POLICY IF EXISTS example_table_select_policy ON example_table;
 CREATE POLICY example_table_select_policy ON example_table 
   FOR SELECT 
   USING (deleted_at IS NULL);
 
--- RLS Policy for admin users - see all records including soft deleted
+-- RLS Policy for admin users - see all records including soft deleted (idempotent)
+DROP POLICY IF EXISTS example_table_admin_select_policy ON example_table;
 CREATE POLICY example_table_admin_select_policy ON example_table 
   FOR SELECT 
   USING (
