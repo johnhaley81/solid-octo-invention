@@ -489,9 +489,13 @@ jobs:
           }
           EOF
 
+          # Reset database to ensure clean state
+          echo "🔄 Resetting database to clean state..."
+          cd "$GITHUB_WORKSPACE"
+          pnpm migrate:reset --erase
+
           # Run migrations (this will also generate schema dump via afterCurrent hook)
           echo "📦 Running migrations..."
-          cd "$GITHUB_WORKSPACE"
           pnpm migrate:up
 
           # Check if schema dump was generated
