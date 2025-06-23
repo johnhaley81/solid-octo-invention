@@ -8,14 +8,22 @@ CREATE EXTENSION IF NOT EXISTS "citext";
 -- Create app_private schema for sensitive data
 CREATE SCHEMA IF NOT EXISTS app_private;
 
--- Create authentication method enum
-CREATE TYPE auth_method AS ENUM ('password', 'webauthn');
+-- Create authentication method enum (idempotent)
+DO $$ BEGIN
+  CREATE TYPE auth_method AS ENUM ('password', 'webauthn');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
--- Create OTP token type enum
-CREATE TYPE otp_token_type AS ENUM ('email_verification', 'login_otp', 'password_reset');
+-- Create OTP token type enum (idempotent)
+DO $$ BEGIN
+  CREATE TYPE otp_token_type AS ENUM ('email_verification', 'login_otp', 'password_reset');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
--- Create users table
-CREATE TABLE users (
+-- Create users table (idempotent)
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email CITEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
@@ -34,13 +42,14 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply updated_at trigger to users table
+-- Apply updated_at trigger to users table (idempotent)
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Authentication tables in app_private schema
--- Password-based authentication credentials
-CREATE TABLE app_private.password_credentials (
+-- Password-based authentication credentials (idempotent)
+CREATE TABLE IF NOT EXISTS app_private.password_credentials (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   password_hash TEXT NOT NULL,
@@ -58,8 +67,8 @@ CREATE TABLE app_private.password_credentials (
   UNIQUE(user_id)
 );
 
--- WebAuthn credentials for passkey authentication
-CREATE TABLE app_private.webauthn_credentials (
+-- WebAuthn credentials for passkey authentication (idempotent)
+CREATE TABLE IF NOT EXISTS app_private.webauthn_credentials (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   credential_id TEXT NOT NULL UNIQUE,
@@ -73,8 +82,8 @@ CREATE TABLE app_private.webauthn_credentials (
   last_used_at TIMESTAMPTZ
 );
 
--- OTP tokens for email verification and login
-CREATE TABLE app_private.otp_tokens (
+-- OTP tokens for email verification and login (idempotent)
+CREATE TABLE IF NOT EXISTS app_private.otp_tokens (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token TEXT NOT NULL,
@@ -85,8 +94,8 @@ CREATE TABLE app_private.otp_tokens (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- User sessions for authentication tracking
-CREATE TABLE app_private.user_sessions (
+-- User sessions for authentication tracking (idempotent)
+CREATE TABLE IF NOT EXISTS app_private.user_sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   session_token TEXT NOT NULL UNIQUE,
@@ -97,27 +106,28 @@ CREATE TABLE app_private.user_sessions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Apply updated_at triggers to app_private tables
+-- Apply updated_at triggers to app_private tables (idempotent)
+DROP TRIGGER IF EXISTS update_password_credentials_updated_at ON app_private.password_credentials;
 CREATE TRIGGER update_password_credentials_updated_at 
   BEFORE UPDATE ON app_private.password_credentials
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Indexes for performance
-CREATE INDEX idx_password_credentials_user_id ON app_private.password_credentials(user_id);
-CREATE INDEX idx_password_credentials_email_verification_token ON app_private.password_credentials(email_verification_token);
-CREATE INDEX idx_password_credentials_password_reset_token ON app_private.password_credentials(password_reset_token);
+-- Indexes for performance (idempotent)
+CREATE INDEX IF NOT EXISTS idx_password_credentials_user_id ON app_private.password_credentials(user_id);
+CREATE INDEX IF NOT EXISTS idx_password_credentials_email_verification_token ON app_private.password_credentials(email_verification_token);
+CREATE INDEX IF NOT EXISTS idx_password_credentials_password_reset_token ON app_private.password_credentials(password_reset_token);
 
-CREATE INDEX idx_webauthn_credentials_user_id ON app_private.webauthn_credentials(user_id);
-CREATE INDEX idx_webauthn_credentials_credential_id ON app_private.webauthn_credentials(credential_id);
+CREATE INDEX IF NOT EXISTS idx_webauthn_credentials_user_id ON app_private.webauthn_credentials(user_id);
+CREATE INDEX IF NOT EXISTS idx_webauthn_credentials_credential_id ON app_private.webauthn_credentials(credential_id);
 
-CREATE INDEX idx_otp_tokens_user_id ON app_private.otp_tokens(user_id);
-CREATE INDEX idx_otp_tokens_token ON app_private.otp_tokens(token);
-CREATE INDEX idx_otp_tokens_expires_at ON app_private.otp_tokens(expires_at);
-CREATE INDEX idx_otp_tokens_token_type ON app_private.otp_tokens(token_type);
+CREATE INDEX IF NOT EXISTS idx_otp_tokens_user_id ON app_private.otp_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_otp_tokens_token ON app_private.otp_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_otp_tokens_expires_at ON app_private.otp_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_otp_tokens_token_type ON app_private.otp_tokens(token_type);
 
-CREATE INDEX idx_user_sessions_user_id ON app_private.user_sessions(user_id);
-CREATE INDEX idx_user_sessions_session_token ON app_private.user_sessions(session_token);
-CREATE INDEX idx_user_sessions_expires_at ON app_private.user_sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON app_private.user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_session_token ON app_private.user_sessions(session_token);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON app_private.user_sessions(expires_at);
 
 -- Function to enforce mutual exclusivity between auth methods
 CREATE OR REPLACE FUNCTION enforce_auth_method_exclusivity()
@@ -137,7 +147,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to enforce mutual exclusivity
+-- Trigger to enforce mutual exclusivity (idempotent)
+DROP TRIGGER IF EXISTS enforce_auth_method_exclusivity_trigger ON users;
 CREATE TRIGGER enforce_auth_method_exclusivity_trigger
   AFTER UPDATE OF auth_method ON users
   FOR EACH ROW
@@ -150,24 +161,30 @@ ALTER TABLE app_private.webauthn_credentials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app_private.otp_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app_private.user_sessions ENABLE ROW LEVEL SECURITY;
 
--- Basic RLS policies (can be customized based on authentication needs)
+-- Basic RLS policies (can be customized based on authentication needs) (idempotent)
+DROP POLICY IF EXISTS users_select_policy ON users;
 CREATE POLICY users_select_policy ON users FOR SELECT USING (true);
 
--- Policy to allow users to only update their own records
+-- Policy to allow users to only update their own records (idempotent)
+DROP POLICY IF EXISTS users_update_policy ON users;
 CREATE POLICY users_update_policy ON users FOR UPDATE 
   USING (id = current_setting('app.current_user_id', true)::UUID)
   WITH CHECK (id = current_setting('app.current_user_id', true)::UUID);
 
--- App_private RLS policies - only accessible by the user themselves
+-- App_private RLS policies - only accessible by the user themselves (idempotent)
+DROP POLICY IF EXISTS password_credentials_policy ON app_private.password_credentials;
 CREATE POLICY password_credentials_policy ON app_private.password_credentials 
   FOR ALL USING (user_id = current_setting('app.current_user_id', true)::UUID);
 
+DROP POLICY IF EXISTS webauthn_credentials_policy ON app_private.webauthn_credentials;
 CREATE POLICY webauthn_credentials_policy ON app_private.webauthn_credentials 
   FOR ALL USING (user_id = current_setting('app.current_user_id', true)::UUID);
 
+DROP POLICY IF EXISTS otp_tokens_policy ON app_private.otp_tokens;
 CREATE POLICY otp_tokens_policy ON app_private.otp_tokens 
   FOR ALL USING (user_id = current_setting('app.current_user_id', true)::UUID);
 
+DROP POLICY IF EXISTS user_sessions_policy ON app_private.user_sessions;
 CREATE POLICY user_sessions_policy ON app_private.user_sessions 
   FOR ALL USING (user_id = current_setting('app.current_user_id', true)::UUID);
 
