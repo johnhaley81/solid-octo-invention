@@ -44,19 +44,25 @@ const main = () => {
   try {
     const databaseUrl = getDatabaseUrl();
 
-    // Check if we're running in a Docker environment or if Docker is available
+    // Check if we're running in a Docker environment with the specific container
     let dumpCommand;
 
     try {
-      // Try to use Docker's pg_dump to avoid version mismatch issues
-      execSync('docker ps > /dev/null 2>&1', { stdio: 'ignore' });
+      // Check if Docker is available and the specific container exists
+      execSync('docker ps --format "table {{.Names}}" | grep -q solid-octo-postgres', {
+        stdio: 'ignore',
+      });
 
       // Use Docker container's pg_dump with the database URL modified for container network
       const containerDbUrl = databaseUrl.replace('localhost', 'postgres');
       dumpCommand = `docker exec solid-octo-postgres pg_dump "${containerDbUrl}" --schema-only --no-owner --no-privileges --no-comments`;
+
+      console.log('Using Docker container pg_dump');
     } catch {
-      // Fallback to local pg_dump if Docker is not available
+      // Fallback to local pg_dump if Docker is not available or container doesn't exist
       dumpCommand = `pg_dump "${databaseUrl}" --schema-only --no-owner --no-privileges --no-comments`;
+
+      console.log('Using local pg_dump');
     }
 
     const schemaDump = execSync(dumpCommand, {
