@@ -492,7 +492,7 @@ jobs:
           # Reset database to ensure clean state
           echo "🔄 Resetting database to clean state..."
           cd "$GITHUB_WORKSPACE"
-          pnpm migrate:reset --erase
+          pnpm db:reset
 
           # Run migrations (this will also generate schema dump via afterCurrent hook)
           echo "📦 Running migrations..."
