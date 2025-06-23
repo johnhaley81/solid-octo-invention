@@ -6,7 +6,7 @@ config({ path: '../../.env' });
 import cors from 'cors';
 import helmet from 'helmet';
 import { postgraphile } from 'postgraphile';
-import PgOmitArchivedPlugin from '@graphile-contrib/pg-omit-archived';
+import { default as PgOmitArchivedPlugin } from '@graphile-contrib/pg-omit-archived';
 import { Effect as E, Layer, Logger, LogLevel, Redacted } from 'effect';
 import { NodeRuntime } from '@effect/platform-node';
 import { envVars } from './config/index.js';
