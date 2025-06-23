@@ -8,9 +8,14 @@
  * to validate that migrations produce the expected schema.
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Get database URL from environment or .gmrc
 const getDatabaseUrl = () => {
@@ -21,7 +26,7 @@ const getDatabaseUrl = () => {
 
   // Try to read from .gmrc file
   try {
-    const gmrcPath = path.join(__dirname, '..', '.gmrc');
+    const gmrcPath = path.join(__dirname, '.gmrc');
     if (fs.existsSync(gmrcPath)) {
       const gmrcContent = fs.readFileSync(gmrcPath, 'utf8');
       const gmrc = JSON.parse(gmrcContent);
@@ -75,7 +80,7 @@ const main = () => {
       .trim();
 
     // Write to schema dump file
-    const schemaPath = path.join(__dirname, '..', 'schema-dump.sql');
+    const schemaPath = path.join(__dirname, 'schema-dump.sql');
     console.log('🔍 Debug: Attempting to write to:', schemaPath);
     console.log('🔍 Debug: Directory exists:', fs.existsSync(path.dirname(schemaPath)));
     console.log('🔍 Debug: Directory contents:', fs.readdirSync(path.dirname(schemaPath)));
@@ -90,8 +95,9 @@ const main = () => {
   }
 };
 
-if (require.main === module) {
+// Check if this file is being run directly (ES module equivalent of require.main === module)
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-module.exports = { main };
+export { main };
