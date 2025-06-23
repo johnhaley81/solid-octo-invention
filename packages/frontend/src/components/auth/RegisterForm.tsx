@@ -76,7 +76,7 @@ export function RegisterForm() {
         },
       });
 
-      if (data?.registerUser) {
+      if (data?.registerUserWithPassword?.user) {
         setIsSuccess(true);
         // Redirect to login after a short delay
         setTimeout(() => {
