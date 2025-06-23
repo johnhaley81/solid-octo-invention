@@ -480,18 +480,17 @@ jobs:
             },
             "afterReset": [],
             "afterAllMigrations": [],
-            "afterCurrent": ["node $ROOT_DIR/packages/backend/packages/migrate/dump-schema.js"]
+            "afterCurrent": ["node $GITHUB_WORKSPACE/packages/backend/packages/migrate/dump-schema.js"]
           }
           EOF
 
           # Run migrations (this will also generate schema dump via afterCurrent hook)
           echo "📦 Running migrations..."
-          ROOT_DIR="$GITHUB_WORKSPACE"
-          cd "$ROOT_DIR"
+          cd "$GITHUB_WORKSPACE"
           pnpm migrate:up
 
           # Check if schema dump was generated
-          cd "$ROOT_DIR/packages/backend/packages/migrate"
+          cd "$GITHUB_WORKSPACE/packages/backend/packages/migrate"
           if [ ! -f "schema-dump.sql" ]; then
             echo "❌ ERROR: Schema dump was not generated"
             exit 1
