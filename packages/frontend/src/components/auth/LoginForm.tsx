@@ -117,9 +117,25 @@ export function LoginForm() {
 
     try {
       // Attempt login
-      const { data: loginData } = await loginWithPassword({
+      const result = await loginWithPassword({
         variables: { email: email.trim(), password },
+        errorPolicy: 'all', // Allow both data and errors to be returned
       });
+
+      // Check for GraphQL errors first
+      if (result.errors && result.errors.length > 0) {
+        const errorMessage = result.errors[0]?.message || 'Login failed';
+        if (errorMessage.toLowerCase().includes('verify')) {
+          setErrors({ general: 'Please verify your email address before logging in' });
+        } else if (errorMessage.toLowerCase().includes('invalid')) {
+          setErrors({ general: 'Invalid email or password' });
+        } else {
+          setErrors({ general: errorMessage });
+        }
+        return;
+      }
+
+      const loginData = result.data;
 
       if (loginData?.loginWithPassword?.results) {
         const { sessionToken } = loginData.loginWithPassword.results;
@@ -136,9 +152,11 @@ export function LoginForm() {
         } else {
           setErrors({ general: 'Failed to retrieve user information' });
         }
+      } else {
+        setErrors({ general: 'Login failed - no response data' });
       }
     } catch (error: any) {
-      // Handle specific error messages
+      // Handle network errors or other exceptions
       const errorMessage = error.message || 'Login failed';
       if (errorMessage.toLowerCase().includes('verify')) {
         setErrors({ general: 'Please verify your email address before logging in' });

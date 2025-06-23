@@ -357,8 +357,6 @@ The application uses PostgreSQL with:
 Key entities:
 
 - `users` - User accounts and profiles
-- `posts` - Blog posts with status workflow
-- `comments` - Threaded comments on posts
 
 ## 🔧 GraphQL API
 

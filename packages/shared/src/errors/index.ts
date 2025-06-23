@@ -18,22 +18,6 @@ export class UserNotFoundError extends Data.TaggedError('UserNotFoundError')<{
   }
 }
 
-export class PostNotFoundError extends Data.TaggedError('PostNotFoundError')<{
-  readonly postId: string;
-}> {
-  override get message() {
-    return `Post with ID ${this.postId} not found`;
-  }
-}
-
-export class CommentNotFoundError extends Data.TaggedError('CommentNotFoundError')<{
-  readonly commentId: string;
-}> {
-  override get message() {
-    return `Comment with ID ${this.commentId} not found`;
-  }
-}
-
 /**
  * Validation errors
  */
@@ -111,49 +95,29 @@ export class ExternalServiceError extends Data.TaggedError('ExternalServiceError
 }
 
 /**
- * Post-specific business errors
+ * Authentication-specific errors
  */
-export class PostAlreadyPublishedError extends Data.TaggedError('PostAlreadyPublishedError')<{
-  readonly postId: string;
+export class InvalidCredentialsError extends Data.TaggedError('InvalidCredentialsError')<{
+  readonly message: string;
 }> {
-  override get message() {
-    return `Post ${this.postId} is already published`;
+  override get message(): string {
+    return this.message;
   }
 }
 
-export class PostNotPublishedError extends Data.TaggedError('PostNotPublishedError')<{
-  readonly postId: string;
+export class SessionExpiredError extends Data.TaggedError('SessionExpiredError')<{
+  readonly sessionId: string;
 }> {
   override get message() {
-    return `Post ${this.postId} is not published`;
+    return `Session ${this.sessionId} has expired`;
   }
 }
 
-export class SlugAlreadyExistsError extends Data.TaggedError('SlugAlreadyExistsError')<{
-  readonly slug: string;
+export class EmailAlreadyExistsError extends Data.TaggedError('EmailAlreadyExistsError')<{
+  readonly email: string;
 }> {
   override get message() {
-    return `Post with slug '${this.slug}' already exists`;
-  }
-}
-
-/**
- * Comment-specific business errors
- */
-export class CommentOnArchivedPostError extends Data.TaggedError('CommentOnArchivedPostError')<{
-  readonly postId: string;
-}> {
-  override get message() {
-    return `Cannot comment on archived post ${this.postId}`;
-  }
-}
-
-export class InvalidParentCommentError extends Data.TaggedError('InvalidParentCommentError')<{
-  readonly parentId: string;
-  readonly postId: string;
-}> {
-  override get message() {
-    return `Parent comment ${this.parentId} does not belong to post ${this.postId}`;
+    return `User with email '${this.email}' already exists`;
   }
 }
 
@@ -171,14 +135,8 @@ export const ErrorUtils = {
   /**
    * Check if an error is a not found error
    */
-  isNotFoundError: (
-    error: unknown,
-  ): error is UserNotFoundError | PostNotFoundError | CommentNotFoundError => {
-    return (
-      error instanceof UserNotFoundError ||
-      error instanceof PostNotFoundError ||
-      error instanceof CommentNotFoundError
-    );
+  isNotFoundError: (error: unknown): error is UserNotFoundError => {
+    return error instanceof UserNotFoundError;
   },
 
   /**
@@ -196,26 +154,42 @@ export const ErrorUtils = {
   },
 
   /**
+   * Check if an error is an authentication error
+   */
+  isAuthenticationError: (
+    error: unknown,
+  ): error is InvalidCredentialsError | SessionExpiredError | EmailAlreadyExistsError => {
+    return (
+      error instanceof InvalidCredentialsError ||
+      error instanceof SessionExpiredError ||
+      error instanceof EmailAlreadyExistsError
+    );
+  },
+
+  /**
    * Convert an unknown error to a domain error
    */
-  toDomainError: (error: unknown, context: string): DomainError | ExternalServiceError => {
-    if (ErrorUtils.isDomainError(error)) {
+  toDomainError: (error: unknown): ValidationError => {
+    if (error instanceof Error) {
+      return new ValidationError({ field: 'unknown', reason: error.message });
+    }
+
+    return new ValidationError({ field: 'unknown', reason: 'An unknown error occurred' });
+  },
+
+  /**
+   * Extract error message from any error type
+   */
+  getErrorMessage: (error: unknown): string => {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    if (typeof error === 'string') {
       return error;
     }
 
-    if (error instanceof Error) {
-      return new ExternalServiceError({
-        service: 'unknown',
-        operation: context,
-        cause: error,
-      });
-    }
-
-    return new ExternalServiceError({
-      service: 'unknown',
-      operation: context,
-      cause: error,
-    });
+    return 'An unknown error occurred';
   },
 };
 

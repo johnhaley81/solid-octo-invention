@@ -26,8 +26,8 @@ test.describe('Authentication Flow', () => {
     await page.goto('/');
 
     // Check that auth links are visible
-    await expect(page.locator('text=Sign in')).toBeVisible();
-    await expect(page.locator('text=Sign up')).toBeVisible();
+    await expect(page.locator('a[href="/login"]').first()).toBeVisible();
+    await expect(page.locator('a[href="/register"]').first()).toBeVisible();
 
     // Check that user info is not visible
     await expect(page.locator('text=Welcome,')).not.toBeVisible();
@@ -49,7 +49,7 @@ test.describe('Authentication Flow', () => {
     await page.goto('/');
 
     // Click sign in link
-    await page.locator('text=Sign in').click();
+    await page.locator('a[href="/login"]').first().click();
 
     // Should be on login page
     await expect(page).toHaveURL('/login');
@@ -86,9 +86,12 @@ test.describe('Authentication Flow', () => {
 
     // Submit form and wait for network request
     const responsePromise = page.waitForResponse(
-      response =>
-        response.url().includes('graphql') &&
-        response.request().postData()?.includes('registerUser'),
+      response => {
+        const postData = response.request().postData();
+        return response.url().includes('graphql') &&
+               postData !== null &&
+               postData.includes('registerUser');
+      },
     );
 
     await page.click('button[type="submit"]');
@@ -185,8 +188,8 @@ test.describe('Authentication Flow', () => {
   });
 
   test('should redirect to login when accessing protected routes', async ({ page }) => {
-    // Try to access protected posts page
-    await page.goto('/posts');
+    // Try to access protected dashboard page
+    await page.goto('/dashboard');
 
     // Should redirect to login
     await expect(page).toHaveURL('/login');
@@ -257,7 +260,7 @@ test.describe('Authentication Flow', () => {
       localStorage.setItem('auth-token', 'mock-token');
     });
 
-    await page.goto('/posts');
+    await page.goto('/dashboard');
 
     // Should show loading state
     await expect(page.locator('text=Loading...')).toBeVisible();
@@ -316,8 +319,8 @@ test.describe('Authentication Flow', () => {
     await page.click('text=Sign out');
 
     // Should show unauthenticated state
-    await expect(page.locator('text=Sign in')).toBeVisible();
-    await expect(page.locator('text=Sign up')).toBeVisible();
+    await expect(page.locator('a[href="/login"]').first()).toBeVisible();
+    await expect(page.locator('a[href="/register"]').first()).toBeVisible();
     await expect(page.locator('text=Welcome,')).not.toBeVisible();
   });
 

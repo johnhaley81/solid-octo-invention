@@ -12,12 +12,24 @@ export function HomePage() {
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
           A modern full-stack application built with functional programming principles
         </p>
-        <div>
+        <div className="space-x-4">
           <Link
-            to="/posts"
+            to="/register"
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors inline-block"
           >
-            View Posts
+            Get Started
+          </Link>
+          <Link
+            to="/login"
+            className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors inline-block"
+          >
+            Sign in
+          </Link>
+          <Link
+            to="/dashboard"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors inline-block"
+          >
+            Dashboard (Protected)
           </Link>
         </div>
       </section>

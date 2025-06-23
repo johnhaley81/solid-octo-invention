@@ -6,76 +6,6 @@ import { gql } from '@apollo/client';
  */
 
 /**
- * Get all posts with pagination and filtering
- */
-export const GET_POSTS = gql`
-  query GetPosts($first: Int, $after: Cursor, $condition: PostCondition) {
-    posts(first: $first, after: $after, condition: $condition, orderBy: PUBLISHED_AT_DESC) {
-      nodes {
-        id
-        title
-        content
-        slug
-        status
-        publishedAt
-        createdAt
-        updatedAt
-        userByAuthorId {
-          id
-          name
-          email
-        }
-      }
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-        startCursor
-        endCursor
-      }
-      totalCount
-    }
-  }
-`;
-
-/**
- * Get a single post by slug with comments
- */
-export const GET_POST_BY_SLUG = gql`
-  query GetPostBySlug($slug: String!) {
-    posts(condition: { slug: $slug }) {
-      nodes {
-        id
-        title
-        content
-        slug
-        status
-        publishedAt
-        createdAt
-        updatedAt
-        userByAuthorId {
-          id
-          name
-          email
-        }
-        commentsByPostId(orderBy: CREATED_AT_ASC) {
-          nodes {
-            id
-            content
-            createdAt
-            updatedAt
-            userByAuthorId {
-              id
-              name
-            }
-            parentId
-          }
-        }
-      }
-    }
-  }
-`;
-
-/**
  * Get user profile information
  */
 export const GET_USER = gql`
@@ -87,39 +17,6 @@ export const GET_USER = gql`
       avatarUrl
       createdAt
       updatedAt
-    }
-  }
-`;
-
-/**
- * Get comments for a specific post
- */
-export const GET_COMMENTS = gql`
-  query GetComments($postId: UUID!, $first: Int, $after: Cursor) {
-    comments(
-      condition: { postId: $postId }
-      first: $first
-      after: $after
-      orderBy: CREATED_AT_ASC
-    ) {
-      nodes {
-        id
-        content
-        createdAt
-        updatedAt
-        userByAuthorId {
-          id
-          name
-        }
-        parentId
-      }
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-        startCursor
-        endCursor
-      }
-      totalCount
     }
   }
 `;
@@ -199,59 +96,116 @@ export const GET_PASSKEY_CHALLENGE = gql`
 `;
 
 /**
- * Get passkey registration options
- */
-export const GET_PASSKEY_REGISTRATION_OPTIONS = gql`
-  query GetPasskeyRegistrationOptions($userId: String!) {
-    getPasskeyRegistrationOptions(userId: $userId) {
-      challenge
-      user {
-        id
-        name
-        displayName
-      }
-      excludeCredentials {
-        id
-        type
-        transports
-      }
-    }
-  }
-`;
-
-/**
- * Get current user from session token
- */
-export const CURRENT_USER_FROM_SESSION = gql`
-  mutation CurrentUserFromSession($sessionToken: String!) {
-    currentUserFromSession(input: { sessionToken: $sessionToken }) {
-      id
-      email
-      name
-      authMethod
-      createdAt
-    }
-  }
-`;
-
-/**
- * Logout user
+ * Logout current user
  */
 export const LOGOUT = gql`
-  mutation Logout($sessionToken: String!) {
-    logout(input: { sessionToken: $sessionToken }) {
+  mutation Logout {
+    logout {
       success
     }
   }
 `;
 
 /**
- * Verify email with token
+ * Get current user session
+ */
+export const GET_CURRENT_USER = gql`
+  query GetCurrentUser {
+    currentUser {
+      id
+      name
+      email
+      avatarUrl
+      authMethod
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+/**
+ * Update user profile
+ */
+export const UPDATE_USER_PROFILE = gql`
+  mutation UpdateUserProfile($id: UUID!, $name: String, $avatarUrl: String) {
+    updateUser(input: { id: $id, patch: { name: $name, avatarUrl: $avatarUrl } }) {
+      user {
+        id
+        name
+        email
+        avatarUrl
+        updatedAt
+      }
+    }
+  }
+`;
+
+/**
+ * Change user password
+ */
+export const CHANGE_PASSWORD = gql`
+  mutation ChangePassword($currentPassword: String!, $newPassword: String!) {
+    changePassword(input: { currentPassword: $currentPassword, newPassword: $newPassword }) {
+      success
+    }
+  }
+`;
+
+/**
+ * Request password reset
+ */
+export const REQUEST_PASSWORD_RESET = gql`
+  mutation RequestPasswordReset($email: String!) {
+    requestPasswordReset(input: { email: $email }) {
+      success
+    }
+  }
+`;
+
+/**
+ * Reset password with token
+ */
+export const RESET_PASSWORD = gql`
+  mutation ResetPassword($token: String!, $newPassword: String!) {
+    resetPassword(input: { token: $token, newPassword: $newPassword }) {
+      success
+    }
+  }
+`;
+
+/**
+ * Verify email address
  */
 export const VERIFY_EMAIL = gql`
   mutation VerifyEmail($token: String!) {
     verifyEmail(input: { token: $token }) {
       success
+    }
+  }
+`;
+
+/**
+ * Resend email verification
+ */
+export const RESEND_EMAIL_VERIFICATION = gql`
+  mutation ResendEmailVerification {
+    resendEmailVerification {
+      success
+    }
+  }
+`;
+
+/**
+ * Get current user from session query
+ */
+export const CURRENT_USER_FROM_SESSION = gql`
+  query CurrentUserFromSession {
+    currentUserFromSession {
+      id
+      email
+      name
+      isVerified
+      createdAt
     }
   }
 `;
