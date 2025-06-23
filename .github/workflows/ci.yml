@@ -323,7 +323,7 @@ jobs:
           cat > .gmrc << EOF
           {
             "connectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e",
-            "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e_shadow", 
+            "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e_shadow",
             "rootConnectionString": "postgresql://postgres:postgres@localhost:5432/postgres",
             "pgSettings": {
               "search_path": "public"
@@ -473,14 +473,14 @@ jobs:
           cat > .gmrc << EOF
           {
             "connectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_migration_test",
-            "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_migration_test_shadow", 
+            "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_migration_test_shadow",
             "rootConnectionString": "postgresql://postgres:postgres@localhost:5432/postgres",
             "pgSettings": {
               "search_path": "public"
             },
             "afterReset": [],
             "afterAllMigrations": [],
-            "afterCurrent": ["node dump-schema.js"]
+            "afterCurrent": ["node ../dump-schema.js"]
           }
           EOF
 
@@ -502,7 +502,7 @@ jobs:
           # Compare with committed schema dump (if it exists)
           if git show HEAD:packages/backend/packages/migrate/schema-dump.sql > committed-schema-dump.sql 2>/dev/null; then
             echo "🔍 Comparing schema dump with committed version..."
-            
+
             # Check if there are differences (ignoring whitespace)
             if ! diff -w committed-schema-dump.sql schema-dump.sql; then
               echo "❌ ERROR: Schema dump differs from committed version"
