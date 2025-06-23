@@ -18,6 +18,7 @@ CREATE SCHEMA IF NOT EXISTS app_private;
 -- Enable necessary extensions in app_public schema
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA app_public;
 CREATE EXTENSION IF NOT EXISTS "citext" WITH SCHEMA app_public;
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================================================
 -- ENUMS
@@ -215,6 +216,36 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function to register a new user with password (for GraphQL mutation)
+CREATE OR REPLACE FUNCTION register_user(
+  email app_public.citext,
+  name TEXT,
+  password TEXT
+) RETURNS app_public.users AS $$
+DECLARE
+  new_user app_public.users;
+  password_hash TEXT;
+BEGIN
+  -- Hash the password using pgcrypto
+  password_hash := crypt(password, gen_salt('bf'));
+  
+  -- Insert new user
+  INSERT INTO app_public.users (email, name, auth_method)
+  VALUES (email, name, 'password')
+  RETURNING * INTO new_user;
+  
+  -- Create primary email record
+  INSERT INTO app_private.user_emails (user_id, email, is_primary, is_verified)
+  VALUES (new_user.id, email, TRUE, FALSE);
+  
+  -- Store password hash
+  INSERT INTO app_private.user_authentication_methods (user_id, method, password_hash)
+  VALUES (new_user.id, 'password', password_hash);
+  
+  RETURN new_user;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Function to enforce auth method exclusivity (idempotent)
 CREATE OR REPLACE FUNCTION enforce_auth_method_exclusivity()
 RETURNS TRIGGER AS $$
@@ -354,4 +385,3 @@ COMMENT ON COLUMN app_public.users.deleted_at IS 'Soft delete timestamp - NULL m
 -- ✅ Set up RLS policies that respect soft delete status
 -- ✅ Grant appropriate permissions
 -- ✅ Test soft delete functionality with the table
-
