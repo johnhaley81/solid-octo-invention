@@ -480,7 +480,7 @@ jobs:
             },
             "afterReset": [],
             "afterAllMigrations": [],
-            "afterCurrent": ["node ../dump-schema.js"]
+            "afterCurrent": ["node $ROOT_DIR/packages/backend/packages/migrate/dump-schema.js"]
           }
           EOF
 

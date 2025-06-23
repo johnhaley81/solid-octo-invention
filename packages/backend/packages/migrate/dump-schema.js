@@ -69,7 +69,7 @@ const main = () => {
 
     // Write to schema dump file
     const schemaPath = path.join(__dirname, '..', 'schema-dump.sql');
-    fs.writeFileSync(schemaPath, cleanedDump + '\n');
+    fs.writeFileSync(schemaPath, `${cleanedDump}\n`);
 
     console.log(`Schema dump created: ${schemaPath}`);
     console.log(`Schema dump size: ${cleanedDump.length} characters`);
