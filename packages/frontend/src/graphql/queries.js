@@ -9,7 +9,7 @@ export const REGISTER_USER = gql`
       id
       email
       name
-      isVerified
+      authMethod
       createdAt
     }
   }
@@ -21,14 +21,9 @@ export const REGISTER_USER = gql`
 export const LOGIN_WITH_PASSWORD = gql`
   mutation LoginWithPassword($email: String!, $password: String!) {
     loginWithPassword(input: { email: $email, password: $password }) {
-      token
-      user {
-        id
-        email
-        name
-        isVerified
-        createdAt
-      }
+      userId
+      sessionToken
+      expiresAt
     }
   }
 `;
