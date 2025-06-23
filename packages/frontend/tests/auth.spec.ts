@@ -85,12 +85,14 @@ test.describe('Authentication Flow', () => {
     await page.fill('#confirmPassword', testUser.password);
 
     // Submit form and wait for network request
-    const responsePromise = page.waitForResponse(response => 
-      response.url().includes('graphql') && response.request().postData()?.includes('registerUser')
+    const responsePromise = page.waitForResponse(
+      response =>
+        response.url().includes('graphql') &&
+        response.request().postData()?.includes('registerUser'),
     );
-    
+
     await page.click('button[type="submit"]');
-    
+
     // Wait for the GraphQL response
     const response = await responsePromise;
     console.log('Registration response status:', response.status());
@@ -98,7 +100,9 @@ test.describe('Authentication Flow', () => {
     console.log('Registration response body:', responseBody);
 
     // Check for any error messages on the page
-    const errorElements = await page.locator('[class*="error"], [class*="Error"], .text-red-500, .text-red-600').all();
+    const errorElements = await page
+      .locator('[class*="error"], [class*="Error"], .text-red-500, .text-red-600')
+      .all();
     for (const element of errorElements) {
       const text = await element.textContent();
       if (text && text.trim()) {
