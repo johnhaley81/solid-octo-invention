@@ -57,6 +57,25 @@ test.describe('Authentication Flow', () => {
   });
 
   test('should register a new user successfully', async ({ page }) => {
+    // Listen for console logs and errors
+    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+    page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
+
+    // Listen for network requests
+    page.on('request', request => {
+      if (request.url().includes('graphql')) {
+        console.log('GraphQL REQUEST:', request.method(), request.url());
+        console.log('GraphQL BODY:', request.postData());
+      }
+    });
+
+    page.on('response', response => {
+      if (response.url().includes('graphql')) {
+        console.log('GraphQL RESPONSE:', response.status(), response.url());
+        response.text().then(text => console.log('GraphQL RESPONSE BODY:', text));
+      }
+    });
+
     await page.goto('/register');
 
     // Fill out registration form
@@ -65,8 +84,27 @@ test.describe('Authentication Flow', () => {
     await page.fill('#password', testUser.password);
     await page.fill('#confirmPassword', testUser.password);
 
-    // Submit form
+    // Submit form and wait for network request
+    const responsePromise = page.waitForResponse(response => 
+      response.url().includes('graphql') && response.request().postData()?.includes('registerUser')
+    );
+    
     await page.click('button[type="submit"]');
+    
+    // Wait for the GraphQL response
+    const response = await responsePromise;
+    console.log('Registration response status:', response.status());
+    const responseBody = await response.text();
+    console.log('Registration response body:', responseBody);
+
+    // Check for any error messages on the page
+    const errorElements = await page.locator('[class*="error"], [class*="Error"], .text-red-500, .text-red-600').all();
+    for (const element of errorElements) {
+      const text = await element.textContent();
+      if (text && text.trim()) {
+        console.log('Error element found:', text);
+      }
+    }
 
     // Should show success message
     await expect(page.locator('h2:has-text("Registration Successful!")')).toBeVisible();
