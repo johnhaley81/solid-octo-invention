@@ -122,7 +122,7 @@ describe('Frontend Utilities', () => {
 
       const oneHourFromNow = new Date(Date.now() + 61 * 60 * 1000); // 61 minutes to ensure it rounds to 1 hour
       const twoHoursFromNow = new Date(Date.now() + 121 * 60 * 1000); // 121 minutes to ensure it rounds to 2 hours
-      const thirtyMinutesFromNow = new Date(Date.now() + 30 * 60 * 1000);
+      const thirtyMinutesFromNow = new Date(Date.now() + 30 * 60 * 1000 + 5000); // Add 5 seconds buffer
 
       expect(formatExpiryTime(oneHourFromNow)).toBe('1 hours');
       expect(formatExpiryTime(twoHoursFromNow)).toBe('2 hours');
