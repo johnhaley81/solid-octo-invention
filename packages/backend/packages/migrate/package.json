@@ -1,5 +1,5 @@
 {
-  "name": "backend/migrate",
+  "name": "@solid-octo-invention/backend-migrate",
   "version": "0.1.0",
   "description": "Database migration package using Graphile Migrate",
   "private": true,
