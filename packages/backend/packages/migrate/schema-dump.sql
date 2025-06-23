@@ -29,34 +29,6 @@ CREATE SCHEMA app_public;
 
 
 --
--- Name: graphile_migrate; Type: SCHEMA; Schema: -; Owner: -
---
-
-CREATE SCHEMA graphile_migrate;
-
-
---
--- Name: citext; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA app_public;
-
-
---
--- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA app_public;
-
-
---
--- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA app_public;
-
-
---
 -- Name: auth_method; Type: TYPE; Schema: app_public; Owner: -
 --
 
@@ -103,6 +75,66 @@ END;
 $$;
 
 
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: users; Type: TABLE; Schema: app_public; Owner: -
+--
+
+CREATE TABLE app_public.users (
+    id uuid DEFAULT app_public.uuid_generate_v4() NOT NULL,
+    email app_public.citext NOT NULL,
+    name text NOT NULL,
+    avatar_url text,
+    auth_method app_public.auth_method DEFAULT 'password'::app_public.auth_method NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_at timestamp with time zone
+);
+
+
+--
+-- Name: current_user_from_session(text); Type: FUNCTION; Schema: app_public; Owner: -
+--
+
+CREATE FUNCTION app_public.current_user_from_session(session_token text DEFAULT NULL::text) RETURNS app_public.users
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  user_record app_public.users;
+  session_record app_private.sessions;
+  token TEXT;
+BEGIN
+  -- Use provided token or get from settings
+  token := COALESCE(session_token, current_setting('app.session_token', true));
+
+  IF token IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  -- Find valid session
+  SELECT * INTO session_record
+  FROM app_private.sessions s
+  WHERE s.session_token = token
+    AND s.expires_at > NOW();
+
+  IF NOT FOUND THEN
+    RETURN NULL;
+  END IF;
+
+  -- Get user
+  SELECT * INTO user_record
+  FROM app_public.users u
+  WHERE u.id = session_record.user_id
+    AND u.deleted_at IS NULL;
+
+  RETURN user_record;
+END;
+$$;
+
+
 --
 -- Name: enforce_auth_method_exclusivity(); Type: FUNCTION; Schema: app_public; Owner: -
 --
@@ -130,6 +162,58 @@ $$;
 
 
 --
+-- Name: login_with_password(app_public.citext, text); Type: FUNCTION; Schema: app_public; Owner: -
+--
+
+CREATE FUNCTION app_public.login_with_password(email app_public.citext, password text) RETURNS TABLE(user_id uuid, session_token text, expires_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  user_record app_public.users;
+  auth_record app_private.user_authentication_methods;
+  new_session_token TEXT;
+  session_expires_at TIMESTAMPTZ;
+BEGIN
+  -- Find user by email
+  SELECT * INTO user_record
+  FROM app_public.users u
+  WHERE u.email = login_with_password.email
+    AND u.deleted_at IS NULL;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Invalid email or password';
+  END IF;
+
+  -- Get authentication method
+  SELECT * INTO auth_record
+  FROM app_private.user_authentication_methods uam
+  WHERE uam.user_id = user_record.id
+    AND uam.method = 'password';
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Invalid email or password';
+  END IF;
+
+  -- Verify password
+  IF NOT (auth_record.password_hash = app_public.crypt(password, auth_record.password_hash)) THEN
+    RAISE EXCEPTION 'Invalid email or password';
+  END IF;
+
+  -- Generate session token
+  new_session_token := encode(app_public.gen_random_bytes(32), 'base64');
+  session_expires_at := NOW() + INTERVAL '30 days';
+
+  -- Create session
+  INSERT INTO app_private.sessions (user_id, session_token, expires_at)
+  VALUES (user_record.id, new_session_token, session_expires_at);
+
+  -- Return session info
+  RETURN QUERY SELECT user_record.id, new_session_token, session_expires_at;
+END;
+$$;
+
+
+--
 -- Name: prevent_hard_delete(); Type: FUNCTION; Schema: app_public; Owner: -
 --
 
@@ -146,26 +230,6 @@ BEGIN
   RETURN NULL;
 END;
 $$;
-
-
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
---
--- Name: users; Type: TABLE; Schema: app_public; Owner: -
---
-
-CREATE TABLE app_public.users (
-    id uuid DEFAULT app_public.uuid_generate_v4() NOT NULL,
-    email app_public.citext NOT NULL,
-    name text NOT NULL,
-    avatar_url text,
-    auth_method app_public.auth_method DEFAULT 'password'::app_public.auth_method NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    deleted_at timestamp with time zone
-);
 
 
 --
@@ -204,7 +268,7 @@ DECLARE
   password_hash TEXT;
 BEGIN
   -- Hash the password using pgcrypto
-  password_hash := crypt(password, gen_salt('bf'));
+  password_hash := app_public.crypt(password, app_public.gen_salt('bf'));
 
   -- Insert new user
   INSERT INTO app_public.users (email, name, auth_method)
@@ -303,29 +367,6 @@ CREATE TABLE app_private.user_emails (
 
 
 --
--- Name: current; Type: TABLE; Schema: graphile_migrate; Owner: -
---
-
-CREATE TABLE graphile_migrate.current (
-    filename text DEFAULT 'current.sql'::text NOT NULL,
-    content text NOT NULL,
-    date timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
--- Name: migrations; Type: TABLE; Schema: graphile_migrate; Owner: -
---
-
-CREATE TABLE graphile_migrate.migrations (
-    hash text NOT NULL,
-    previous_hash text,
-    filename text NOT NULL,
-    date timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
 -- Name: otp_tokens otp_tokens_email_token_type_token_hash_key; Type: CONSTRAINT; Schema: app_private; Owner: -
 --
 
@@ -403,22 +444,6 @@ ALTER TABLE ONLY app_public.users
 
 ALTER TABLE ONLY app_public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-
---
--- Name: current current_pkey; Type: CONSTRAINT; Schema: graphile_migrate; Owner: -
---
-
-ALTER TABLE ONLY graphile_migrate.current
-    ADD CONSTRAINT current_pkey PRIMARY KEY (filename);
-
-
---
--- Name: migrations migrations_pkey; Type: CONSTRAINT; Schema: graphile_migrate; Owner: -
---
-
-ALTER TABLE ONLY graphile_migrate.migrations
-    ADD CONSTRAINT migrations_pkey PRIMARY KEY (hash);
 
 
 --
@@ -605,14 +630,6 @@ ALTER TABLE ONLY app_private.user_authentication_methods
 
 ALTER TABLE ONLY app_private.user_emails
     ADD CONSTRAINT user_emails_user_id_fkey FOREIGN KEY (user_id) REFERENCES app_public.users(id) ON DELETE CASCADE;
-
-
---
--- Name: migrations migrations_previous_hash_fkey; Type: FK CONSTRAINT; Schema: graphile_migrate; Owner: -
---
-
-ALTER TABLE ONLY graphile_migrate.migrations
-    ADD CONSTRAINT migrations_previous_hash_fkey FOREIGN KEY (previous_hash) REFERENCES graphile_migrate.migrations(hash);
 
 
 --

@@ -18,7 +18,7 @@ CREATE SCHEMA IF NOT EXISTS app_private;
 -- Enable necessary extensions in app_public schema
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA app_public;
 CREATE EXTENSION IF NOT EXISTS "citext" WITH SCHEMA app_public;
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA app_public;
 
 -- ============================================================================
 -- ENUMS
@@ -227,7 +227,7 @@ DECLARE
   password_hash TEXT;
 BEGIN
   -- Hash the password using pgcrypto
-  password_hash := crypt(password, gen_salt('bf'));
+  password_hash := app_public.crypt(password, app_public.gen_salt('bf'));
 
   -- Insert new user
   INSERT INTO app_public.users (email, name, auth_method)
@@ -243,6 +243,95 @@ BEGIN
   VALUES (new_user.id, 'password', password_hash);
 
   RETURN new_user;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to login with password (for GraphQL mutation)
+CREATE OR REPLACE FUNCTION app_public.login_with_password(
+  email app_public.citext,
+  password TEXT
+) RETURNS TABLE(
+  user_id UUID,
+  session_token TEXT,
+  expires_at TIMESTAMPTZ
+) AS $$
+DECLARE
+  user_record app_public.users;
+  auth_record app_private.user_authentication_methods;
+  new_session_token TEXT;
+  session_expires_at TIMESTAMPTZ;
+BEGIN
+  -- Find user by email
+  SELECT * INTO user_record
+  FROM app_public.users u
+  WHERE u.email = login_with_password.email
+    AND u.deleted_at IS NULL;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Invalid email or password';
+  END IF;
+
+  -- Get authentication method
+  SELECT * INTO auth_record
+  FROM app_private.user_authentication_methods uam
+  WHERE uam.user_id = user_record.id
+    AND uam.method = 'password';
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Invalid email or password';
+  END IF;
+
+  -- Verify password
+  IF NOT (auth_record.password_hash = app_public.crypt(password, auth_record.password_hash)) THEN
+    RAISE EXCEPTION 'Invalid email or password';
+  END IF;
+
+  -- Generate session token
+  new_session_token := encode(app_public.gen_random_bytes(32), 'base64');
+  session_expires_at := NOW() + INTERVAL '30 days';
+
+  -- Create session
+  INSERT INTO app_private.sessions (user_id, session_token, expires_at)
+  VALUES (user_record.id, new_session_token, session_expires_at);
+
+  -- Return session info
+  RETURN QUERY SELECT user_record.id, new_session_token, session_expires_at;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to get current user from session
+CREATE OR REPLACE FUNCTION app_public.current_user_from_session(
+  session_token TEXT DEFAULT NULL
+) RETURNS app_public.users AS $$
+DECLARE
+  user_record app_public.users;
+  session_record app_private.sessions;
+  token TEXT;
+BEGIN
+  -- Use provided token or get from settings
+  token := COALESCE(session_token, current_setting('app.session_token', true));
+
+  IF token IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  -- Find valid session
+  SELECT * INTO session_record
+  FROM app_private.sessions s
+  WHERE s.session_token = token
+    AND s.expires_at > NOW();
+
+  IF NOT FOUND THEN
+    RETURN NULL;
+  END IF;
+
+  -- Get user
+  SELECT * INTO user_record
+  FROM app_public.users u
+  WHERE u.id = session_record.user_id
+    AND u.deleted_at IS NULL;
+
+  RETURN user_record;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

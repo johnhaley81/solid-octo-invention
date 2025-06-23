@@ -55,12 +55,12 @@ const main = () => {
 
       // Use Docker container's pg_dump with the database URL modified for container network
       const containerDbUrl = databaseUrl.replace('localhost', 'postgres');
-      dumpCommand = `docker exec solid-octo-postgres pg_dump "${containerDbUrl}" --schema-only --no-owner --no-privileges --no-comments`;
+      dumpCommand = `docker exec solid-octo-postgres pg_dump "${containerDbUrl}" --schema-only --no-owner --no-privileges --no-comments --schema=app_public --schema=app_private`;
 
       console.log('Using Docker container pg_dump');
     } catch {
       // Fallback to local pg_dump if Docker is not available or container doesn't exist
-      dumpCommand = `pg_dump "${databaseUrl}" --schema-only --no-owner --no-privileges --no-comments`;
+      dumpCommand = `pg_dump "${databaseUrl}" --schema-only --no-owner --no-privileges --no-comments --schema=app_public --schema=app_private`;
 
       console.log('Using local pg_dump');
     }

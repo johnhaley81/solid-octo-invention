@@ -32,7 +32,7 @@ export function validatePassword(password) {
   }
 
   if (password.length < 8) {
-    return { isValid: false, error: 'Password must be at least 8 characters long' };
+    return { isValid: false, error: 'Password must be at least 8 characters' };
   }
 
   if (!PASSWORD_REGEX.test(password)) {
@@ -74,8 +74,9 @@ export function validateLoginForm(email, password) {
     isValid = false;
   }
 
-  if (!password) {
-    errors.password = 'Password is required';
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.isValid) {
+    errors.password = passwordValidation.error;
     isValid = false;
   }
 
