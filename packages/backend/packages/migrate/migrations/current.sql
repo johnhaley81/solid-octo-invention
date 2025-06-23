@@ -402,10 +402,10 @@ GRANT EXECUTE ON FUNCTION logout(TEXT) TO postgres;
 ALTER TABLE users ADD COLUMN deleted_at TIMESTAMPTZ DEFAULT NULL;
 
 -- Create index for performance on active (non-deleted) records
-CREATE INDEX CONCURRENTLY users_active_idx ON users (id) WHERE deleted_at IS NULL;
+CREATE INDEX users_active_idx ON users (id) WHERE deleted_at IS NULL;
 
 -- Create index for performance on deleted records (for admin queries)
-CREATE INDEX CONCURRENTLY users_deleted_idx ON users (deleted_at) WHERE deleted_at IS NOT NULL;
+CREATE INDEX users_deleted_idx ON users (deleted_at) WHERE deleted_at IS NOT NULL;
 
 -- Create soft delete function in app_private schema
 CREATE OR REPLACE FUNCTION app_private.soft_delete_record(table_name TEXT, record_id UUID)
@@ -499,9 +499,9 @@ BEGIN
   admin_policy_name := table_name || '_admin_select_policy';
   
   -- Create indexes
-  EXECUTE format('CREATE INDEX CONCURRENTLY %I ON %I (id) WHERE deleted_at IS NULL', 
+  EXECUTE format('CREATE INDEX %I ON %I (id) WHERE deleted_at IS NULL', 
                  index_name_active, table_name);
-  EXECUTE format('CREATE INDEX CONCURRENTLY %I ON %I (deleted_at) WHERE deleted_at IS NOT NULL', 
+  EXECUTE format('CREATE INDEX %I ON %I (deleted_at) WHERE deleted_at IS NOT NULL', 
                  index_name_deleted, table_name);
   
   -- Add prevent hard delete trigger
@@ -566,10 +566,10 @@ CREATE TRIGGER update_example_table_updated_at
 
 -- Create indexes for performance
 -- Index for active (non-deleted) records - most common queries
-CREATE INDEX CONCURRENTLY example_table_active_idx ON example_table (id) WHERE deleted_at IS NULL;
+CREATE INDEX example_table_active_idx ON example_table (id) WHERE deleted_at IS NULL;
 
 -- Index for deleted records (for admin/recovery queries)
-CREATE INDEX CONCURRENTLY example_table_deleted_idx ON example_table (deleted_at) WHERE deleted_at IS NOT NULL;
+CREATE INDEX example_table_deleted_idx ON example_table (deleted_at) WHERE deleted_at IS NOT NULL;
 
 -- Add any additional indexes your table needs
 -- CREATE INDEX example_table_name_idx ON example_table (name) WHERE deleted_at IS NULL;
