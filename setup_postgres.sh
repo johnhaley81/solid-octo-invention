@@ -208,8 +208,9 @@ echo "Choose installation method:"
 echo "1. Native PostgreSQL installation (recommended)"
 echo "2. Docker PostgreSQL (if Docker is available)"
 echo "3. Create helper scripts only"
+echo "4. Run backend integration tests"
 
-read -p "Enter choice (1-3) [default: 1]: " choice
+read -p "Enter choice (1-4) [default: 1]: " choice
 choice=${choice:-1}
 
 case $choice in
@@ -224,6 +225,15 @@ case $choice in
     3)
         create_db_helper
         echo "✅ Helper scripts created. Run setup manually if needed."
+        ;;
+    4)
+        echo "🧪 Running backend integration tests..."
+        if command -v python3 >/dev/null 2>&1; then
+            python3 test_postgres_simple.py
+        else
+            echo "❌ Python3 not found. Please install Python3 to run tests."
+        fi
+        exit 0
         ;;
     *)
         echo "Invalid choice. Using native installation."
@@ -241,4 +251,3 @@ echo "  python3 db_helper.py     - Show database status"
 echo "  python3 db_helper.py start - Start PostgreSQL service"
 echo ""
 echo "For development, you can now use PostgreSQL in your projects!"
-
