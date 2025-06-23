@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation, useLazyQuery } from '@apollo/client';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LOGIN_WITH_PASSWORD, CURRENT_USER_FROM_SESSION } from '../../graphql/queries.js';
+import { LOGIN_WITH_PASSWORD, LOGIN_WITH_PASSKEY, GET_PASSKEY_CHALLENGE, CURRENT_USER_FROM_SESSION } from '../../graphql/queries.js';
 import { useAuth } from '../../contexts/AuthContext.js';
+import { validateLoginForm } from '../../utils/validation.js';
+import { isPasskeySupported, authenticateWithPasskey } from '../../utils/passkey.js';
 
 /**
  * Login form component with validation and error handling
@@ -18,35 +20,86 @@ export function LoginForm() {
   const { login } = useAuth();
 
   const [loginWithPassword] = useMutation(LOGIN_WITH_PASSWORD);
+  const [loginWithPasskey] = useMutation(LOGIN_WITH_PASSKEY);
+  const [getPasskeyChallenge] = useLazyQuery(GET_PASSKEY_CHALLENGE);
   const [getCurrentUser] = useMutation(CURRENT_USER_FROM_SESSION);
 
   // Get the intended destination or default to home
   const from = (location.state as any)?.from?.pathname || '/';
 
   /**
-   * Validate form inputs
+   * Validate form inputs using shared validation schema
    */
   const validateForm = (): boolean => {
-    const newErrors: typeof errors = {};
-
-    if (!email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const validation = validateLoginForm(email, password);
+    setErrors(validation.errors);
+    return validation.isValid;
   };
 
   /**
-   * Handle form submission
+   * Handle passkey login
+   */
+  const handlePasskeyLogin = async () => {
+    if (!email.trim()) {
+      setErrors({ email: 'Email is required for passkey login' });
+      return;
+    }
+
+    if (!isPasskeySupported()) {
+      setErrors({ general: 'Passkeys are not supported in this browser' });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Get passkey challenge from server
+      const { data: challengeData } = await getPasskeyChallenge({
+        variables: { email: email.trim() },
+      });
+
+      if (!challengeData?.getPasskeyChallenge) {
+        setErrors({ general: 'No passkeys found for this email address' });
+        return;
+      }
+
+      // Authenticate with passkey
+      const credential = await authenticateWithPasskey({
+        challenge: challengeData.getPasskeyChallenge.challenge,
+        allowCredentials: challengeData.getPasskeyChallenge.allowCredentials,
+      });
+
+      // Login with passkey credential
+      const { data: loginData } = await loginWithPasskey({
+        variables: { email: email.trim(), credential },
+      });
+
+      if (loginData?.loginWithPasskey) {
+        const { sessionToken } = loginData.loginWithPasskey;
+
+        // Get user details
+        const { data: userData } = await getCurrentUser({
+          variables: { sessionToken },
+        });
+
+        if (userData?.currentUserFromSession) {
+          // Login successful
+          login(userData.currentUserFromSession, sessionToken);
+          navigate(from, { replace: true });
+        } else {
+          setErrors({ general: 'Failed to retrieve user information' });
+        }
+      }
+    } catch (error: any) {
+      const errorMessage = error.message || 'Passkey login failed';
+      setErrors({ general: errorMessage });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Handle form submission (password login)
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,7 +252,7 @@ export function LoginForm() {
             </div>
           )}
 
-          <div>
+          <div className="space-y-3">
             <button
               type="submit"
               disabled={isLoading}
@@ -230,9 +283,46 @@ export function LoginForm() {
                   Signing in...
                 </>
               ) : (
-                'Sign in'
+                'Sign in with Password'
               )}
             </button>
+
+            {/* Passkey Login Button */}
+            {isPasskeySupported() && (
+              <>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-gray-50 text-gray-500">Or</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handlePasskeyLogin}
+                  disabled={isLoading}
+                  className="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                  Sign in with Passkey
+                </button>
+              </>
+            )}
           </div>
 
           <div className="text-center">

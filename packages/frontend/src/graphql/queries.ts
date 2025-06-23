@@ -157,6 +157,69 @@ export const LOGIN_WITH_PASSWORD = gql`
 `;
 
 /**
+ * Login with passkey (WebAuthn)
+ */
+export const LOGIN_WITH_PASSKEY = gql`
+  mutation LoginWithPasskey($email: String!, $credential: String!) {
+    loginWithPasskey(input: { email: $email, credential: $credential }) {
+      userId
+      sessionToken
+      expiresAt
+    }
+  }
+`;
+
+/**
+ * Register a new passkey for a user
+ */
+export const REGISTER_PASSKEY = gql`
+  mutation RegisterPasskey($userId: String!, $credential: String!, $name: String) {
+    registerPasskey(input: { userId: $userId, credential: $credential, name: $name }) {
+      id
+      name
+      createdAt
+    }
+  }
+`;
+
+/**
+ * Get passkey challenge for authentication
+ */
+export const GET_PASSKEY_CHALLENGE = gql`
+  query GetPasskeyChallenge($email: String!) {
+    getPasskeyChallenge(email: $email) {
+      challenge
+      allowCredentials {
+        id
+        type
+        transports
+      }
+    }
+  }
+`;
+
+/**
+ * Get passkey registration options
+ */
+export const GET_PASSKEY_REGISTRATION_OPTIONS = gql`
+  query GetPasskeyRegistrationOptions($userId: String!) {
+    getPasskeyRegistrationOptions(userId: $userId) {
+      challenge
+      user {
+        id
+        name
+        displayName
+      }
+      excludeCredentials {
+        id
+        type
+        transports
+      }
+    }
+  }
+`;
+
+/**
  * Get current user from session token
  */
 export const CURRENT_USER_FROM_SESSION = gql`
