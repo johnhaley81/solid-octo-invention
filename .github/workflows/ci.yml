@@ -480,7 +480,7 @@ jobs:
             },
             "afterReset": [],
             "afterAllMigrations": [],
-            "afterCurrent": ["../dump-schema.js"]
+            "afterCurrent": []
           }
           EOF
 
@@ -493,11 +493,13 @@ jobs:
           echo "🔍 Debug: Contents of migrate directory:"
           ls -la "$GITHUB_WORKSPACE/packages/backend/packages/migrate/"
           cd "$GITHUB_WORKSPACE"
-          echo "🔍 Debug: About to run pnpm migrate:up from $(pwd)"
+                    echo "🔍 Debug: About to run pnpm migrate:up from $(pwd)"
           pnpm migrate:up
 
           echo "🔍 Debug: Migration command completed with exit code: $?"
-          echo "🔍 Debug: Checking if afterCurrent hook ran..."
+          echo "🔍 Debug: Manually running dump-schema.js..."
+          cd "$GITHUB_WORKSPACE/packages/backend/packages/migrate"
+          node dump-schema.js
 
           # Check if schema dump was generated
           cd "$GITHUB_WORKSPACE/packages/backend/packages/migrate"
