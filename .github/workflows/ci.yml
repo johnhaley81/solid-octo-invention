@@ -476,7 +476,7 @@ jobs:
             "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_migration_test_shadow",
             "rootConnectionString": "postgresql://postgres:postgres@localhost:5432/postgres",
             "pgSettings": {
-              "search_path": "public"
+              "search_path": "app_public"
             },
             "afterReset": [],
             "afterAllMigrations": [],
