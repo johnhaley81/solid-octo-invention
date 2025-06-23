@@ -393,3 +393,221 @@ GRANT EXECUTE ON FUNCTION login_with_password(CITEXT, TEXT) TO postgres;
 GRANT EXECUTE ON FUNCTION switch_auth_method(UUID, auth_method) TO postgres;
 GRANT EXECUTE ON FUNCTION current_user_from_session(TEXT) TO postgres;
 GRANT EXECUTE ON FUNCTION logout(TEXT) TO postgres;
+
+-- ============================================================================
+-- SOFT DELETE INFRASTRUCTURE
+-- ============================================================================
+
+-- Add deleted_at column to users table
+ALTER TABLE users ADD COLUMN deleted_at TIMESTAMPTZ DEFAULT NULL;
+
+-- Create index for performance on active (non-deleted) records
+CREATE INDEX CONCURRENTLY users_active_idx ON users (id) WHERE deleted_at IS NULL;
+
+-- Create index for performance on deleted records (for admin queries)
+CREATE INDEX CONCURRENTLY users_deleted_idx ON users (deleted_at) WHERE deleted_at IS NOT NULL;
+
+-- Create soft delete function in app_private schema
+CREATE OR REPLACE FUNCTION app_private.soft_delete_record(table_name TEXT, record_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  sql_query TEXT;
+  rows_affected INTEGER;
+BEGIN
+  -- Construct the SQL query dynamically
+  sql_query := format('UPDATE %I SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL', table_name);
+  
+  -- Execute the query
+  EXECUTE sql_query USING record_id;
+  
+  -- Get the number of affected rows
+  GET DIAGNOSTICS rows_affected = ROW_COUNT;
+  
+  -- Return true if a row was updated, false otherwise
+  RETURN rows_affected > 0;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create restore function in app_private schema
+CREATE OR REPLACE FUNCTION app_private.restore_record(table_name TEXT, record_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  sql_query TEXT;
+  rows_affected INTEGER;
+BEGIN
+  -- Construct the SQL query dynamically
+  sql_query := format('UPDATE %I SET deleted_at = NULL WHERE id = $1 AND deleted_at IS NOT NULL', table_name);
+  
+  -- Execute the query
+  EXECUTE sql_query USING record_id;
+  
+  -- Get the number of affected rows
+  GET DIAGNOSTICS rows_affected = ROW_COUNT;
+  
+  -- Return true if a row was updated, false otherwise
+  RETURN rows_affected > 0;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create function to prevent hard deletes
+CREATE OR REPLACE FUNCTION prevent_hard_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+  RAISE EXCEPTION 'Hard deletes are not allowed. Use soft delete instead by setting deleted_at = NOW()';
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Add trigger to prevent hard deletes on users table
+CREATE TRIGGER prevent_users_hard_delete
+  BEFORE DELETE ON users
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_hard_delete();
+
+-- Update RLS policies to exclude soft deleted records by default
+DROP POLICY IF EXISTS users_select_policy ON users;
+
+-- Policy for regular users - only see active (non-deleted) records
+CREATE POLICY users_select_policy ON users 
+  FOR SELECT 
+  USING (deleted_at IS NULL);
+
+-- Policy for admin users to see all records (including soft deleted)
+-- This assumes you have a way to identify admin users - adjust as needed
+CREATE POLICY users_admin_select_policy ON users 
+  FOR SELECT 
+  USING (
+    deleted_at IS NULL OR 
+    current_setting('app.user_role', true) = 'admin'
+  );
+
+-- Helper function to set up soft delete infrastructure for a new table
+CREATE OR REPLACE FUNCTION app_private.setup_soft_delete_for_table(table_name TEXT)
+RETURNS VOID AS $$
+DECLARE
+  index_name_active TEXT;
+  index_name_deleted TEXT;
+  trigger_name TEXT;
+  policy_name TEXT;
+  admin_policy_name TEXT;
+BEGIN
+  -- Generate names
+  index_name_active := table_name || '_active_idx';
+  index_name_deleted := table_name || '_deleted_idx';
+  trigger_name := 'prevent_' || table_name || '_hard_delete';
+  policy_name := table_name || '_select_policy';
+  admin_policy_name := table_name || '_admin_select_policy';
+  
+  -- Create indexes
+  EXECUTE format('CREATE INDEX CONCURRENTLY %I ON %I (id) WHERE deleted_at IS NULL', 
+                 index_name_active, table_name);
+  EXECUTE format('CREATE INDEX CONCURRENTLY %I ON %I (deleted_at) WHERE deleted_at IS NOT NULL', 
+                 index_name_deleted, table_name);
+  
+  -- Add prevent hard delete trigger
+  EXECUTE format('CREATE TRIGGER %I BEFORE DELETE ON %I FOR EACH ROW EXECUTE FUNCTION prevent_hard_delete()', 
+                 trigger_name, table_name);
+  
+  -- Enable RLS
+  EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', table_name);
+  
+  -- Create RLS policies
+  EXECUTE format('CREATE POLICY %I ON %I FOR SELECT USING (deleted_at IS NULL)', 
+                 policy_name, table_name);
+  EXECUTE format('CREATE POLICY %I ON %I FOR SELECT USING (deleted_at IS NULL OR current_setting(''app.user_role'', true) = ''admin'')', 
+                 admin_policy_name, table_name);
+  
+  RAISE NOTICE 'Soft delete infrastructure set up for table: %', table_name;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Grant permissions for the new soft delete functions
+GRANT EXECUTE ON FUNCTION app_private.soft_delete_record(TEXT, UUID) TO postgres;
+GRANT EXECUTE ON FUNCTION app_private.restore_record(TEXT, UUID) TO postgres;
+GRANT EXECUTE ON FUNCTION app_private.setup_soft_delete_for_table(TEXT) TO postgres;
+
+-- Comment on the functions for documentation
+COMMENT ON FUNCTION app_private.soft_delete_record(TEXT, UUID) IS 'Soft delete a record by setting deleted_at to current timestamp';
+COMMENT ON FUNCTION app_private.restore_record(TEXT, UUID) IS 'Restore a soft deleted record by setting deleted_at to NULL';
+COMMENT ON FUNCTION prevent_hard_delete() IS 'Trigger function to prevent hard deletes and enforce soft delete pattern';
+COMMENT ON FUNCTION app_private.setup_soft_delete_for_table(TEXT) IS 'Helper function to set up soft delete infrastructure (indexes, triggers, RLS policies) for a new table';
+
+-- ============================================================================
+-- SOFT DELETE TABLE TEMPLATE AND REQUIREMENTS
+-- ============================================================================
+
+-- Template for creating new tables with soft delete support
+-- Copy this template when creating new tables to ensure consistency
+
+-- Example table creation with soft delete support:
+-- Replace 'example_table' with your actual table name
+
+/*
+CREATE TABLE example_table (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  
+  -- Your table-specific columns here
+  name TEXT NOT NULL,
+  description TEXT,
+  
+  -- Standard audit columns
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  
+  -- Soft delete column - REQUIRED for all tables
+  deleted_at TIMESTAMPTZ DEFAULT NULL
+);
+
+-- Create updated_at trigger
+CREATE TRIGGER update_example_table_updated_at 
+  BEFORE UPDATE ON example_table
+  FOR EACH ROW 
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Create indexes for performance
+-- Index for active (non-deleted) records - most common queries
+CREATE INDEX CONCURRENTLY example_table_active_idx ON example_table (id) WHERE deleted_at IS NULL;
+
+-- Index for deleted records (for admin/recovery queries)
+CREATE INDEX CONCURRENTLY example_table_deleted_idx ON example_table (deleted_at) WHERE deleted_at IS NOT NULL;
+
+-- Add any additional indexes your table needs
+-- CREATE INDEX example_table_name_idx ON example_table (name) WHERE deleted_at IS NULL;
+
+-- Prevent hard deletes with trigger
+CREATE TRIGGER prevent_example_table_hard_delete
+  BEFORE DELETE ON example_table
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_hard_delete();
+
+-- Enable Row Level Security
+ALTER TABLE example_table ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policy for regular users - only see active records
+CREATE POLICY example_table_select_policy ON example_table 
+  FOR SELECT 
+  USING (deleted_at IS NULL);
+
+-- RLS Policy for admin users - see all records including soft deleted
+CREATE POLICY example_table_admin_select_policy ON example_table 
+  FOR SELECT 
+  USING (
+    deleted_at IS NULL OR 
+    current_setting('app.user_role', true) = 'admin'
+  );
+
+-- Grant permissions
+GRANT SELECT, INSERT, UPDATE ON example_table TO postgres;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO postgres;
+
+-- Or use the helper function to set up soft delete infrastructure:
+-- SELECT app_private.setup_soft_delete_for_table('example_table');
+*/
+
+-- Checklist for new tables with soft delete support:
+-- ✅ Include deleted_at TIMESTAMPTZ DEFAULT NULL column
+-- ✅ Create partial indexes on deleted_at for performance
+-- ✅ Add prevent hard delete trigger
+-- ✅ Set up RLS policies that respect soft delete status
+-- ✅ Grant appropriate permissions
+-- ✅ Test soft delete functionality with the table

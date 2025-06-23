@@ -64,6 +64,22 @@ export class DatabaseError extends Error {
 - Add automatic timestamps with triggers
 - Keep schema simple and focused on core domain
 
+### Migration Management (CRITICAL)
+
+**All database schema changes MUST be consolidated in `current.sql`:**
+
+- **✅ USE `current.sql`** as the single source of truth for all schema changes
+- **❌ NO separate migration files** - everything goes in `current.sql`
+- **❌ NO individual `.sql` files** for features - consolidate into `current.sql`
+- **✅ ORGANIZE `current.sql`** with clear sections and comments
+- **✅ USE Graphile Migrate** to commit migrations when ready for production
+
+**Why this matters:**
+- Prevents migration file proliferation and conflicts
+- Ensures single source of truth for database schema
+- Makes it easier to review and understand schema changes
+- Follows Graphile Migrate best practices for development
+
 ### Soft Delete Pattern (REQUIRED)
 
 **All tables MUST implement soft deletes using `deleted_at TIMESTAMPTZ` instead of hard deletes:**
@@ -80,10 +96,10 @@ deleted_at TIMESTAMPTZ DEFAULT NULL
 - RLS policies must respect soft delete status
 - Create partial indexes for performance: `WHERE deleted_at IS NULL`
 
-**Database functions available:**
-- `soft_delete_record(table_name, record_id)` - Soft delete a record
-- `restore_record(table_name, record_id)` - Restore a soft deleted record
-- `setup_soft_delete_for_table(table_name)` - Set up infrastructure for new tables
+**Database functions available (in app_private schema):**
+- `app_private.soft_delete_record(table_name, record_id)` - Soft delete a record
+- `app_private.restore_record(table_name, record_id)` - Restore a soft deleted record
+- `app_private.setup_soft_delete_for_table(table_name)` - Set up infrastructure for new tables
 
 **Effect-TS service methods:**
 - `databaseService.softDelete(tableName, recordId)` - Soft delete via service
@@ -92,8 +108,8 @@ deleted_at TIMESTAMPTZ DEFAULT NULL
 
 **When creating new tables:**
 1. Include `deleted_at TIMESTAMPTZ DEFAULT NULL` column
-2. Run `SELECT setup_soft_delete_for_table('your_table_name')` to add infrastructure
-3. Or manually follow the template in `packages/migrate/migrations/table-template.sql`
+2. Run `SELECT app_private.setup_soft_delete_for_table('your_table_name')` to add infrastructure
+3. Or manually follow the template in `current.sql` (see soft delete section)
 
 ## 🚫 PROHIBITED PATTERNS
 
@@ -108,6 +124,8 @@ deleted_at TIMESTAMPTZ DEFAULT NULL
 - **❌ NO TEXT columns with CHECK constraints** - use PostgreSQL ENUMs for better GraphQL type generation
 - **❌ NO separate migration files** - all schema changes go in `current.sql`
 - **❌ NO sensitive data in public schema** - use `app_private` schema for authentication tables
+- **❌ NO hard deletes** - use soft delete pattern with `deleted_at TIMESTAMPTZ`
+- **❌ NO helper functions in public schema** - put utility functions in `app_private` schema
 
 ### Background Processing Anti-patterns
 - **❌ NO database functions for background tasks** - use graphile-worker jobs

@@ -133,7 +133,7 @@ const makeDatabaseService = E.gen(function* () {
   const softDelete = (tableName: string, recordId: string) =>
     E.tryPromise({
       try: async () => {
-        const result = await pool.query('SELECT soft_delete_record($1, $2)', [tableName, recordId]);
+        const result = await pool.query('SELECT app_private.soft_delete_record($1, $2)', [tableName, recordId]);
         return result.rows[0]?.soft_delete_record || false;
       },
       catch: error => new DatabaseError(`Soft delete failed for ${tableName}:${recordId}`, error),
@@ -145,7 +145,7 @@ const makeDatabaseService = E.gen(function* () {
   const restore = (tableName: string, recordId: string) =>
     E.tryPromise({
       try: async () => {
-        const result = await pool.query('SELECT restore_record($1, $2)', [tableName, recordId]);
+        const result = await pool.query('SELECT app_private.restore_record($1, $2)', [tableName, recordId]);
         return result.rows[0]?.restore_record || false;
       },
       catch: error => new DatabaseError(`Restore failed for ${tableName}:${recordId}`, error),
