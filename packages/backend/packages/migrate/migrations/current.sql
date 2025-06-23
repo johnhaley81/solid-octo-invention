@@ -8,14 +8,22 @@ CREATE EXTENSION IF NOT EXISTS "citext";
 -- Create app_private schema for sensitive data
 CREATE SCHEMA IF NOT EXISTS app_private;
 
--- Create authentication method enum
-CREATE TYPE auth_method AS ENUM ('password', 'webauthn');
+-- Create authentication method enum (idempotent)
+DO $$ BEGIN
+  CREATE TYPE auth_method AS ENUM ('password', 'webauthn');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
--- Create OTP token type enum
-CREATE TYPE otp_token_type AS ENUM ('email_verification', 'login_otp', 'password_reset');
+-- Create OTP token type enum (idempotent)
+DO $$ BEGIN
+  CREATE TYPE otp_token_type AS ENUM ('email_verification', 'login_otp', 'password_reset');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
--- Create users table
-CREATE TABLE users (
+-- Create users table (idempotent)
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email CITEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
@@ -34,13 +42,14 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply updated_at trigger to users table
+-- Apply updated_at trigger to users table (idempotent)
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Authentication tables in app_private schema
--- Password-based authentication credentials
-CREATE TABLE app_private.password_credentials (
+-- Password-based authentication credentials (idempotent)
+CREATE TABLE IF NOT EXISTS app_private.password_credentials (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   password_hash TEXT NOT NULL,
@@ -58,8 +67,8 @@ CREATE TABLE app_private.password_credentials (
   UNIQUE(user_id)
 );
 
--- WebAuthn credentials for passkey authentication
-CREATE TABLE app_private.webauthn_credentials (
+-- WebAuthn credentials for passkey authentication (idempotent)
+CREATE TABLE IF NOT EXISTS app_private.webauthn_credentials (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   credential_id TEXT NOT NULL UNIQUE,
@@ -73,8 +82,8 @@ CREATE TABLE app_private.webauthn_credentials (
   last_used_at TIMESTAMPTZ
 );
 
--- OTP tokens for email verification and login
-CREATE TABLE app_private.otp_tokens (
+-- OTP tokens for email verification and login (idempotent)
+CREATE TABLE IF NOT EXISTS app_private.otp_tokens (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token TEXT NOT NULL,
@@ -85,8 +94,8 @@ CREATE TABLE app_private.otp_tokens (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- User sessions for authentication tracking
-CREATE TABLE app_private.user_sessions (
+-- User sessions for authentication tracking (idempotent)
+CREATE TABLE IF NOT EXISTS app_private.user_sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   session_token TEXT NOT NULL UNIQUE,
@@ -97,27 +106,28 @@ CREATE TABLE app_private.user_sessions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Apply updated_at triggers to app_private tables
+-- Apply updated_at triggers to app_private tables (idempotent)
+DROP TRIGGER IF EXISTS update_password_credentials_updated_at ON app_private.password_credentials;
 CREATE TRIGGER update_password_credentials_updated_at 
   BEFORE UPDATE ON app_private.password_credentials
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Indexes for performance
-CREATE INDEX idx_password_credentials_user_id ON app_private.password_credentials(user_id);
-CREATE INDEX idx_password_credentials_email_verification_token ON app_private.password_credentials(email_verification_token);
-CREATE INDEX idx_password_credentials_password_reset_token ON app_private.password_credentials(password_reset_token);
+-- Indexes for performance (idempotent)
+CREATE INDEX IF NOT EXISTS idx_password_credentials_user_id ON app_private.password_credentials(user_id);
+CREATE INDEX IF NOT EXISTS idx_password_credentials_email_verification_token ON app_private.password_credentials(email_verification_token);
+CREATE INDEX IF NOT EXISTS idx_password_credentials_password_reset_token ON app_private.password_credentials(password_reset_token);
 
-CREATE INDEX idx_webauthn_credentials_user_id ON app_private.webauthn_credentials(user_id);
-CREATE INDEX idx_webauthn_credentials_credential_id ON app_private.webauthn_credentials(credential_id);
+CREATE INDEX IF NOT EXISTS idx_webauthn_credentials_user_id ON app_private.webauthn_credentials(user_id);
+CREATE INDEX IF NOT EXISTS idx_webauthn_credentials_credential_id ON app_private.webauthn_credentials(credential_id);
 
-CREATE INDEX idx_otp_tokens_user_id ON app_private.otp_tokens(user_id);
-CREATE INDEX idx_otp_tokens_token ON app_private.otp_tokens(token);
-CREATE INDEX idx_otp_tokens_expires_at ON app_private.otp_tokens(expires_at);
-CREATE INDEX idx_otp_tokens_token_type ON app_private.otp_tokens(token_type);
+CREATE INDEX IF NOT EXISTS idx_otp_tokens_user_id ON app_private.otp_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_otp_tokens_token ON app_private.otp_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_otp_tokens_expires_at ON app_private.otp_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_otp_tokens_token_type ON app_private.otp_tokens(token_type);
 
-CREATE INDEX idx_user_sessions_user_id ON app_private.user_sessions(user_id);
-CREATE INDEX idx_user_sessions_session_token ON app_private.user_sessions(session_token);
-CREATE INDEX idx_user_sessions_expires_at ON app_private.user_sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON app_private.user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_session_token ON app_private.user_sessions(session_token);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON app_private.user_sessions(expires_at);
 
 -- Function to enforce mutual exclusivity between auth methods
 CREATE OR REPLACE FUNCTION enforce_auth_method_exclusivity()
@@ -137,7 +147,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to enforce mutual exclusivity
+-- Trigger to enforce mutual exclusivity (idempotent)
+DROP TRIGGER IF EXISTS enforce_auth_method_exclusivity_trigger ON users;
 CREATE TRIGGER enforce_auth_method_exclusivity_trigger
   AFTER UPDATE OF auth_method ON users
   FOR EACH ROW
@@ -150,24 +161,30 @@ ALTER TABLE app_private.webauthn_credentials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app_private.otp_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app_private.user_sessions ENABLE ROW LEVEL SECURITY;
 
--- Basic RLS policies (can be customized based on authentication needs)
+-- Basic RLS policies (can be customized based on authentication needs) (idempotent)
+DROP POLICY IF EXISTS users_select_policy ON users;
 CREATE POLICY users_select_policy ON users FOR SELECT USING (true);
 
--- Policy to allow users to only update their own records
+-- Policy to allow users to only update their own records (idempotent)
+DROP POLICY IF EXISTS users_update_policy ON users;
 CREATE POLICY users_update_policy ON users FOR UPDATE 
   USING (id = current_setting('app.current_user_id', true)::UUID)
   WITH CHECK (id = current_setting('app.current_user_id', true)::UUID);
 
--- App_private RLS policies - only accessible by the user themselves
+-- App_private RLS policies - only accessible by the user themselves (idempotent)
+DROP POLICY IF EXISTS password_credentials_policy ON app_private.password_credentials;
 CREATE POLICY password_credentials_policy ON app_private.password_credentials 
   FOR ALL USING (user_id = current_setting('app.current_user_id', true)::UUID);
 
+DROP POLICY IF EXISTS webauthn_credentials_policy ON app_private.webauthn_credentials;
 CREATE POLICY webauthn_credentials_policy ON app_private.webauthn_credentials 
   FOR ALL USING (user_id = current_setting('app.current_user_id', true)::UUID);
 
+DROP POLICY IF EXISTS otp_tokens_policy ON app_private.otp_tokens;
 CREATE POLICY otp_tokens_policy ON app_private.otp_tokens 
   FOR ALL USING (user_id = current_setting('app.current_user_id', true)::UUID);
 
+DROP POLICY IF EXISTS user_sessions_policy ON app_private.user_sessions;
 CREATE POLICY user_sessions_policy ON app_private.user_sessions 
   FOR ALL USING (user_id = current_setting('app.current_user_id', true)::UUID);
 
@@ -393,3 +410,230 @@ GRANT EXECUTE ON FUNCTION login_with_password(CITEXT, TEXT) TO postgres;
 GRANT EXECUTE ON FUNCTION switch_auth_method(UUID, auth_method) TO postgres;
 GRANT EXECUTE ON FUNCTION current_user_from_session(TEXT) TO postgres;
 GRANT EXECUTE ON FUNCTION logout(TEXT) TO postgres;
+
+-- ============================================================================
+-- SOFT DELETE INFRASTRUCTURE
+-- ============================================================================
+
+-- Add deleted_at column to users table (idempotent)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
+
+-- Create index for performance on active (non-deleted) records (idempotent)
+CREATE INDEX IF NOT EXISTS users_active_idx ON users (id) WHERE deleted_at IS NULL;
+
+-- Create index for performance on deleted records (for admin queries) (idempotent)
+CREATE INDEX IF NOT EXISTS users_deleted_idx ON users (deleted_at) WHERE deleted_at IS NOT NULL;
+
+-- Create soft delete function in app_private schema
+CREATE OR REPLACE FUNCTION app_private.soft_delete_record(table_name TEXT, record_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  sql_query TEXT;
+  rows_affected INTEGER;
+BEGIN
+  -- Construct the SQL query dynamically
+  sql_query := format('UPDATE %I SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL', table_name);
+  
+  -- Execute the query
+  EXECUTE sql_query USING record_id;
+  
+  -- Get the number of affected rows
+  GET DIAGNOSTICS rows_affected = ROW_COUNT;
+  
+  -- Return true if a row was updated, false otherwise
+  RETURN rows_affected > 0;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create restore function in app_private schema
+CREATE OR REPLACE FUNCTION app_private.restore_record(table_name TEXT, record_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  sql_query TEXT;
+  rows_affected INTEGER;
+BEGIN
+  -- Construct the SQL query dynamically
+  sql_query := format('UPDATE %I SET deleted_at = NULL WHERE id = $1 AND deleted_at IS NOT NULL', table_name);
+  
+  -- Execute the query
+  EXECUTE sql_query USING record_id;
+  
+  -- Get the number of affected rows
+  GET DIAGNOSTICS rows_affected = ROW_COUNT;
+  
+  -- Return true if a row was updated, false otherwise
+  RETURN rows_affected > 0;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create function to prevent hard deletes
+CREATE OR REPLACE FUNCTION prevent_hard_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+  RAISE EXCEPTION 'Hard deletes are not allowed. Use soft delete instead by setting deleted_at = NOW()';
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Add trigger to prevent hard deletes on users table (idempotent)
+DROP TRIGGER IF EXISTS prevent_users_hard_delete ON users;
+CREATE TRIGGER prevent_users_hard_delete
+  BEFORE DELETE ON users
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_hard_delete();
+
+-- Update RLS policies to exclude soft deleted records by default
+DROP POLICY IF EXISTS users_select_policy ON users;
+
+-- Policy for regular users - only see active (non-deleted) records
+CREATE POLICY users_select_policy ON users 
+  FOR SELECT 
+  USING (deleted_at IS NULL);
+
+-- Policy for admin users to see all records (including soft deleted) (idempotent)
+-- This assumes you have a way to identify admin users - adjust as needed
+DROP POLICY IF EXISTS users_admin_select_policy ON users;
+CREATE POLICY users_admin_select_policy ON users 
+  FOR SELECT 
+  USING (
+    deleted_at IS NULL OR 
+    current_setting('app.user_role', true) = 'admin'
+  );
+
+-- Helper function to set up soft delete infrastructure for a new table
+CREATE OR REPLACE FUNCTION app_private.setup_soft_delete_for_table(table_name TEXT)
+RETURNS VOID AS $$
+DECLARE
+  index_name_active TEXT;
+  index_name_deleted TEXT;
+  trigger_name TEXT;
+  policy_name TEXT;
+  admin_policy_name TEXT;
+BEGIN
+  -- Generate names
+  index_name_active := table_name || '_active_idx';
+  index_name_deleted := table_name || '_deleted_idx';
+  trigger_name := 'prevent_' || table_name || '_hard_delete';
+  policy_name := table_name || '_select_policy';
+  admin_policy_name := table_name || '_admin_select_policy';
+  
+  -- Create indexes (idempotent)
+  EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON %I (id) WHERE deleted_at IS NULL', 
+                 index_name_active, table_name);
+  EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON %I (deleted_at) WHERE deleted_at IS NOT NULL', 
+                 index_name_deleted, table_name);
+  
+  -- Add prevent hard delete trigger (idempotent)
+  EXECUTE format('DROP TRIGGER IF EXISTS %I ON %I', trigger_name, table_name);
+  EXECUTE format('CREATE TRIGGER %I BEFORE DELETE ON %I FOR EACH ROW EXECUTE FUNCTION prevent_hard_delete()', 
+                 trigger_name, table_name);
+  
+  -- Enable RLS
+  EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', table_name);
+  
+  -- Create RLS policies (idempotent)
+  EXECUTE format('DROP POLICY IF EXISTS %I ON %I', policy_name, table_name);
+  EXECUTE format('CREATE POLICY %I ON %I FOR SELECT USING (deleted_at IS NULL)', 
+                 policy_name, table_name);
+  EXECUTE format('DROP POLICY IF EXISTS %I ON %I', admin_policy_name, table_name);
+  EXECUTE format('CREATE POLICY %I ON %I FOR SELECT USING (deleted_at IS NULL OR current_setting(''app.user_role'', true) = ''admin'')', 
+                 admin_policy_name, table_name);
+  
+  RAISE NOTICE 'Soft delete infrastructure set up for table: %', table_name;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Grant permissions for the new soft delete functions
+GRANT EXECUTE ON FUNCTION app_private.soft_delete_record(TEXT, UUID) TO postgres;
+GRANT EXECUTE ON FUNCTION app_private.restore_record(TEXT, UUID) TO postgres;
+GRANT EXECUTE ON FUNCTION app_private.setup_soft_delete_for_table(TEXT) TO postgres;
+
+-- Comment on the functions for documentation
+COMMENT ON FUNCTION app_private.soft_delete_record(TEXT, UUID) IS 'Soft delete a record by setting deleted_at to current timestamp';
+COMMENT ON FUNCTION app_private.restore_record(TEXT, UUID) IS 'Restore a soft deleted record by setting deleted_at to NULL';
+COMMENT ON FUNCTION prevent_hard_delete() IS 'Trigger function to prevent hard deletes and enforce soft delete pattern';
+COMMENT ON FUNCTION app_private.setup_soft_delete_for_table(TEXT) IS 'Helper function to set up soft delete infrastructure (indexes, triggers, RLS policies) for a new table';
+
+-- ============================================================================
+-- SOFT DELETE TABLE TEMPLATE AND REQUIREMENTS
+-- ============================================================================
+
+-- Template for creating new tables with soft delete support
+-- Copy this template when creating new tables to ensure consistency
+
+-- Example table creation with soft delete support:
+-- Replace 'example_table' with your actual table name
+
+/*
+CREATE TABLE IF NOT EXISTS example_table (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  
+  -- Your table-specific columns here
+  name TEXT NOT NULL,
+  description TEXT,
+  
+  -- Standard audit columns
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  
+  -- Soft delete column - REQUIRED for all tables
+  deleted_at TIMESTAMPTZ DEFAULT NULL
+);
+
+-- Create updated_at trigger (idempotent)
+DROP TRIGGER IF EXISTS update_example_table_updated_at ON example_table;
+CREATE TRIGGER update_example_table_updated_at 
+  BEFORE UPDATE ON example_table
+  FOR EACH ROW 
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Create indexes for performance (idempotent)
+-- Index for active (non-deleted) records - most common queries
+CREATE INDEX IF NOT EXISTS example_table_active_idx ON example_table (id) WHERE deleted_at IS NULL;
+
+-- Index for deleted records (for admin/recovery queries)
+CREATE INDEX IF NOT EXISTS example_table_deleted_idx ON example_table (deleted_at) WHERE deleted_at IS NOT NULL;
+
+-- Add any additional indexes your table needs
+-- CREATE INDEX example_table_name_idx ON example_table (name) WHERE deleted_at IS NULL;
+
+-- Prevent hard deletes with trigger (idempotent)
+DROP TRIGGER IF EXISTS prevent_example_table_hard_delete ON example_table;
+CREATE TRIGGER prevent_example_table_hard_delete
+  BEFORE DELETE ON example_table
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_hard_delete();
+
+-- Enable Row Level Security
+ALTER TABLE example_table ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policy for regular users - only see active records (idempotent)
+DROP POLICY IF EXISTS example_table_select_policy ON example_table;
+CREATE POLICY example_table_select_policy ON example_table 
+  FOR SELECT 
+  USING (deleted_at IS NULL);
+
+-- RLS Policy for admin users - see all records including soft deleted (idempotent)
+DROP POLICY IF EXISTS example_table_admin_select_policy ON example_table;
+CREATE POLICY example_table_admin_select_policy ON example_table 
+  FOR SELECT 
+  USING (
+    deleted_at IS NULL OR 
+    current_setting('app.user_role', true) = 'admin'
+  );
+
+-- Grant permissions
+GRANT SELECT, INSERT, UPDATE ON example_table TO postgres;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO postgres;
+
+-- Or use the helper function to set up soft delete infrastructure:
+-- SELECT app_private.setup_soft_delete_for_table('example_table');
+*/
+
+-- Checklist for new tables with soft delete support:
+-- ✅ Include deleted_at TIMESTAMPTZ DEFAULT NULL column
+-- ✅ Create partial indexes on deleted_at for performance
+-- ✅ Add prevent hard delete trigger
+-- ✅ Set up RLS policies that respect soft delete status
+-- ✅ Grant appropriate permissions
+-- ✅ Test soft delete functionality with the table

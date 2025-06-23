@@ -64,6 +64,77 @@ export class DatabaseError extends Error {
 - Add automatic timestamps with triggers
 - Keep schema simple and focused on core domain
 
+### Migration Management (CRITICAL)
+
+**All database schema changes MUST be consolidated in `current.sql`:**
+
+- **✅ USE `current.sql`** as the single source of truth for all schema changes
+- **❌ NO separate migration files** - everything goes in `current.sql`
+- **❌ NO individual `.sql` files** for features - consolidate into `current.sql`
+- **✅ ORGANIZE `current.sql`** with clear sections and comments
+- **✅ USE Graphile Migrate** to commit migrations when ready for production
+
+**CRITICAL: ALL MIGRATIONS MUST BE IDEMPOTENT**
+
+Every SQL statement in `current.sql` MUST be safe to run multiple times:
+
+- **✅ USE `IF NOT EXISTS`** for CREATE statements:
+  ```sql
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
+  CREATE INDEX IF NOT EXISTS users_active_idx ON users (id) WHERE deleted_at IS NULL;
+  ```
+
+- **✅ USE `CREATE OR REPLACE`** for functions:
+  ```sql
+  CREATE OR REPLACE FUNCTION app_private.soft_delete_record(...)
+  ```
+
+- **✅ USE `DROP IF EXISTS` before CREATE** for policies and triggers:
+  ```sql
+  DROP POLICY IF EXISTS users_select_policy ON users;
+  CREATE POLICY users_select_policy ON users FOR SELECT USING (deleted_at IS NULL);
+  
+  DROP TRIGGER IF EXISTS prevent_users_hard_delete ON users;
+  CREATE TRIGGER prevent_users_hard_delete BEFORE DELETE ON users ...;
+  ```
+
+**Why idempotency matters:**
+- Migrations can be safely re-run during development
+- CI/CD pipelines won't fail on repeated deployments
+- Database state remains consistent across environments
+- Prevents "already exists" errors that break deployments
+
+### Soft Delete Pattern (REQUIRED)
+
+**All tables MUST implement soft deletes using `deleted_at TIMESTAMPTZ` instead of hard deletes:**
+
+```sql
+-- Every table must include this column
+deleted_at TIMESTAMPTZ DEFAULT NULL
+```
+
+**Key principles:**
+- Hard deletes are prohibited - use `deleted_at = NOW()` instead
+- All tables have triggers that prevent accidental hard deletes
+- Use `@graphile-contrib/pg-omit-archived` for automatic GraphQL filtering
+- RLS policies must respect soft delete status
+- Create partial indexes for performance: `WHERE deleted_at IS NULL`
+
+**Database functions available (in app_private schema):**
+- `app_private.soft_delete_record(table_name, record_id)` - Soft delete a record
+- `app_private.restore_record(table_name, record_id)` - Restore a soft deleted record
+- `app_private.setup_soft_delete_for_table(table_name)` - Set up infrastructure for new tables
+
+**Effect-TS service methods:**
+- `databaseService.softDelete(tableName, recordId)` - Soft delete via service
+- `databaseService.restore(tableName, recordId)` - Restore via service
+- `databaseService.permanentDelete(tableName, recordId)` - Permanent delete (admin only)
+
+**When creating new tables:**
+1. Include `deleted_at TIMESTAMPTZ DEFAULT NULL` column
+2. Run `SELECT app_private.setup_soft_delete_for_table('your_table_name')` to add infrastructure
+3. Or manually follow the template in `current.sql` (see soft delete section)
+
 ## 🚫 PROHIBITED PATTERNS
 
 ### REST API Endpoints
@@ -77,6 +148,9 @@ export class DatabaseError extends Error {
 - **❌ NO TEXT columns with CHECK constraints** - use PostgreSQL ENUMs for better GraphQL type generation
 - **❌ NO separate migration files** - all schema changes go in `current.sql`
 - **❌ NO sensitive data in public schema** - use `app_private` schema for authentication tables
+- **❌ NO hard deletes** - use soft delete pattern with `deleted_at TIMESTAMPTZ`
+- **❌ NO helper functions in public schema** - put utility functions in `app_private` schema
+- **❌ NO non-idempotent migrations** - all SQL in `current.sql` must be safe to run multiple times
 
 ### Background Processing Anti-patterns
 - **❌ NO database functions for background tasks** - use graphile-worker jobs

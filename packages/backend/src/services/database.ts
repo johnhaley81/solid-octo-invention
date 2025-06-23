@@ -15,6 +15,13 @@ export interface DatabaseService {
     _fn: (_client: PoolClient) => E.Effect<T, DatabaseError>,
   ) => E.Effect<T, DatabaseError>;
   readonly close: () => E.Effect<void, never>;
+  // Soft delete operations
+  readonly softDelete: (_tableName: string, _recordId: string) => E.Effect<boolean, DatabaseError>;
+  readonly restore: (_tableName: string, _recordId: string) => E.Effect<boolean, DatabaseError>;
+  readonly permanentDelete: (
+    _tableName: string,
+    _recordId: string,
+  ) => E.Effect<boolean, DatabaseError>;
 }
 
 /**
@@ -122,11 +129,62 @@ const makeDatabaseService = E.gen(function* () {
       yield* E.logInfo('Database connection pool closed');
     }).pipe(E.ignore);
 
+  // Soft delete operations
+  const softDelete = (tableName: string, recordId: string) =>
+    E.tryPromise({
+      try: async () => {
+        const result = await pool.query('SELECT app_private.soft_delete_record($1, $2)', [
+          tableName,
+          recordId,
+        ]);
+        return result.rows[0]?.soft_delete_record || false;
+      },
+      catch: error => new DatabaseError(`Soft delete failed for ${tableName}:${recordId}`, error),
+    }).pipe(
+      E.tapError(error => E.logError('Soft delete failed', { tableName, recordId, error })),
+      E.withSpan('database-soft-delete', { attributes: { tableName, recordId } }),
+    );
+
+  const restore = (tableName: string, recordId: string) =>
+    E.tryPromise({
+      try: async () => {
+        const result = await pool.query('SELECT app_private.restore_record($1, $2)', [
+          tableName,
+          recordId,
+        ]);
+        return result.rows[0]?.restore_record || false;
+      },
+      catch: error => new DatabaseError(`Restore failed for ${tableName}:${recordId}`, error),
+    }).pipe(
+      E.tapError(error => E.logError('Restore failed', { tableName, recordId, error })),
+      E.withSpan('database-restore', { attributes: { tableName, recordId } }),
+    );
+
+  const permanentDelete = (tableName: string, recordId: string) =>
+    E.tryPromise({
+      try: async () => {
+        // This bypasses the trigger by using a special function
+        const result = await pool.query(
+          `DELETE FROM ${tableName} WHERE id = $1 AND deleted_at IS NOT NULL`,
+          [recordId],
+        );
+        return (result.rowCount ?? 0) > 0;
+      },
+      catch: error =>
+        new DatabaseError(`Permanent delete failed for ${tableName}:${recordId}`, error),
+    }).pipe(
+      E.tapError(error => E.logError('Permanent delete failed', { tableName, recordId, error })),
+      E.withSpan('database-permanent-delete', { attributes: { tableName, recordId } }),
+    );
+
   return {
     query,
     getClient,
     transaction,
     close,
+    softDelete,
+    restore,
+    permanentDelete,
   } satisfies DatabaseService;
 });
 
@@ -149,4 +207,7 @@ export const TestDatabaseService = Layer.succeed(DatabaseService, {
   transaction: <T>(_fn: (_client: PoolClient) => E.Effect<T, DatabaseError>) =>
     E.die('TestDatabaseService.transaction not implemented'),
   close: () => E.succeed(undefined),
+  softDelete: (_tableName: string, _recordId: string) => E.succeed(true),
+  restore: (_tableName: string, _recordId: string) => E.succeed(true),
+  permanentDelete: (_tableName: string, _recordId: string) => E.succeed(true),
 } satisfies DatabaseService);

@@ -58,6 +58,9 @@ importers:
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.16.8)
+      '@graphile-contrib/pg-omit-archived':
+        specifier: 3.2.1
+        version: 3.2.1(graphile-build-pg@4.14.1)(graphile-build@4.14.1)(postgraphile@4.14.1)
       '@simplewebauthn/server':
         specifier: ^9.0.3
         version: 9.0.3
@@ -1115,6 +1118,23 @@ packages:
       }
     engines: { node: ^12.22.0 || ^14.17.0 || >=16.0.0 }
     dev: true
+
+  /@graphile-contrib/pg-omit-archived@3.2.1(graphile-build-pg@4.14.1)(graphile-build@4.14.1)(postgraphile@4.14.1):
+    resolution:
+      {
+        integrity: sha512-vfx7fnwjoyBRKqW5e4+FuJiBydMurIyDVb5ajkByQ+zJ2h5TkY3sd36z0957eanpPEBNqdlu0dhS6oJGjS9vHQ==,
+      }
+    peerDependencies:
+      graphile-build-pg: ^4.5.5
+      postgraphile: ^4.5.5
+    dependencies:
+      graphile-build-pg: 4.14.1(graphql@15.10.1)(pg@8.16.2)
+      graphile-utils: 4.14.1(graphile-build-pg@4.14.1)(graphile-build@4.14.1)
+      postgraphile: 4.14.1
+    transitivePeerDependencies:
+      - graphile-build
+      - supports-color
+    dev: false
 
   /@graphile/logger@0.2.0:
     resolution:

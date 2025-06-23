@@ -6,6 +6,9 @@ config({ path: '../../.env' });
 import cors from 'cors';
 import helmet from 'helmet';
 import { postgraphile } from 'postgraphile';
+import * as PgOmitArchivedModule from '@graphile-contrib/pg-omit-archived';
+const PgOmitArchivedPlugin =
+  (PgOmitArchivedModule.default as any).default || PgOmitArchivedModule.default;
 import { Effect as E, Layer, Logger, LogLevel, Redacted } from 'effect';
 import { NodeRuntime } from '@effect/platform-node';
 import { envVars } from './config/index.js';
@@ -73,8 +76,16 @@ const ServerProgram = E.gen(function* () {
       showErrorStack: nodeEnv === 'development' ? 'json' : false,
       extendedErrors: nodeEnv === 'development' ? ['hint', 'detail', 'errcode'] : ['errcode'],
       appendPlugins: [
-        // Add PostGraphile plugins here as needed
+        // Soft delete support - automatically omits records where deleted_at IS NOT NULL
+        PgOmitArchivedPlugin,
       ],
+      graphileBuildOptions: {
+        // Configure pg-omit-archived plugin to use deleted_at column
+        pgArchivedColumnName: 'deleted_at',
+        pgArchivedColumnImpliesVisible: false, // deleted_at IS NOT NULL means hidden
+        pgArchivedRelations: true, // Also apply to related records
+        pgArchivedDefault: 'NO', // Exclude soft-deleted records by default
+      },
       ...(nodeEnv === 'development' && { exportGqlSchemaPath: 'schema.graphql' }),
       sortExport: true,
       legacyRelations: 'omit',

@@ -24,6 +24,7 @@
     "@effect/platform": "^0.85.2",
     "@effect/platform-node": "^0.86.4",
     "@effect/schema": "^0.75.5",
+    "@graphile-contrib/pg-omit-archived": "3.2.1",
     "@simplewebauthn/server": "^9.0.3",
     "@solid-octo-invention/shared": "workspace:*",
     "bcrypt": "^5.1.1",
