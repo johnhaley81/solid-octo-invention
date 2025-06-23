@@ -93,16 +93,9 @@ Every SQL statement in `current.sql` MUST be safe to run multiple times:
   ```sql
   DROP POLICY IF EXISTS users_select_policy ON users;
   CREATE POLICY users_select_policy ON users FOR SELECT USING (deleted_at IS NULL);
-  ```
-
-- **✅ USE conditional blocks** for complex operations:
-  ```sql
-  DO $$
-  BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trigger_name') THEN
-      CREATE TRIGGER trigger_name ...;
-    END IF;
-  END $$;
+  
+  DROP TRIGGER IF EXISTS prevent_users_hard_delete ON users;
+  CREATE TRIGGER prevent_users_hard_delete BEFORE DELETE ON users ...;
   ```
 
 **Why idempotency matters:**

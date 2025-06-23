@@ -459,19 +459,11 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Add trigger to prevent hard deletes on users table (idempotent)
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_trigger 
-    WHERE tgname = 'prevent_users_hard_delete' 
-    AND tgrelid = 'users'::regclass
-  ) THEN
-    CREATE TRIGGER prevent_users_hard_delete
-      BEFORE DELETE ON users
-      FOR EACH ROW
-      EXECUTE FUNCTION prevent_hard_delete();
-  END IF;
-END $$;
+DROP TRIGGER IF EXISTS prevent_users_hard_delete ON users;
+CREATE TRIGGER prevent_users_hard_delete
+  BEFORE DELETE ON users
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_hard_delete();
 
 -- Update RLS policies to exclude soft deleted records by default
 DROP POLICY IF EXISTS users_select_policy ON users;
@@ -515,18 +507,9 @@ BEGIN
                  index_name_deleted, table_name);
   
   -- Add prevent hard delete trigger (idempotent)
-  EXECUTE format('
-    DO $$
-    BEGIN
-      IF NOT EXISTS (
-        SELECT 1 FROM pg_trigger 
-        WHERE tgname = %L 
-        AND tgrelid = %L::regclass
-      ) THEN
-        CREATE TRIGGER %I BEFORE DELETE ON %I FOR EACH ROW EXECUTE FUNCTION prevent_hard_delete();
-      END IF;
-    END $$;
-  ', trigger_name, table_name, trigger_name, table_name);
+  EXECUTE format('DROP TRIGGER IF EXISTS %I ON %I', trigger_name, table_name);
+  EXECUTE format('CREATE TRIGGER %I BEFORE DELETE ON %I FOR EACH ROW EXECUTE FUNCTION prevent_hard_delete()', 
+                 trigger_name, table_name);
   
   -- Enable RLS
   EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', table_name);
