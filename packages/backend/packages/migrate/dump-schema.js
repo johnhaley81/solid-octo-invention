@@ -37,7 +37,14 @@ const getDatabaseUrl = () => {
 
 const main = () => {
   try {
+    console.log('🔍 Debug: dump-schema.js starting...');
+    console.log('🔍 Debug: __dirname:', __dirname);
+    console.log('🔍 Debug: process.cwd():', process.cwd());
+    console.log('🔍 Debug: process.env.GITHUB_WORKSPACE:', process.env.GITHUB_WORKSPACE);
+    console.log('🔍 Debug: process.argv:', process.argv);
+
     const databaseUrl = getDatabaseUrl();
+    console.log('🔍 Debug: Using database URL:', databaseUrl);
     console.log('Creating schema dump...');
 
     // Use pg_dump to create a schema-only dump
@@ -69,6 +76,10 @@ const main = () => {
 
     // Write to schema dump file
     const schemaPath = path.join(__dirname, '..', 'schema-dump.sql');
+    console.log('🔍 Debug: Attempting to write to:', schemaPath);
+    console.log('🔍 Debug: Directory exists:', fs.existsSync(path.dirname(schemaPath)));
+    console.log('🔍 Debug: Directory contents:', fs.readdirSync(path.dirname(schemaPath)));
+
     fs.writeFileSync(schemaPath, `${cleanedDump}\n`);
 
     console.log(`Schema dump created: ${schemaPath}`);

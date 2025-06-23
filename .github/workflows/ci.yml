@@ -480,13 +480,28 @@ jobs:
             },
             "afterReset": [],
             "afterAllMigrations": [],
-            "afterCurrent": ["node $GITHUB_WORKSPACE/packages/backend/packages/migrate/dump-schema.js"]
+            "afterCurrent": [
+              "echo '🔍 Debug: afterCurrent hook starting...'",
+              "echo '🔍 Debug: Current working directory:' && pwd",
+              "echo '🔍 Debug: GITHUB_WORKSPACE=' && echo $GITHUB_WORKSPACE",
+              "echo '🔍 Debug: Checking if dump-schema.js exists...'",
+              "ls -la $GITHUB_WORKSPACE/packages/backend/packages/migrate/dump-schema.js || echo '❌ File not found'",
+              "echo '🔍 Debug: About to execute dump-schema.js...'",
+              "node $GITHUB_WORKSPACE/packages/backend/packages/migrate/dump-schema.js"
+            ]
           }
           EOF
 
           # Run migrations (this will also generate schema dump via afterCurrent hook)
           echo "📦 Running migrations..."
+          echo "🔍 Debug: GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          echo "🔍 Debug: Current directory=$(pwd)"
+          echo "🔍 Debug: Checking if dump-schema.js exists..."
+          ls -la "$GITHUB_WORKSPACE/packages/backend/packages/migrate/dump-schema.js" || echo "❌ dump-schema.js not found"
+          echo "🔍 Debug: Contents of migrate directory:"
+          ls -la "$GITHUB_WORKSPACE/packages/backend/packages/migrate/"
           cd "$GITHUB_WORKSPACE"
+          echo "🔍 Debug: About to run pnpm migrate:up from $(pwd)"
           pnpm migrate:up
 
           # Check if schema dump was generated
