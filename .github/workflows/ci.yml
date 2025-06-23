@@ -469,7 +469,7 @@ jobs:
 
           cd packages/backend/packages/migrate
 
-          # Create test database configuration
+          # Create test database configuration with afterCurrent hook
           cat > .gmrc << EOF
           {
             "connectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_migration_test",
@@ -480,26 +480,19 @@ jobs:
             },
             "afterReset": [],
             "afterAllMigrations": [],
-            "afterCurrent": []
+            "afterCurrent": [
+              {
+                "_": "command",
+                "command": "node dump-schema.js"
+              }
+            ]
           }
           EOF
 
           # Run migrations (this will also generate schema dump via afterCurrent hook)
           echo "📦 Running migrations..."
-          echo "🔍 Debug: GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-          echo "🔍 Debug: Current directory=$(pwd)"
-          echo "🔍 Debug: Checking if dump-schema.js exists..."
-          ls -la "$GITHUB_WORKSPACE/packages/backend/packages/migrate/dump-schema.js" || echo "❌ dump-schema.js not found"
-          echo "🔍 Debug: Contents of migrate directory:"
-          ls -la "$GITHUB_WORKSPACE/packages/backend/packages/migrate/"
           cd "$GITHUB_WORKSPACE"
-                    echo "🔍 Debug: About to run pnpm migrate:up from $(pwd)"
           pnpm migrate:up
-
-          echo "🔍 Debug: Migration command completed with exit code: $?"
-          echo "🔍 Debug: Manually running dump-schema.js..."
-          cd "$GITHUB_WORKSPACE/packages/backend/packages/migrate"
-          node dump-schema.js
 
           # Check if schema dump was generated
           cd "$GITHUB_WORKSPACE/packages/backend/packages/migrate"

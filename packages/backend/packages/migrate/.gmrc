@@ -7,5 +7,10 @@
   },
   "afterReset": [],
   "afterAllMigrations": [],
-  "afterCurrent": ["node ../dump-schema.js"]
+  "afterCurrent": [
+    {
+      "_": "command",
+      "command": "node dump-schema.js"
+    }
+  ]
 }

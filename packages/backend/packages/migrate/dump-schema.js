@@ -19,8 +19,8 @@ const __dirname = path.dirname(__filename);
 
 // Get database URL from environment or .gmrc
 const getDatabaseUrl = () => {
-  // Try environment variable first
-  if (process.env.DATABASE_URL) {
+  // Try environment variable first, but ignore Graphile Migrate's placeholder
+  if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('GM_DBURL')) {
     return process.env.DATABASE_URL;
   }
 
@@ -42,18 +42,22 @@ const getDatabaseUrl = () => {
 
 const main = () => {
   try {
-    console.log('🔍 Debug: dump-schema.js starting...');
-    console.log('🔍 Debug: __dirname:', __dirname);
-    console.log('🔍 Debug: process.cwd():', process.cwd());
-    console.log('🔍 Debug: process.env.GITHUB_WORKSPACE:', process.env.GITHUB_WORKSPACE);
-    console.log('🔍 Debug: process.argv:', process.argv);
-
     const databaseUrl = getDatabaseUrl();
-    console.log('🔍 Debug: Using database URL:', databaseUrl);
-    console.log('Creating schema dump...');
 
-    // Use pg_dump to create a schema-only dump
-    const dumpCommand = `pg_dump "${databaseUrl}" --schema-only --no-owner --no-privileges --no-comments`;
+    // Check if we're running in a Docker environment or if Docker is available
+    let dumpCommand;
+
+    try {
+      // Try to use Docker's pg_dump to avoid version mismatch issues
+      execSync('docker ps > /dev/null 2>&1', { stdio: 'ignore' });
+
+      // Use Docker container's pg_dump with the database URL modified for container network
+      const containerDbUrl = databaseUrl.replace('localhost', 'postgres');
+      dumpCommand = `docker exec solid-octo-postgres pg_dump "${containerDbUrl}" --schema-only --no-owner --no-privileges --no-comments`;
+    } catch {
+      // Fallback to local pg_dump if Docker is not available
+      dumpCommand = `pg_dump "${databaseUrl}" --schema-only --no-owner --no-privileges --no-comments`;
+    }
 
     const schemaDump = execSync(dumpCommand, {
       encoding: 'utf8',
@@ -81,16 +85,10 @@ const main = () => {
 
     // Write to schema dump file
     const schemaPath = path.join(__dirname, 'schema-dump.sql');
-    console.log('🔍 Debug: Attempting to write to:', schemaPath);
-    console.log('🔍 Debug: Directory exists:', fs.existsSync(path.dirname(schemaPath)));
-    console.log('🔍 Debug: Directory contents:', fs.readdirSync(path.dirname(schemaPath)));
 
     fs.writeFileSync(schemaPath, `${cleanedDump}\n`);
-
-    console.log(`Schema dump created: ${schemaPath}`);
-    console.log(`Schema dump size: ${cleanedDump.length} characters`);
   } catch (error) {
-    console.error('Failed to create schema dump:', error.message);
+    console.error('Error in dump-schema.js:', error.message);
     process.exit(1);
   }
 };
