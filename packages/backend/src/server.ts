@@ -77,6 +77,13 @@ const ServerProgram = E.gen(function* () {
         // Soft delete support - automatically omits records where deleted_at IS NOT NULL
         PgOmitArchivedPlugin,
       ],
+      graphileBuildOptions: {
+        // Configure pg-omit-archived plugin to use deleted_at column
+        pgArchivedColumnName: 'deleted_at',
+        pgArchivedColumnImpliesVisible: false, // deleted_at IS NOT NULL means hidden
+        pgArchivedRelations: true, // Also apply to related records
+        pgArchivedDefault: 'NO', // Exclude soft-deleted records by default
+      },
       ...(nodeEnv === 'development' && { exportGqlSchemaPath: 'schema.graphql' }),
       sortExport: true,
       legacyRelations: 'omit',
