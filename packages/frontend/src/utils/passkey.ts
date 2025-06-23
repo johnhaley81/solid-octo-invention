@@ -8,10 +8,10 @@
  */
 export function isPasskeySupported(): boolean {
   return !!(
+    typeof window !== 'undefined' &&
     window.PublicKeyCredential &&
-    window.navigator.credentials &&
-    window.navigator.credentials.create &&
-    window.navigator.credentials.get
+    typeof window.navigator?.credentials?.create === 'function' &&
+    typeof window.navigator?.credentials?.get === 'function'
   );
 }
 
@@ -22,7 +22,7 @@ function arrayBufferToBase64url(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   let binary = '';
   for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+    binary += String.fromCharCode(bytes[i]!);
   }
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
@@ -32,7 +32,7 @@ function arrayBufferToBase64url(buffer: ArrayBuffer): string {
  */
 function base64urlToArrayBuffer(base64url: string): ArrayBuffer {
   const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+  const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
   const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
@@ -61,35 +61,40 @@ export async function registerPasskey(options: {
     throw new Error('Passkeys are not supported in this browser');
   }
 
-  const createOptions: CredentialCreationOptions = {
-    publicKey: {
-      challenge: base64urlToArrayBuffer(options.challenge),
-      rp: {
-        name: window.location.hostname,
-        id: window.location.hostname,
-      },
-      user: {
-        id: new TextEncoder().encode(options.user.id),
-        name: options.user.name,
-        displayName: options.user.displayName,
-      },
-      pubKeyCredParams: [
-        { alg: -7, type: 'public-key' }, // ES256
-        { alg: -257, type: 'public-key' }, // RS256
-      ],
-      authenticatorSelection: {
-        authenticatorAttachment: 'platform',
-        userVerification: 'required',
-        residentKey: 'preferred',
-      },
-      timeout: 60000,
-      attestation: 'none',
-      excludeCredentials: options.excludeCredentials?.map(cred => ({
-        id: base64urlToArrayBuffer(cred.id),
-        type: cred.type as PublicKeyCredentialType,
-        transports: cred.transports as AuthenticatorTransport[],
-      })),
+  const publicKeyOptions: PublicKeyCredentialCreationOptions = {
+    challenge: base64urlToArrayBuffer(options.challenge),
+    rp: {
+      name: window.location.hostname,
+      id: window.location.hostname,
     },
+    user: {
+      id: new TextEncoder().encode(options.user.id),
+      name: options.user.name,
+      displayName: options.user.displayName,
+    },
+    pubKeyCredParams: [
+      { alg: -7, type: 'public-key' }, // ES256
+      { alg: -257, type: 'public-key' }, // RS256
+    ],
+    authenticatorSelection: {
+      authenticatorAttachment: 'platform',
+      userVerification: 'required',
+      residentKey: 'preferred',
+    },
+    timeout: 60000,
+    attestation: 'none',
+  };
+
+  if (options.excludeCredentials && options.excludeCredentials.length > 0) {
+    publicKeyOptions.excludeCredentials = options.excludeCredentials.map(cred => ({
+      id: base64urlToArrayBuffer(cred.id),
+      type: cred.type as PublicKeyCredentialType,
+      transports: cred.transports as AuthenticatorTransport[],
+    }));
+  }
+
+  const createOptions: CredentialCreationOptions = {
+    publicKey: publicKeyOptions,
   };
 
   const credential = await navigator.credentials.create(createOptions) as PublicKeyCredential;
@@ -128,17 +133,22 @@ export async function authenticateWithPasskey(options: {
     throw new Error('Passkeys are not supported in this browser');
   }
 
+  const publicKeyOptions: PublicKeyCredentialRequestOptions = {
+    challenge: base64urlToArrayBuffer(options.challenge),
+    timeout: 60000,
+    userVerification: 'required',
+  };
+
+  if (options.allowCredentials && options.allowCredentials.length > 0) {
+    publicKeyOptions.allowCredentials = options.allowCredentials.map(cred => ({
+      id: base64urlToArrayBuffer(cred.id),
+      type: cred.type as PublicKeyCredentialType,
+      transports: cred.transports as AuthenticatorTransport[],
+    }));
+  }
+
   const getOptions: CredentialRequestOptions = {
-    publicKey: {
-      challenge: base64urlToArrayBuffer(options.challenge),
-      timeout: 60000,
-      userVerification: 'required',
-      allowCredentials: options.allowCredentials?.map(cred => ({
-        id: base64urlToArrayBuffer(cred.id),
-        type: cred.type as PublicKeyCredentialType,
-        transports: cred.transports as AuthenticatorTransport[],
-      })),
-    },
+    publicKey: publicKeyOptions,
   };
 
   const credential = await navigator.credentials.get(getOptions) as PublicKeyCredential;
@@ -167,16 +177,12 @@ export async function authenticateWithPasskey(options: {
 /**
  * Check if user has passkeys available for a given email
  */
-export async function hasPasskeysAvailable(email: string): Promise<boolean> {
+export async function hasPasskeysAvailable(_email: string): Promise<boolean> {
   if (!isPasskeySupported()) {
     return false;
   }
 
-  try {
-    // This is a simple check - in a real implementation, you'd query your backend
-    // to see if the user has registered passkeys
-    return true; // Placeholder - should be replaced with actual backend check
-  } catch (error) {
-    return false;
-  }
+  // This is a simple check - in a real implementation, you'd query your backend
+  // to see if the user has registered passkeys
+  return true; // Placeholder - should be replaced with actual backend check
 }

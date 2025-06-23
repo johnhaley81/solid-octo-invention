@@ -32,6 +32,17 @@ export default [
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
+        btoa: 'readonly',
+        atob: 'readonly',
+        TextEncoder: 'readonly',
+        // WebAuthn APIs
+        PublicKeyCredential: 'readonly',
+        PublicKeyCredentialType: 'readonly',
+        AuthenticatorTransport: 'readonly',
+        AuthenticatorAttestationResponse: 'readonly',
+        AuthenticatorAssertionResponse: 'readonly',
+        CredentialCreationOptions: 'readonly',
+        CredentialRequestOptions: 'readonly',
         // TypeScript globals
         HTMLInputElement: 'readonly',
         HTMLFormElement: 'readonly',

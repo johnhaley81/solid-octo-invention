@@ -48,7 +48,7 @@ export function RegisterForm() {
       formData.email,
       formData.name,
       formData.password,
-      formData.confirmPassword
+      formData.confirmPassword,
     );
     setErrors(validation.errors);
     return validation.isValid;

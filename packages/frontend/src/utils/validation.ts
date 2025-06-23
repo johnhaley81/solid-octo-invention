@@ -16,8 +16,8 @@ export const emailSchema = {
   pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   messages: {
     required: 'Email is required',
-    pattern: 'Please enter a valid email address'
-  }
+    pattern: 'Please enter a valid email address',
+  },
 };
 
 /**
@@ -28,8 +28,8 @@ export const passwordSchema = {
   minLength: 8,
   messages: {
     required: 'Password is required',
-    minLength: 'Password must be at least 8 characters'
-  }
+    minLength: 'Password must be at least 8 characters',
+  },
 };
 
 /**
@@ -42,8 +42,8 @@ export const nameSchema = {
   messages: {
     required: 'Name is required',
     minLength: 'Name must be at least 2 characters',
-    maxLength: 'Name must be less than 50 characters'
-  }
+    maxLength: 'Name must be less than 50 characters',
+  },
 };
 
 /**
@@ -83,7 +83,7 @@ export function validateLoginForm(email: string, password: string): ValidationRe
 
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
   };
 }
 
@@ -91,10 +91,10 @@ export function validateLoginForm(email: string, password: string): ValidationRe
  * Validate registration form data
  */
 export function validateRegistrationForm(
-  email: string, 
-  name: string, 
-  password: string, 
-  confirmPassword: string
+  email: string,
+  name: string,
+  password: string,
+  confirmPassword: string,
 ): ValidationResult {
   const errors: Record<string, string> = {};
 
@@ -113,6 +113,6 @@ export function validateRegistrationForm(
 
   return {
     isValid: Object.keys(errors).length === 0,
-    errors
+    errors,
   };
 }

@@ -44,7 +44,7 @@ describe('LoginForm', () => {
     expect(screen.getByText('Sign in to your account')).toBeInTheDocument();
     expect(screen.getByLabelText('Email address')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign in with Password' })).toBeInTheDocument();
     expect(screen.getByText('create a new account')).toBeInTheDocument();
     expect(screen.getByText('Forgot your password?')).toBeInTheDocument();
   });
@@ -53,7 +53,7 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
     renderLoginForm();
 
-    const submitButton = screen.getByRole('button', { name: 'Sign in' });
+    const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
     await user.click(submitButton);
 
     expect(screen.getByText('Email is required')).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('LoginForm', () => {
 
     const emailInput = screen.getByLabelText('Email address');
     const passwordInput = screen.getByLabelText('Password');
-    const submitButton = screen.getByRole('button', { name: 'Sign in' });
+    const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     await user.type(emailInput, 'invalid-email');
     await user.type(passwordInput, 'password123');
@@ -83,7 +83,7 @@ describe('LoginForm', () => {
 
     const emailInput = screen.getByLabelText('Email address');
     const passwordInput = screen.getByLabelText('Password');
-    const submitButton = screen.getByRole('button', { name: 'Sign in' });
+    const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'short');
@@ -138,7 +138,7 @@ describe('LoginForm', () => {
 
     const emailInput = screen.getByLabelText('Email address');
     const passwordInput = screen.getByLabelText('Password');
-    const submitButton = screen.getByRole('button', { name: 'Sign in' });
+    const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'password123');
@@ -172,7 +172,7 @@ describe('LoginForm', () => {
 
     const emailInput = screen.getByLabelText('Email address');
     const passwordInput = screen.getByLabelText('Password');
-    const submitButton = screen.getByRole('button', { name: 'Sign in' });
+    const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'wrongpassword');
@@ -202,7 +202,7 @@ describe('LoginForm', () => {
 
     const emailInput = screen.getByLabelText('Email address');
     const passwordInput = screen.getByLabelText('Password');
-    const submitButton = screen.getByRole('button', { name: 'Sign in' });
+    const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'password123');
@@ -218,7 +218,7 @@ describe('LoginForm', () => {
     renderLoginForm();
 
     const emailInput = screen.getByLabelText('Email address');
-    const submitButton = screen.getByRole('button', { name: 'Sign in' });
+    const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     // Trigger validation error
     await user.click(submitButton);
@@ -257,7 +257,7 @@ describe('LoginForm', () => {
 
     const emailInput = screen.getByLabelText('Email address');
     const passwordInput = screen.getByLabelText('Password');
-    const submitButton = screen.getByRole('button', { name: 'Sign in' });
+    const submitButton = screen.getByRole('button', { name: 'Sign in with Password' });
 
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'password123');
