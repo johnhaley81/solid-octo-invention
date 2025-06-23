@@ -10,7 +10,13 @@ test.describe('Authentication Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Clear any existing auth state
     await page.context().clearCookies();
-    await page.evaluate(() => localStorage.clear());
+    // Try to clear localStorage, but handle security errors gracefully
+    try {
+      await page.evaluate(() => localStorage.clear());
+    } catch (error) {
+      // Ignore localStorage security errors in test environment
+      console.log('localStorage.clear() failed (expected in some test environments):', error.message);
+    }
   });
 
   test('should display login and register links when not authenticated', async ({ page }) => {
