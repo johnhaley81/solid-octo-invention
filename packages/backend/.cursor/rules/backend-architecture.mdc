@@ -74,11 +74,42 @@ export class DatabaseError extends Error {
 - **✅ ORGANIZE `current.sql`** with clear sections and comments
 - **✅ USE Graphile Migrate** to commit migrations when ready for production
 
-**Why this matters:**
-- Prevents migration file proliferation and conflicts
-- Ensures single source of truth for database schema
-- Makes it easier to review and understand schema changes
-- Follows Graphile Migrate best practices for development
+**CRITICAL: ALL MIGRATIONS MUST BE IDEMPOTENT**
+
+Every SQL statement in `current.sql` MUST be safe to run multiple times:
+
+- **✅ USE `IF NOT EXISTS`** for CREATE statements:
+  ```sql
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
+  CREATE INDEX IF NOT EXISTS users_active_idx ON users (id) WHERE deleted_at IS NULL;
+  ```
+
+- **✅ USE `CREATE OR REPLACE`** for functions:
+  ```sql
+  CREATE OR REPLACE FUNCTION app_private.soft_delete_record(...)
+  ```
+
+- **✅ USE `DROP IF EXISTS` before CREATE** for policies and triggers:
+  ```sql
+  DROP POLICY IF EXISTS users_select_policy ON users;
+  CREATE POLICY users_select_policy ON users FOR SELECT USING (deleted_at IS NULL);
+  ```
+
+- **✅ USE conditional blocks** for complex operations:
+  ```sql
+  DO $$
+  BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trigger_name') THEN
+      CREATE TRIGGER trigger_name ...;
+    END IF;
+  END $$;
+  ```
+
+**Why idempotency matters:**
+- Migrations can be safely re-run during development
+- CI/CD pipelines won't fail on repeated deployments
+- Database state remains consistent across environments
+- Prevents "already exists" errors that break deployments
 
 ### Soft Delete Pattern (REQUIRED)
 
@@ -126,6 +157,7 @@ deleted_at TIMESTAMPTZ DEFAULT NULL
 - **❌ NO sensitive data in public schema** - use `app_private` schema for authentication tables
 - **❌ NO hard deletes** - use soft delete pattern with `deleted_at TIMESTAMPTZ`
 - **❌ NO helper functions in public schema** - put utility functions in `app_private` schema
+- **❌ NO non-idempotent migrations** - all SQL in `current.sql` must be safe to run multiple times
 
 ### Background Processing Anti-patterns
 - **❌ NO database functions for background tasks** - use graphile-worker jobs

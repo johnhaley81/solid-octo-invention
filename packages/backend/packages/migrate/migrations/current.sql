@@ -398,14 +398,14 @@ GRANT EXECUTE ON FUNCTION logout(TEXT) TO postgres;
 -- SOFT DELETE INFRASTRUCTURE
 -- ============================================================================
 
--- Add deleted_at column to users table
-ALTER TABLE users ADD COLUMN deleted_at TIMESTAMPTZ DEFAULT NULL;
+-- Add deleted_at column to users table (idempotent)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
 
--- Create index for performance on active (non-deleted) records
-CREATE INDEX users_active_idx ON users (id) WHERE deleted_at IS NULL;
+-- Create index for performance on active (non-deleted) records (idempotent)
+CREATE INDEX IF NOT EXISTS users_active_idx ON users (id) WHERE deleted_at IS NULL;
 
--- Create index for performance on deleted records (for admin queries)
-CREATE INDEX users_deleted_idx ON users (deleted_at) WHERE deleted_at IS NOT NULL;
+-- Create index for performance on deleted records (for admin queries) (idempotent)
+CREATE INDEX IF NOT EXISTS users_deleted_idx ON users (deleted_at) WHERE deleted_at IS NOT NULL;
 
 -- Create soft delete function in app_private schema
 CREATE OR REPLACE FUNCTION app_private.soft_delete_record(table_name TEXT, record_id UUID)
@@ -458,11 +458,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Add trigger to prevent hard deletes on users table
-CREATE TRIGGER prevent_users_hard_delete
-  BEFORE DELETE ON users
-  FOR EACH ROW
-  EXECUTE FUNCTION prevent_hard_delete();
+-- Add trigger to prevent hard deletes on users table (idempotent)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger 
+    WHERE tgname = 'prevent_users_hard_delete' 
+    AND tgrelid = 'users'::regclass
+  ) THEN
+    CREATE TRIGGER prevent_users_hard_delete
+      BEFORE DELETE ON users
+      FOR EACH ROW
+      EXECUTE FUNCTION prevent_hard_delete();
+  END IF;
+END $$;
 
 -- Update RLS policies to exclude soft deleted records by default
 DROP POLICY IF EXISTS users_select_policy ON users;
@@ -472,8 +481,9 @@ CREATE POLICY users_select_policy ON users
   FOR SELECT 
   USING (deleted_at IS NULL);
 
--- Policy for admin users to see all records (including soft deleted)
+-- Policy for admin users to see all records (including soft deleted) (idempotent)
 -- This assumes you have a way to identify admin users - adjust as needed
+DROP POLICY IF EXISTS users_admin_select_policy ON users;
 CREATE POLICY users_admin_select_policy ON users 
   FOR SELECT 
   USING (
@@ -498,22 +508,34 @@ BEGIN
   policy_name := table_name || '_select_policy';
   admin_policy_name := table_name || '_admin_select_policy';
   
-  -- Create indexes
-  EXECUTE format('CREATE INDEX %I ON %I (id) WHERE deleted_at IS NULL', 
+  -- Create indexes (idempotent)
+  EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON %I (id) WHERE deleted_at IS NULL', 
                  index_name_active, table_name);
-  EXECUTE format('CREATE INDEX %I ON %I (deleted_at) WHERE deleted_at IS NOT NULL', 
+  EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON %I (deleted_at) WHERE deleted_at IS NOT NULL', 
                  index_name_deleted, table_name);
   
-  -- Add prevent hard delete trigger
-  EXECUTE format('CREATE TRIGGER %I BEFORE DELETE ON %I FOR EACH ROW EXECUTE FUNCTION prevent_hard_delete()', 
-                 trigger_name, table_name);
+  -- Add prevent hard delete trigger (idempotent)
+  EXECUTE format('
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = %L 
+        AND tgrelid = %L::regclass
+      ) THEN
+        CREATE TRIGGER %I BEFORE DELETE ON %I FOR EACH ROW EXECUTE FUNCTION prevent_hard_delete();
+      END IF;
+    END $$;
+  ', trigger_name, table_name, trigger_name, table_name);
   
   -- Enable RLS
   EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', table_name);
   
-  -- Create RLS policies
+  -- Create RLS policies (idempotent)
+  EXECUTE format('DROP POLICY IF EXISTS %I ON %I', policy_name, table_name);
   EXECUTE format('CREATE POLICY %I ON %I FOR SELECT USING (deleted_at IS NULL)', 
                  policy_name, table_name);
+  EXECUTE format('DROP POLICY IF EXISTS %I ON %I', admin_policy_name, table_name);
   EXECUTE format('CREATE POLICY %I ON %I FOR SELECT USING (deleted_at IS NULL OR current_setting(''app.user_role'', true) = ''admin'')', 
                  admin_policy_name, table_name);
   
@@ -564,12 +586,12 @@ CREATE TRIGGER update_example_table_updated_at
   FOR EACH ROW 
   EXECUTE FUNCTION update_updated_at_column();
 
--- Create indexes for performance
+-- Create indexes for performance (idempotent)
 -- Index for active (non-deleted) records - most common queries
-CREATE INDEX example_table_active_idx ON example_table (id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS example_table_active_idx ON example_table (id) WHERE deleted_at IS NULL;
 
 -- Index for deleted records (for admin/recovery queries)
-CREATE INDEX example_table_deleted_idx ON example_table (deleted_at) WHERE deleted_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS example_table_deleted_idx ON example_table (deleted_at) WHERE deleted_at IS NOT NULL;
 
 -- Add any additional indexes your table needs
 -- CREATE INDEX example_table_name_idx ON example_table (name) WHERE deleted_at IS NULL;
