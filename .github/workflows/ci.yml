@@ -481,13 +481,7 @@ jobs:
             "afterReset": [],
             "afterAllMigrations": [],
             "afterCurrent": [
-              "echo '🔍 Debug: afterCurrent hook starting...'",
-              "echo '🔍 Debug: Current working directory:' && pwd",
-              "echo '🔍 Debug: GITHUB_WORKSPACE=' && echo $GITHUB_WORKSPACE",
-              "echo '🔍 Debug: Checking if dump-schema.js exists...'",
-              "ls -la $GITHUB_WORKSPACE/packages/backend/packages/migrate/dump-schema.js || echo '❌ File not found'",
-              "echo '🔍 Debug: About to execute dump-schema.js...'",
-              "node $GITHUB_WORKSPACE/packages/backend/packages/migrate/dump-schema.js"
+              "bash -c \"echo '🔍 Debug: afterCurrent hook starting...' && echo '🔍 Debug: Current working directory:' && pwd && echo '🔍 Debug: GITHUB_WORKSPACE=$GITHUB_WORKSPACE' && echo '🔍 Debug: Checking if dump-schema.js exists...' && ls -la $GITHUB_WORKSPACE/packages/backend/packages/migrate/dump-schema.js && echo '🔍 Debug: About to execute dump-schema.js...' && node $GITHUB_WORKSPACE/packages/backend/packages/migrate/dump-schema.js\""
             ]
           }
           EOF
