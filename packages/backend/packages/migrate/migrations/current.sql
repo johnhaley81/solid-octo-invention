@@ -217,7 +217,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to register a new user with password (for GraphQL mutation)
-CREATE OR REPLACE FUNCTION app_public.register_user(
+CREATE OR REPLACE FUNCTION app_public.register_user_with_password(
   email app_public.citext,
   name TEXT,
   password TEXT

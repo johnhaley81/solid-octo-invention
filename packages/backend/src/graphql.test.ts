@@ -73,7 +73,7 @@ describe('GraphQL Authentication API', () => {
     it('should register a new user via GraphQL', async () => {
       const mutation = `
         mutation RegisterUser($email: String!, $name: String!, $password: String!) {
-          registerUser(input: { email: $email, name: $name, password: $password }) {
+          registerUserWithPassword(input: { email: $email, name: $name, password: $password }) {
             id
             email
             name
