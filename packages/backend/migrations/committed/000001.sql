@@ -1,8 +1,12 @@
--- Initial database schema for Solid Octo Invention
--- This file contains the current state of the database schema
+-- Migration: Create app_public schema and move users table
+-- This migration creates the app_public schema and moves the users table from public to app_public
 
 -- Create the app_public schema
 CREATE SCHEMA IF NOT EXISTS app_public;
+
+-- Move the users table from public to app_public schema
+-- First, we need to drop the existing table in public and recreate it in app_public
+-- Since this is a new setup, we'll create it directly in app_public
 
 -- Enable necessary extensions in app_public schema
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA app_public;
@@ -46,3 +50,20 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA app_public TO postgres;
 GRANT USAGE ON SCHEMA app_public TO app_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app_public TO app_user;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA app_public TO app_user;
+
+-- If there's existing data in public.users, migrate it
+-- This is a conditional migration that only runs if public.users exists
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users') THEN
+    -- Copy data from public.users to app_public.users
+    INSERT INTO app_public.users (id, email, name, avatar_url, created_at, updated_at)
+    SELECT id, email, name, avatar_url, created_at, updated_at
+    FROM public.users;
+    
+    -- Drop the old table
+    DROP TABLE public.users CASCADE;
+  END IF;
+END
+$$;
+
