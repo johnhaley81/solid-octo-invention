@@ -1,16 +1,19 @@
 # PostgreSQL in Codegen Sandbox
 
-This guide provides multiple approaches to run PostgreSQL in the codegen sandbox environment for easier development.
+This guide provides multiple approaches to run PostgreSQL in the codegen sandbox
+environment for easier development.
 
 ## 🚀 Quick Start
 
 ### Option 1: Automated Setup (Recommended)
+
 ```bash
 chmod +x setup_postgres.sh
 ./setup_postgres.sh
 ```
 
 ### Option 2: Manual Native Installation
+
 ```bash
 # Install PostgreSQL
 sudo apt update
@@ -28,6 +31,7 @@ psql -c "SELECT version();"
 ```
 
 ### Option 3: Docker (if available)
+
 ```bash
 # Note: Docker daemon may not be running in sandbox
 docker run --name postgres-dev \
@@ -50,6 +54,7 @@ After setup, you can connect using:
 ## 🛠️ Usage Examples
 
 ### Basic Connection
+
 ```bash
 # Connect to default database
 psql
@@ -62,6 +67,7 @@ psql -U postgres -d codegen
 ```
 
 ### Python Usage
+
 ```python
 import psycopg2
 
@@ -81,6 +87,7 @@ conn.close()
 ```
 
 ### Node.js Usage
+
 ```javascript
 const { Client } = require('pg');
 
@@ -89,7 +96,7 @@ const client = new Client({
   port: 5432,
   database: 'codegen',
   user: 'postgres',
-  password: 'postgres'  // Only needed for Docker setup
+  password: 'postgres', // Only needed for Docker setup
 });
 
 client.connect();
@@ -120,6 +127,7 @@ python3 db_helper.py connect myproject
 ## 🐛 Troubleshooting
 
 ### PostgreSQL won't start
+
 ```bash
 # Check if it's already running
 sudo service postgresql status
@@ -132,6 +140,7 @@ sudo tail -f /var/log/postgresql/postgresql-15-main.log
 ```
 
 ### Connection refused
+
 ```bash
 # Check if PostgreSQL is listening
 sudo netstat -tlnp | grep 5432
@@ -141,6 +150,7 @@ pg_isready -h localhost -p 5432
 ```
 
 ### Permission denied
+
 ```bash
 # Create user if doesn't exist
 sudo -u postgres createuser --superuser $USER
@@ -152,6 +162,7 @@ sudo -u postgres psql -c "ALTER USER $USER PASSWORD 'newpassword';"
 ## 📚 Common Development Patterns
 
 ### 1. Project-specific Database
+
 ```bash
 # Create database for your project
 createdb myproject_dev
@@ -161,6 +172,7 @@ export DATABASE_URL="postgresql://localhost/myproject_dev"
 ```
 
 ### 2. Test Database Setup
+
 ```bash
 # Create test database
 createdb myproject_test
@@ -170,6 +182,7 @@ export TEST_DATABASE_URL="postgresql://localhost/myproject_test"
 ```
 
 ### 3. Database Migrations
+
 ```bash
 # Example with a simple schema
 psql myproject_dev << EOF
@@ -203,8 +216,10 @@ createdb myproject_dev
 
 ## 🌟 Pro Tips
 
-1. **Environment Variables**: Set `DATABASE_URL` for easy connection string management
-2. **Connection Pooling**: Use connection pooling libraries in production-like testing
+1. **Environment Variables**: Set `DATABASE_URL` for easy connection string
+   management
+2. **Connection Pooling**: Use connection pooling libraries in production-like
+   testing
 3. **Backup/Restore**: Use `pg_dump` and `pg_restore` for data management
 4. **Extensions**: Install useful extensions like `uuid-ossp`, `hstore`, etc.
 
@@ -230,5 +245,5 @@ psql -c "CREATE EXTENSION IF NOT EXISTS \"hstore\";"
 
 ---
 
-This setup provides a robust PostgreSQL environment for development work in the codegen sandbox. Choose the approach that best fits your needs!
-
+This setup provides a robust PostgreSQL environment for development work in the
+codegen sandbox. Choose the approach that best fits your needs!
