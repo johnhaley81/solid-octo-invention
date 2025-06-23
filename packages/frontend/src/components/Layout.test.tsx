@@ -10,9 +10,7 @@ const renderWithRouter = (component: React.ReactElement) => {
   return render(
     <MockedProvider mocks={[]} addTypename={false}>
       <BrowserRouter>
-        <AuthProvider>
-          {component}
-        </AuthProvider>
+        <AuthProvider>{component}</AuthProvider>
       </BrowserRouter>
     </MockedProvider>,
   );

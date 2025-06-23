@@ -1,4 +1,3 @@
-
 import { Navigate } from 'react-router-dom';
 import { RegisterForm } from '../components/auth/RegisterForm.js';
 import { useAuth } from '../contexts/AuthContext.js';

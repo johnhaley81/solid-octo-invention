@@ -21,21 +21,21 @@ export function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route 
-            path="/posts" 
+          <Route
+            path="/posts"
             element={
               <ProtectedRoute>
                 <PostsPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/posts/:slug" 
+          <Route
+            path="/posts/:slug"
             element={
               <ProtectedRoute>
                 <PostDetailPage />
               </ProtectedRoute>
-            } 
+            }
           />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

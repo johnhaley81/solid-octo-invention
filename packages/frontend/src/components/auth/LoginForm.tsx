@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { useMutation, useLazyQuery } from '@apollo/client';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LOGIN_WITH_PASSWORD, LOGIN_WITH_PASSKEY, GET_PASSKEY_CHALLENGE, CURRENT_USER_FROM_SESSION } from '../../graphql/queries.js';
+import {
+  LOGIN_WITH_PASSWORD,
+  LOGIN_WITH_PASSKEY,
+  GET_PASSKEY_CHALLENGE,
+  CURRENT_USER_FROM_SESSION,
+} from '../../graphql/queries.js';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { validateLoginForm } from '../../utils/validation.js';
 import { isPasskeySupported, authenticateWithPasskey } from '../../utils/passkey.js';
@@ -103,7 +108,7 @@ export function LoginForm() {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -177,7 +182,7 @@ export function LoginForm() {
                 type="email"
                 autoComplete="email"
                 value={email}
-                onChange={(e) => {
+                onChange={e => {
                   setEmail(e.target.value);
                   if (errors.email) {
                     setErrors(prev => ({ ...prev, email: '' }));
@@ -206,7 +211,7 @@ export function LoginForm() {
                 type="password"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => {
+                onChange={e => {
                   setPassword(e.target.value);
                   if (errors.password) {
                     setErrors(prev => ({ ...prev, password: '' }));

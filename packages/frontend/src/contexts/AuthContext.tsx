@@ -104,7 +104,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  
+
   const [getCurrentUser] = useLazyQuery(CURRENT_USER_FROM_SESSION);
   // Note: logout is handled client-side by clearing localStorage
 
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
    */
   const checkAuth = async () => {
     const token = localStorage.getItem('auth-token');
-    
+
     if (!token) {
       dispatch({ type: 'SET_LOADING', payload: false });
       return;
@@ -173,11 +173,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkAuth,
   };
 
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 
 /**

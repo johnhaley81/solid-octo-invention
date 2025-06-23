@@ -32,7 +32,7 @@ function arrayBufferToBase64url(buffer: ArrayBuffer): string {
  */
 function base64urlToArrayBuffer(base64url: string): ArrayBuffer {
   const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
+  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
   const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
@@ -97,14 +97,14 @@ export async function registerPasskey(options: {
     publicKey: publicKeyOptions,
   };
 
-  const credential = await navigator.credentials.create(createOptions) as PublicKeyCredential;
-  
+  const credential = (await navigator.credentials.create(createOptions)) as PublicKeyCredential;
+
   if (!credential) {
     throw new Error('Failed to create passkey');
   }
 
   const response = credential.response as AuthenticatorAttestationResponse;
-  
+
   const credentialData = {
     id: credential.id,
     rawId: arrayBufferToBase64url(credential.rawId),
@@ -151,14 +151,14 @@ export async function authenticateWithPasskey(options: {
     publicKey: publicKeyOptions,
   };
 
-  const credential = await navigator.credentials.get(getOptions) as PublicKeyCredential;
-  
+  const credential = (await navigator.credentials.get(getOptions)) as PublicKeyCredential;
+
   if (!credential) {
     throw new Error('Failed to authenticate with passkey');
   }
 
   const response = credential.response as AuthenticatorAssertionResponse;
-  
+
   const credentialData = {
     id: credential.id,
     rawId: arrayBufferToBase64url(credential.rawId),

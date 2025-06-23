@@ -41,7 +41,7 @@ export function Layout({ children }: LayoutProps) {
                 Solid Octo Invention
               </Link>
             </div>
-            
+
             <div className="flex items-center space-x-8">
               <ul className="flex space-x-8">
                 <li>
@@ -60,9 +60,7 @@ export function Layout({ children }: LayoutProps) {
               <div className="flex items-center space-x-4">
                 {state.isAuthenticated ? (
                   <>
-                    <span className="text-sm text-gray-600">
-                      Welcome, {state.user?.name}
-                    </span>
+                    <span className="text-sm text-gray-600">Welcome, {state.user?.name}</span>
                     <button
                       onClick={handleLogout}
                       className="text-sm text-gray-600 hover:text-red-600 transition-colors"

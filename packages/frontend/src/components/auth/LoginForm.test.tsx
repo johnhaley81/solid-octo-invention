@@ -210,7 +210,9 @@ describe('LoginForm', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByTestId('general-error')).toHaveTextContent('Please verify your email address before logging in');
+      expect(screen.getByTestId('general-error')).toHaveTextContent(
+        'Please verify your email address before logging in',
+      );
     });
   });
 

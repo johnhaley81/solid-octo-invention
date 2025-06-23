@@ -1,4 +1,3 @@
-
 import { useLocation, Navigate } from 'react-router-dom';
 import { LoginForm } from '../components/auth/LoginForm.js';
 import { useAuth } from '../contexts/AuthContext.js';

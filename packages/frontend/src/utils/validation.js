@@ -15,11 +15,11 @@ export function validateEmail(email) {
   if (!email) {
     return { isValid: false, error: 'Email is required' };
   }
-  
+
   if (!EMAIL_REGEX.test(email)) {
     return { isValid: false, error: 'Please enter a valid email address' };
   }
-  
+
   return { isValid: true, error: null };
 }
 
@@ -30,18 +30,19 @@ export function validatePassword(password) {
   if (!password) {
     return { isValid: false, error: 'Password is required' };
   }
-  
+
   if (password.length < 8) {
     return { isValid: false, error: 'Password must be at least 8 characters long' };
   }
-  
+
   if (!PASSWORD_REGEX.test(password)) {
-    return { 
-      isValid: false, 
-      error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number', 
+    return {
+      isValid: false,
+      error:
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number',
     };
   }
-  
+
   return { isValid: true, error: null };
 }
 
@@ -52,11 +53,11 @@ export function validateName(name) {
   if (!name) {
     return { isValid: false, error: 'Name is required' };
   }
-  
+
   if (name.trim().length < 2) {
     return { isValid: false, error: 'Name must be at least 2 characters long' };
   }
-  
+
   return { isValid: true, error: null };
 }
 
@@ -66,18 +67,18 @@ export function validateName(name) {
 export function validateLoginForm(email, password) {
   const errors = {};
   let isValid = true;
-  
+
   const emailValidation = validateEmail(email);
   if (!emailValidation.isValid) {
     errors.email = emailValidation.error;
     isValid = false;
   }
-  
+
   if (!password) {
     errors.password = 'Password is required';
     isValid = false;
   }
-  
+
   return { isValid, errors };
 }
 
@@ -87,25 +88,25 @@ export function validateLoginForm(email, password) {
 export function validateRegistrationForm(email, name, password, confirmPassword) {
   const errors = {};
   let isValid = true;
-  
+
   const emailValidation = validateEmail(email);
   if (!emailValidation.isValid) {
     errors.email = emailValidation.error;
     isValid = false;
   }
-  
+
   const nameValidation = validateName(name);
   if (!nameValidation.isValid) {
     errors.name = nameValidation.error;
     isValid = false;
   }
-  
+
   const passwordValidation = validatePassword(password);
   if (!passwordValidation.isValid) {
     errors.password = passwordValidation.error;
     isValid = false;
   }
-  
+
   if (!confirmPassword) {
     errors.confirmPassword = 'Please confirm your password';
     isValid = false;
@@ -113,7 +114,7 @@ export function validateRegistrationForm(email, name, password, confirmPassword)
     errors.confirmPassword = 'Passwords do not match';
     isValid = false;
   }
-  
+
   return { isValid, errors };
 }
 
@@ -123,13 +124,13 @@ export function validateRegistrationForm(email, name, password, confirmPassword)
 export function validatePasswordResetForm(email) {
   const errors = {};
   let isValid = true;
-  
+
   const emailValidation = validateEmail(email);
   if (!emailValidation.isValid) {
     errors.email = emailValidation.error;
     isValid = false;
   }
-  
+
   return { isValid, errors };
 }
 
@@ -139,13 +140,13 @@ export function validatePasswordResetForm(email) {
 export function validateNewPasswordForm(password, confirmPassword) {
   const errors = {};
   let isValid = true;
-  
+
   const passwordValidation = validatePassword(password);
   if (!passwordValidation.isValid) {
     errors.password = passwordValidation.error;
     isValid = false;
   }
-  
+
   if (!confirmPassword) {
     errors.confirmPassword = 'Please confirm your password';
     isValid = false;
@@ -153,6 +154,6 @@ export function validateNewPasswordForm(password, confirmPassword) {
     errors.confirmPassword = 'Passwords do not match';
     isValid = false;
   }
-  
+
   return { isValid, errors };
 }

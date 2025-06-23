@@ -33,7 +33,7 @@ export function RegisterForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // Clear error for this field when user starts typing
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -59,7 +59,7 @@ export function RegisterForm() {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -81,14 +81,19 @@ export function RegisterForm() {
         // Redirect to login after a short delay
         setTimeout(() => {
           navigate('/login', {
-            state: { message: 'Registration successful! Please check your email to verify your account.' },
+            state: {
+              message: 'Registration successful! Please check your email to verify your account.',
+            },
           });
         }, 2000);
       }
     } catch (error: any) {
       // Handle specific error messages
       const errorMessage = error.message || 'Registration failed';
-      if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('exists')) {
+      if (
+        errorMessage.toLowerCase().includes('email') &&
+        errorMessage.toLowerCase().includes('exists')
+      ) {
         setErrors({ email: 'An account with this email already exists' });
       } else {
         setErrors({ general: errorMessage });
@@ -111,11 +116,7 @@ export function RegisterForm() {
                 strokeWidth="1.5"
                 stroke="currentColor"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.5 12.75l6 6 9-13.5"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
             </div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -124,9 +125,7 @@ export function RegisterForm() {
             <p className="mt-2 text-center text-sm text-gray-600">
               Please check your email to verify your account before signing in.
             </p>
-            <p className="mt-4 text-center text-sm text-gray-500">
-              Redirecting to login page...
-            </p>
+            <p className="mt-4 text-center text-sm text-gray-500">Redirecting to login page...</p>
           </div>
         </div>
       </div>
