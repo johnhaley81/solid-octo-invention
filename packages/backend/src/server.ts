@@ -7,7 +7,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { postgraphile } from 'postgraphile';
 import * as PgOmitArchivedModule from '@graphile-contrib/pg-omit-archived';
-const PgOmitArchivedPlugin = PgOmitArchivedModule.default.default;
+const PgOmitArchivedPlugin = (PgOmitArchivedModule.default as any).default || PgOmitArchivedModule.default;
 import { Effect as E, Layer, Logger, LogLevel, Redacted } from 'effect';
 import { NodeRuntime } from '@effect/platform-node';
 import { envVars } from './config/index.js';
