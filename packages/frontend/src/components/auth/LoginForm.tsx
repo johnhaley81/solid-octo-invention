@@ -121,8 +121,8 @@ export function LoginForm() {
         variables: { email: email.trim(), password },
       });
 
-      if (loginData?.loginWithPassword) {
-        const { sessionToken } = loginData.loginWithPassword;
+      if (loginData?.loginWithPassword?.results) {
+        const { sessionToken } = loginData.loginWithPassword.results;
 
         // Get user details
         const { data: userData } = await getCurrentUser({

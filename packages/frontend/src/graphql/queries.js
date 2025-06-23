@@ -23,9 +23,11 @@ export const REGISTER_USER = gql`
 export const LOGIN_WITH_PASSWORD = gql`
   mutation LoginWithPassword($email: String!, $password: String!) {
     loginWithPassword(input: { email: $email, password: $password }) {
-      userId
-      sessionToken
-      expiresAt
+      results {
+        userId
+        sessionToken
+        expiresAt
+      }
     }
   }
 `;
