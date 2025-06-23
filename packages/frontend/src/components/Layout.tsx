@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext.js';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,11 +11,21 @@ interface LayoutProps {
  */
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
+  const { state, logout } = useAuth();
 
   const isActive = (path: string) => {
     return location.pathname === path
       ? 'text-blue-600 font-semibold border-b-2 border-blue-600'
       : 'text-gray-600 hover:text-blue-600 transition-colors';
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      // Handle logout error silently or show user notification
+      // console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -30,18 +41,53 @@ export function Layout({ children }: LayoutProps) {
                 Solid Octo Invention
               </Link>
             </div>
-            <ul className="flex space-x-8">
-              <li>
-                <Link to="/" className={`py-2 px-1 ${isActive('/')}`}>
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/posts" className={`py-2 px-1 ${isActive('/posts')}`}>
-                  Posts
-                </Link>
-              </li>
-            </ul>
+            
+            <div className="flex items-center space-x-8">
+              <ul className="flex space-x-8">
+                <li>
+                  <Link to="/" className={`py-2 px-1 ${isActive('/')}`}>
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/posts" className={`py-2 px-1 ${isActive('/posts')}`}>
+                    Posts
+                  </Link>
+                </li>
+              </ul>
+
+              {/* Authentication section */}
+              <div className="flex items-center space-x-4">
+                {state.isAuthenticated ? (
+                  <>
+                    <span className="text-sm text-gray-600">
+                      Welcome, {state.user?.name}
+                    </span>
+                    <button
+                      onClick={handleLogout}
+                      className="text-sm text-gray-600 hover:text-red-600 transition-colors"
+                    >
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                    >
+                      Sign in
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="text-sm bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      Sign up
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </nav>
       </header>

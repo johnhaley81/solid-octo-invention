@@ -27,6 +27,16 @@ export default [
         sessionStorage: 'readonly',
         // React globals
         React: 'readonly',
+        // Browser APIs
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        // TypeScript globals
+        HTMLInputElement: 'readonly',
+        HTMLFormElement: 'readonly',
+        HTMLButtonElement: 'readonly',
+        Event: 'readonly',
       },
     },
     rules: {
@@ -54,6 +64,20 @@ export default [
   },
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+    languageOptions: {
+      globals: {
+        // Vitest globals
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        vi: 'readonly',
+      },
+    },
     rules: {
       'no-console': 'off',
     },

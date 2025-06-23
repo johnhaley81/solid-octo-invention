@@ -123,3 +123,72 @@ export const GET_COMMENTS = gql`
     }
   }
 `;
+
+/**
+ * Authentication mutations
+ */
+
+/**
+ * Register a new user
+ */
+export const REGISTER_USER = gql`
+  mutation RegisterUser($email: String!, $name: String!, $password: String!) {
+    registerUser(input: { email: $email, name: $name, password: $password }) {
+      id
+      email
+      name
+      authMethod
+      createdAt
+    }
+  }
+`;
+
+/**
+ * Login with email and password
+ */
+export const LOGIN_WITH_PASSWORD = gql`
+  mutation LoginWithPassword($email: String!, $password: String!) {
+    loginWithPassword(input: { email: $email, password: $password }) {
+      userId
+      sessionToken
+      expiresAt
+    }
+  }
+`;
+
+/**
+ * Get current user from session token
+ */
+export const CURRENT_USER_FROM_SESSION = gql`
+  mutation CurrentUserFromSession($sessionToken: String!) {
+    currentUserFromSession(input: { sessionToken: $sessionToken }) {
+      id
+      email
+      name
+      authMethod
+      createdAt
+    }
+  }
+`;
+
+/**
+ * Logout user
+ */
+export const LOGOUT = gql`
+  mutation Logout($sessionToken: String!) {
+    logout(input: { sessionToken: $sessionToken }) {
+      success
+    }
+  }
+`;
+
+/**
+ * Verify email with token
+ */
+export const VERIFY_EMAIL = gql`
+  mutation VerifyEmail($token: String!) {
+    verifyEmail(input: { token: $token }) {
+      success
+    }
+  }
+`;
