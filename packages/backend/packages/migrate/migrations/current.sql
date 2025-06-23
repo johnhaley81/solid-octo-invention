@@ -195,7 +195,7 @@ CREATE INDEX IF NOT EXISTS otp_tokens_expires_at_idx ON app_private.otp_tokens(e
 -- ============================================================================
 
 -- Function to register a new user (idempotent)
-CREATE OR REPLACE FUNCTION register_user(
+CREATE OR REPLACE FUNCTION app_public.register_user(
   email app_public.citext,
   name TEXT,
   auth_method auth_method DEFAULT 'password'
@@ -217,7 +217,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to register a new user with password (for GraphQL mutation)
-CREATE OR REPLACE FUNCTION register_user(
+CREATE OR REPLACE FUNCTION app_public.register_user(
   email app_public.citext,
   name TEXT,
   password TEXT
