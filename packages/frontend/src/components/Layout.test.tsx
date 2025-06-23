@@ -1,11 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { MockedProvider } from '@apollo/client/testing';
 import { Layout } from './Layout';
+import { AuthProvider } from '../contexts/AuthContext';
 
 // Mock React Testing Library setup
 const renderWithRouter = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
+  return render(
+    <MockedProvider mocks={[]} addTypename={false}>
+      <BrowserRouter>
+        <AuthProvider>{component}</AuthProvider>
+      </BrowserRouter>
+    </MockedProvider>,
+  );
 };
 
 describe('Layout', () => {

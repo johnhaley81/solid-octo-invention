@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { ApolloProvider } from '@apollo/client';
 import { BrowserRouter } from 'react-router-dom';
 import { apolloClient } from './apollo/client.js';
-import { App } from './App.js';
+import App from './App.js';
 import './index.css';
 
 /**

@@ -8,20 +8,25 @@
  * to validate that migrations produce the expected schema.
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Get database URL from environment or .gmrc
 const getDatabaseUrl = () => {
-  // Try environment variable first
-  if (process.env.DATABASE_URL) {
+  // Try environment variable first, but ignore Graphile Migrate's placeholder
+  if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('GM_DBURL')) {
     return process.env.DATABASE_URL;
   }
 
   // Try to read from .gmrc file
   try {
-    const gmrcPath = path.join(__dirname, '..', '.gmrc');
+    const gmrcPath = path.join(__dirname, '.gmrc');
     if (fs.existsSync(gmrcPath)) {
       const gmrcContent = fs.readFileSync(gmrcPath, 'utf8');
       const gmrc = JSON.parse(gmrcContent);
@@ -38,10 +43,27 @@ const getDatabaseUrl = () => {
 const main = () => {
   try {
     const databaseUrl = getDatabaseUrl();
-    console.log('Creating schema dump...');
 
-    // Use pg_dump to create a schema-only dump
-    const dumpCommand = `pg_dump "${databaseUrl}" --schema-only --no-owner --no-privileges --no-comments`;
+    // Check if we're running in a Docker environment with the specific container
+    let dumpCommand;
+
+    try {
+      // Check if Docker is available and the specific container exists
+      execSync('docker ps --format "table {{.Names}}" | grep -q solid-octo-postgres', {
+        stdio: 'ignore',
+      });
+
+      // Use Docker container's pg_dump with the database URL modified for container network
+      const containerDbUrl = databaseUrl.replace('localhost', 'postgres');
+      dumpCommand = `docker exec solid-octo-postgres pg_dump "${containerDbUrl}" --schema-only --no-owner --no-privileges --no-comments --schema=app_public --schema=app_private`;
+
+      console.log('Using Docker container pg_dump');
+    } catch {
+      // Fallback to local pg_dump if Docker is not available or container doesn't exist
+      dumpCommand = `pg_dump "${databaseUrl}" --schema-only --no-owner --no-privileges --no-comments --schema=app_public --schema=app_private`;
+
+      console.log('Using local pg_dump');
+    }
 
     const schemaDump = execSync(dumpCommand, {
       encoding: 'utf8',
@@ -68,19 +90,18 @@ const main = () => {
       .trim();
 
     // Write to schema dump file
-    const schemaPath = path.join(__dirname, '..', 'schema-dump.sql');
-    fs.writeFileSync(schemaPath, cleanedDump + '\n');
+    const schemaPath = path.join(__dirname, 'schema-dump.sql');
 
-    console.log(`Schema dump created: ${schemaPath}`);
-    console.log(`Schema dump size: ${cleanedDump.length} characters`);
+    fs.writeFileSync(schemaPath, `${cleanedDump}\n`);
   } catch (error) {
-    console.error('Failed to create schema dump:', error.message);
+    console.error('Error in dump-schema.js:', error.message);
     process.exit(1);
   }
 };
 
-if (require.main === module) {
+// Check if this file is being run directly (ES module equivalent of require.main === module)
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-module.exports = { main };
+export { main };

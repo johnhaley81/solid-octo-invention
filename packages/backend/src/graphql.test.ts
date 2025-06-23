@@ -73,12 +73,14 @@ describe('GraphQL Authentication API', () => {
     it('should register a new user via GraphQL', async () => {
       const mutation = `
         mutation RegisterUser($email: String!, $name: String!, $password: String!) {
-          registerUser(input: { email: $email, name: $name, password: $password }) {
-            id
-            email
-            name
-            authMethod
-            createdAt
+          registerUserWithPassword(input: { email: $email, name: $name, password: $password }) {
+            user {
+              id
+              email
+              name
+              authMethod
+              createdAt
+            }
           }
         }
       `;
@@ -95,13 +97,13 @@ describe('GraphQL Authentication API', () => {
         .expect(200);
 
       expect(response.body.errors).toBeUndefined();
-      expect(response.body.data.registerUser).toMatchObject({
+      expect(response.body.data.registerUserWithPassword.user).toMatchObject({
         email: 'test@example.com',
         name: 'Test User',
         authMethod: 'PASSWORD',
       });
-      expect(response.body.data.registerUser.id).toBeDefined();
-      expect(response.body.data.registerUser.createdAt).toBeDefined();
+      expect(response.body.data.registerUserWithPassword.user.id).toBeDefined();
+      expect(response.body.data.registerUserWithPassword.user.createdAt).toBeDefined();
     });
 
     it('should reject duplicate email registration', async () => {

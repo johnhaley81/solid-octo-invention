@@ -16,6 +16,6 @@
     "rootDir": "."
   },
   "include": ["src/**/*", "vite.config.ts"],
-  "exclude": ["dist", "node_modules"],
+  "exclude": ["dist", "node_modules", "**/*.test.*", "**/*.spec.*"],
   "references": [{ "path": "../shared" }]
 }
