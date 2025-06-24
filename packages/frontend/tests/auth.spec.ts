@@ -4,7 +4,7 @@ test.describe('Authentication Flow', () => {
   const testUser = {
     name: 'Test User',
     email: `test-${Date.now()}@example.com`,
-    password: 'TestPassword123',
+    password: 'TestPassword123!',
   };
 
   test.beforeEach(async ({ page }) => {
@@ -143,8 +143,8 @@ test.describe('Authentication Flow', () => {
     await expect(page.locator('text=Password must be at least 8 characters')).toBeVisible();
 
     // Test password mismatch
-    await page.fill('#password', 'StrongPassword123');
-    await page.fill('#confirmPassword', 'DifferentPassword123');
+    await page.fill('#password', 'StrongPassword123!');
+    await page.fill('#confirmPassword', 'DifferentPassword123!');
     await page.click('button[type="submit"]');
     await expect(page.locator('text=Passwords do not match')).toBeVisible();
   });
@@ -176,7 +176,7 @@ test.describe('Authentication Flow', () => {
 
     // Fill form with invalid credentials
     await page.fill('#email', 'nonexistent@example.com');
-    await page.fill('#password', 'WrongPassword123');
+    await page.fill('#password', 'WrongPassword123!');
 
     // Submit form
     await page.click('button[type="submit"]');
