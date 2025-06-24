@@ -18,7 +18,8 @@
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist",
     "worker:start": "tsx src/worker/index.ts",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "schema:generate": "tsx scripts/generate-schema.ts"
   },
   "dependencies": {
     "@effect/platform": "^0.85.2",

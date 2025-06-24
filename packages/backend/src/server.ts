@@ -6,9 +6,7 @@ config({ path: '../../.env' });
 import cors from 'cors';
 import helmet from 'helmet';
 import { postgraphile } from 'postgraphile';
-import * as PgOmitArchivedModule from '@graphile-contrib/pg-omit-archived';
-const PgOmitArchivedPlugin =
-  (PgOmitArchivedModule.default as any).default || PgOmitArchivedModule.default;
+import { createServerPostGraphileConfig } from './config/postgraphile.js';
 import { Effect as E, Layer, Logger, LogLevel, Redacted } from 'effect';
 import { NodeRuntime } from '@effect/platform-node';
 import { envVars } from './config/index.js';
@@ -66,34 +64,14 @@ const ServerProgram = E.gen(function* () {
 
   // PostGraphile middleware
   app.use(
-    postgraphile(Redacted.value(databaseUrl), 'app_public', {
-      watchPg: nodeEnv === 'development',
-      graphiql: enableGraphiQL,
-      enhanceGraphiql: true,
-      dynamicJson: true,
-      setofFunctionsContainNulls: false,
-      ignoreRBAC: false,
-      showErrorStack: nodeEnv === 'development' ? 'json' : false,
-      extendedErrors: nodeEnv === 'development' ? ['hint', 'detail', 'errcode'] : ['errcode'],
-      appendPlugins: [
-        // Soft delete support - automatically omits records where deleted_at IS NOT NULL
-        PgOmitArchivedPlugin,
-      ],
-      graphileBuildOptions: {
-        // Configure pg-omit-archived plugin to use deleted_at column
-        pgArchivedColumnName: 'deleted_at',
-        pgArchivedColumnImpliesVisible: false, // deleted_at IS NOT NULL means hidden
-        pgArchivedRelations: true, // Also apply to related records
-        pgArchivedDefault: 'NO', // Exclude soft-deleted records by default
-      },
-      ...(nodeEnv === 'development' && { exportGqlSchemaPath: 'schema.graphql' }),
-      sortExport: true,
-      legacyRelations: 'omit',
-      pgSettings: _req => ({
-        // Set PostgreSQL settings based on request context
-        role: 'postgres', // This will be enhanced with proper authentication
+    postgraphile(
+      Redacted.value(databaseUrl),
+      'app_public',
+      createServerPostGraphileConfig({
+        nodeEnv,
+        enableGraphiQL,
       }),
-    }),
+    ),
   );
 
   // Error handling middleware
