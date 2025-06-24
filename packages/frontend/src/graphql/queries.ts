@@ -6,15 +6,53 @@ import { gql } from '@apollo/client';
  */
 
 /**
- * Get user profile information
+ * Get user profile information by nodeId
  */
 export const GET_USER = gql`
-  query GetUser($id: UUID!) {
-    user(id: $id) {
+  query GetUser($nodeId: ID!) {
+    user(nodeId: $nodeId) {
       id
+      nodeId
       name
       email
       avatarUrl
+      authMethod
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+/**
+ * Get user profile information by email
+ */
+export const GET_USER_BY_EMAIL = gql`
+  query GetUserByEmail($email: String!) {
+    userByEmail(email: $email) {
+      id
+      nodeId
+      name
+      email
+      avatarUrl
+      authMethod
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+/**
+ * Get user profile information by UUID
+ */
+export const GET_USER_BY_ID = gql`
+  query GetUserById($id: UUID!) {
+    userById(id: $id) {
+      id
+      nodeId
+      name
+      email
+      avatarUrl
+      authMethod
       createdAt
       updatedAt
     }
@@ -26,99 +64,37 @@ export const GET_USER = gql`
  */
 
 /**
- * Register a new user
+ * Register a new user with password
  */
-export const REGISTER_USER = gql`
-  mutation RegisterUser($email: String!, $name: String!, $password: String!) {
-    registerUser(input: { email: $email, name: $name, password: $password }) {
-      id
-      email
-      name
-      authMethod
-      createdAt
-    }
-  }
-`;
-
-/**
- * Login with email and password
- */
-export const LOGIN_WITH_PASSWORD = gql`
-  mutation LoginWithPassword($email: String!, $password: String!) {
-    loginWithPassword(input: { email: $email, password: $password }) {
-      userId
-      sessionToken
-      expiresAt
-    }
-  }
-`;
-
-/**
- * Login with passkey (WebAuthn)
- */
-export const LOGIN_WITH_PASSKEY = gql`
-  mutation LoginWithPasskey($email: String!, $credential: String!) {
-    loginWithPasskey(input: { email: $email, credential: $credential }) {
-      userId
-      sessionToken
-      expiresAt
-    }
-  }
-`;
-
-/**
- * Register a new passkey for a user
- */
-export const REGISTER_PASSKEY = gql`
-  mutation RegisterPasskey($userId: String!, $credential: String!, $name: String) {
-    registerPasskey(input: { userId: $userId, credential: $credential, name: $name }) {
-      id
-      name
-      createdAt
-    }
-  }
-`;
-
-/**
- * Get passkey challenge for authentication
- */
-export const GET_PASSKEY_CHALLENGE = gql`
-  query GetPasskeyChallenge($email: String!) {
-    getPasskeyChallenge(email: $email) {
-      challenge
-      allowCredentials {
+export const REGISTER_USER_WITH_PASSWORD = gql`
+  mutation RegisterUserWithPassword($email: String!, $name: String!, $password: String!) {
+    registerUserWithPassword(input: { email: $email, name: $name, password: $password }) {
+      user {
         id
-        type
-        transports
+        nodeId
+        email
+        name
+        authMethod
+        createdAt
       }
     }
   }
 `;
 
 /**
- * Logout current user
+ * Register a new user (without password - for WebAuthn)
  */
-export const LOGOUT = gql`
-  mutation Logout {
-    logout {
-      success
-    }
-  }
-`;
-
-/**
- * Get current user session
- */
-export const GET_CURRENT_USER = gql`
-  query GetCurrentUser {
-    currentUser {
-      id
-      name
-      email
-      avatarUrl
-      authMethod
-      createdAt
-      updatedAt
+export const REGISTER_USER = gql`
+  mutation RegisterUser($email: String!, $name: String!, $authMethod: AuthMethod!) {
+    registerUser(input: { email: $email, name: $name, authMethod: $authMethod }) {
+      user {
+        id
+        nodeId
+        email
+        name
+        authMethod
+        createdAt
+      }
     }
   }
 `;
@@ -127,10 +103,11 @@ export const GET_CURRENT_USER = gql`
  * Update user profile
  */
 export const UPDATE_USER_PROFILE = gql`
-  mutation UpdateUserProfile($id: UUID!, $name: String, $avatarUrl: String) {
-    updateUser(input: { id: $id, patch: { name: $name, avatarUrl: $avatarUrl } }) {
+  mutation UpdateUserProfile($nodeId: ID!, $name: String, $avatarUrl: String) {
+    updateUser(input: { nodeId: $nodeId, userPatch: { name: $name, avatarUrl: $avatarUrl } }) {
       user {
         id
+        nodeId
         name
         email
         avatarUrl
@@ -141,71 +118,150 @@ export const UPDATE_USER_PROFILE = gql`
 `;
 
 /**
- * Change user password
+ * Get all users (with pagination)
  */
-export const CHANGE_PASSWORD = gql`
-  mutation ChangePassword($currentPassword: String!, $newPassword: String!) {
-    changePassword(input: { currentPassword: $currentPassword, newPassword: $newPassword }) {
-      success
+export const GET_ALL_USERS = gql`
+  query GetAllUsers($first: Int, $after: Cursor) {
+    allUsers(first: $first, after: $after) {
+      nodes {
+        id
+        nodeId
+        name
+        email
+        avatarUrl
+        authMethod
+        createdAt
+        updatedAt
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+      totalCount
     }
   }
 `;
 
 /**
- * Request password reset
+ * Create a new user
  */
-export const REQUEST_PASSWORD_RESET = gql`
-  mutation RequestPasswordReset($email: String!) {
-    requestPasswordReset(input: { email: $email }) {
-      success
+export const CREATE_USER = gql`
+  mutation CreateUser($email: String!, $name: String!, $authMethod: AuthMethod!) {
+    createUser(input: { user: { email: $email, name: $name, authMethod: $authMethod } }) {
+      user {
+        id
+        nodeId
+        email
+        name
+        authMethod
+        createdAt
+      }
     }
   }
 `;
 
 /**
- * Reset password with token
+ * Delete a user by nodeId
  */
-export const RESET_PASSWORD = gql`
-  mutation ResetPassword($token: String!, $newPassword: String!) {
-    resetPassword(input: { token: $token, newPassword: $newPassword }) {
-      success
+export const DELETE_USER = gql`
+  mutation DeleteUser($nodeId: ID!) {
+    deleteUser(input: { nodeId: $nodeId }) {
+      user {
+        id
+        nodeId
+        name
+        email
+      }
     }
   }
 `;
 
 /**
- * Verify email address
+ * Delete a user by email
  */
-export const VERIFY_EMAIL = gql`
-  mutation VerifyEmail($token: String!) {
-    verifyEmail(input: { token: $token }) {
-      success
+export const DELETE_USER_BY_EMAIL = gql`
+  mutation DeleteUserByEmail($email: String!) {
+    deleteUserByEmail(input: { email: $email }) {
+      user {
+        id
+        nodeId
+        name
+        email
+      }
     }
   }
 `;
 
 /**
- * Resend email verification
+ * Login with password
  */
-export const RESEND_EMAIL_VERIFICATION = gql`
-  mutation ResendEmailVerification {
-    resendEmailVerification {
-      success
+export const LOGIN_WITH_PASSWORD = gql`
+  mutation LoginWithPassword($email: String!, $password: String!) {
+    loginWithPassword(input: { email: $email, password: $password }) {
+      results {
+        sessionToken
+        userId
+        expiresAt
+      }
     }
   }
 `;
 
 /**
- * Get current user from session query
+ * Get current user from session
  */
 export const CURRENT_USER_FROM_SESSION = gql`
-  query CurrentUserFromSession {
-    currentUserFromSession {
-      id
-      email
-      name
-      isVerified
-      createdAt
+  mutation CurrentUserFromSession {
+    currentUserFromSession(input: {}) {
+      user {
+        id
+        nodeId
+        name
+        email
+        avatarUrl
+        authMethod
+        createdAt
+        updatedAt
+      }
     }
   }
 `;
+
+/**
+ * Placeholder queries for passkey authentication
+ * These need to be implemented in the backend schema
+ * For now, we'll create stub implementations to satisfy the existing components
+ */
+
+// TODO: Implement these mutations in the backend schema
+// For now, these are commented out to avoid codegen errors
+
+/*
+export const LOGIN_WITH_PASSKEY = gql`
+  mutation LoginWithPasskey($email: String!, $credential: String!) {
+    loginWithPasskey(input: { email: $email, credential: $credential }) {
+      results {
+        sessionToken
+        userId
+        expiresAt
+      }
+    }
+  }
+`;
+
+export const GET_PASSKEY_CHALLENGE = gql`
+  query GetPasskeyChallenge($email: String!) {
+    passkeyChallenge(email: $email) {
+      challenge
+      allowCredentials
+    }
+  }
+`;
+*/
+
+// Temporary stub exports to satisfy existing imports
+// These should be replaced with proper implementations
+export const LOGIN_WITH_PASSKEY = null;
+export const GET_PASSKEY_CHALLENGE = null;

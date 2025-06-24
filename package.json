@@ -33,6 +33,8 @@
     "migrate:watch": "pnpm --filter backend/migrate dev",
     "worker:start": "pnpm --filter backend worker:start",
     "schema:generate": "pnpm --filter backend schema:generate",
+    "codegen": "pnpm schema:generate && pnpm --filter frontend codegen",
+    "codegen:watch": "pnpm --filter frontend codegen:watch",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "check": "node scripts/check-prerequisites.js",

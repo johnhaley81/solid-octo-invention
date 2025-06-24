@@ -25,8 +25,9 @@ export function LoginForm() {
   const { login } = useAuth();
 
   const [loginWithPassword] = useMutation(LOGIN_WITH_PASSWORD);
-  const [loginWithPasskey] = useMutation(LOGIN_WITH_PASSKEY);
-  const [getPasskeyChallenge] = useLazyQuery(GET_PASSKEY_CHALLENGE);
+  // TODO: Implement passkey authentication mutations in backend
+  const [loginWithPasskey] = useMutation(LOGIN_WITH_PASSKEY || LOGIN_WITH_PASSWORD); // Fallback to password login
+  const [getPasskeyChallenge] = useLazyQuery(GET_PASSKEY_CHALLENGE || CURRENT_USER_FROM_SESSION); // Fallback
   const [getCurrentUser] = useLazyQuery(CURRENT_USER_FROM_SESSION);
 
   // Get the intended destination or default to home

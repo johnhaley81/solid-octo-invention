@@ -140,6 +140,7 @@ temp/
 
 # GraphQL generated files
 introspection.json
+packages/frontend/src/generated/
 
 # Graphile
 # .gmrc - Included in scaffolding since it uses environment variables
