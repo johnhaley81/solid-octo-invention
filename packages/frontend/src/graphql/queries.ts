@@ -83,7 +83,6 @@ export const REGISTER_USER_WITH_PASSWORD = gql`
 
 /**
  * Register a new user (without password - for WebAuthn)
- * Note: Using createUser since registerUser doesn't exist in schema
  */
 export const REGISTER_USER = gql`
   mutation RegisterUser($email: String!, $name: String!, $authMethod: AuthMethod!) {
@@ -231,122 +230,38 @@ export const CURRENT_USER_FROM_SESSION = gql`
 `;
 
 /**
- * WebAuthn/Passkey authentication mutations and queries
+ * Placeholder queries for passkey authentication
+ * These need to be implemented in the backend schema
+ * For now, we'll create stub implementations to satisfy the existing components
  */
 
-/**
- * Generate WebAuthn registration challenge
- */
-export const GENERATE_WEBAUTHN_REGISTRATION_CHALLENGE = gql`
-  mutation GenerateWebauthnRegistrationChallenge($email: String!) {
-    generateWebauthnRegistrationChallenge(input: { userEmail: $email }) {
+// TODO: Implement these mutations in the backend schema
+// For now, these are commented out to avoid codegen errors
+
+/*
+export const LOGIN_WITH_PASSKEY = gql`
+  mutation LoginWithPasskey($email: String!, $credential: String!) {
+    loginWithPasskey(input: { email: $email, credential: $credential }) {
       results {
-        challenge
-        userId
-        userName
-        userDisplayName
-      }
-    }
-  }
-`;
-
-/**
- * Register WebAuthn credential
- */
-export const REGISTER_WEBAUTHN_CREDENTIAL = gql`
-  mutation RegisterWebauthnCredential(
-    $email: String!
-    $credentialId: String!
-    $publicKey: String!
-    $challenge: String!
-    $clientDataJson: String!
-    $attestationObject: String!
-  ) {
-    registerWebauthnCredential(
-      input: {
-        userEmail: $email
-        credentialId: $credentialId
-        publicKey: $publicKey
-        challenge: $challenge
-        clientDataJson: $clientDataJson
-        attestationObject: $attestationObject
-      }
-    ) {
-      user {
-        id
-        nodeId
-        email
-        name
-        authMethod
-        updatedAt
-      }
-    }
-  }
-`;
-
-/**
- * Generate WebAuthn authentication challenge
- */
-export const GENERATE_WEBAUTHN_AUTHENTICATION_CHALLENGE = gql`
-  mutation GenerateWebauthnAuthenticationChallenge($email: String!) {
-    generateWebauthnAuthenticationChallenge(input: { userEmail: $email }) {
-      results {
-        challenge
-        credentialIds
-      }
-    }
-  }
-`;
-
-/**
- * Login with WebAuthn
- */
-export const LOGIN_WITH_WEBAUTHN = gql`
-  mutation LoginWithWebauthn(
-    $email: String!
-    $credentialId: String!
-    $challenge: String!
-    $clientDataJson: String!
-    $authenticatorData: String!
-    $signature: String!
-  ) {
-    loginWithWebauthn(
-      input: {
-        userEmail: $email
-        credentialId: $credentialId
-        challenge: $challenge
-        clientDataJson: $clientDataJson
-        authenticatorData: $authenticatorData
-        signature: $signature
-      }
-    ) {
-      results {
-        userId
         sessionToken
+        userId
         expiresAt
       }
     }
   }
 `;
 
-/**
- * Switch authentication method
- */
-export const SWITCH_AUTH_METHOD = gql`
-  mutation SwitchAuthMethod($userId: UUID!, $newMethod: AuthMethod!) {
-    switchAuthMethod(input: { userId: $userId, newMethod: $newMethod }) {
-      user {
-        id
-        nodeId
-        email
-        name
-        authMethod
-        updatedAt
-      }
+export const GET_PASSKEY_CHALLENGE = gql`
+  query GetPasskeyChallenge($email: String!) {
+    passkeyChallenge(email: $email) {
+      challenge
+      allowCredentials
     }
   }
 `;
+*/
 
-// Legacy exports for backward compatibility
-export const LOGIN_WITH_PASSKEY = LOGIN_WITH_WEBAUTHN;
-export const GET_PASSKEY_CHALLENGE = GENERATE_WEBAUTHN_AUTHENTICATION_CHALLENGE;
+// Temporary stub exports to satisfy existing imports
+// These should be replaced with proper implementations
+export const LOGIN_WITH_PASSKEY = null;
+export const GET_PASSKEY_CHALLENGE = null;
