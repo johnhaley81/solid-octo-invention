@@ -11,7 +11,7 @@
 import { createServer } from 'http';
 import { postgraphile } from 'postgraphile';
 import { Pool } from 'pg';
-import { existsSync } from 'fs';
+import { existsSync, statSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createSchemaGenerationConfig } from '../src/config/postgraphile.js';
@@ -70,7 +70,7 @@ async function generateSchema(): Promise<void> {
           if (existsSync(SCHEMA_OUTPUT_PATH)) {
             console.log('✅ GraphQL schema generated successfully!');
             console.log(
-              `📊 Schema file size: ${require('fs').statSync(SCHEMA_OUTPUT_PATH).size} bytes`,
+              `📊 Schema file size: ${statSync(SCHEMA_OUTPUT_PATH).size} bytes`,
             );
             resolve();
           } else {
