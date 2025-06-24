@@ -83,21 +83,23 @@ export const REGISTER_USER_WITH_PASSWORD = gql`
 
 /**
  * Register a new user (without password - for WebAuthn)
+ * Note: Direct user creation via createUser mutation has been removed for security.
+ * Use registerUser function or registerUserWithPassword mutation instead.
  */
-export const REGISTER_USER = gql`
-  mutation RegisterUser($email: String!, $name: String!, $authMethod: AuthMethod!) {
-    createUser(input: { user: { email: $email, name: $name, authMethod: $authMethod } }) {
-      user {
-        id
-        nodeId
-        email
-        name
-        authMethod
-        createdAt
-      }
-    }
-  }
-`;
+// export const REGISTER_USER = gql`
+//   mutation RegisterUser($email: String!, $name: String!, $authMethod: AuthMethod!) {
+//     createUser(input: { user: { email: $email, name: $name, authMethod: $authMethod } }) {
+//       user {
+//         id
+//         nodeId
+//         email
+//         name
+//         authMethod
+//         createdAt
+//       }
+//     }
+//   }
+// `;
 
 /**
  * Update user profile
@@ -146,21 +148,23 @@ export const GET_ALL_USERS = gql`
 
 /**
  * Create a new user
+ * Note: Direct user creation via createUser mutation has been removed for security.
+ * Use registerUser function or registerUserWithPassword mutation instead.
  */
-export const CREATE_USER = gql`
-  mutation CreateUser($email: String!, $name: String!, $authMethod: AuthMethod!) {
-    createUser(input: { user: { email: $email, name: $name, authMethod: $authMethod } }) {
-      user {
-        id
-        nodeId
-        email
-        name
-        authMethod
-        createdAt
-      }
-    }
-  }
-`;
+// export const CREATE_USER = gql`
+//   mutation CreateUser($email: String!, $name: String!, $authMethod: AuthMethod!) {
+//     createUser(input: { user: { email: $email, name: $name, authMethod: $authMethod } }) {
+//       user {
+//         id
+//         nodeId
+//         email
+//         name
+//         authMethod
+//         createdAt
+//       }
+//     }
+//   }
+// `;
 
 /**
  * Delete a user by nodeId
@@ -180,19 +184,21 @@ export const DELETE_USER = gql`
 
 /**
  * Delete a user by email
+ * Note: Direct user deletion via deleteUserByEmail mutation has been removed for security.
+ * Use soft delete patterns or the remaining deleteUser mutation instead.
  */
-export const DELETE_USER_BY_EMAIL = gql`
-  mutation DeleteUserByEmail($email: String!) {
-    deleteUserByEmail(input: { email: $email }) {
-      user {
-        id
-        nodeId
-        name
-        email
-      }
-    }
-  }
-`;
+// export const DELETE_USER_BY_EMAIL = gql`
+//   mutation DeleteUserByEmail($email: String!) {
+//     deleteUserByEmail(input: { email: $email }) {
+//       user {
+//         id
+//         nodeId
+//         name
+//         email
+//       }
+//     }
+//   }
+// `;
 
 /**
  * Login with password
