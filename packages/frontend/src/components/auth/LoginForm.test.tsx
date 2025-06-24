@@ -126,6 +126,10 @@ describe('LoginForm', () => {
                 id: '1',
                 email: 'test@example.com',
                 name: 'Test User',
+<<<<<<< HEAD
+=======
+                isVerified: true,
+>>>>>>> f669cff (Remove JS files: migrate queries.js to queries.ts)
                 createdAt: new Date().toISOString(),
               },
             },
