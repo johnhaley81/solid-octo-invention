@@ -54,8 +54,6 @@ When you make database schema changes via migrations:
    # Create a new migration
    pnpm migrate:watch
    # Make your database changes in the watch mode
-   # Commit the migration
-   pnpm migrate:commit
    ```
 
 2. **Regenerate the GraphQL schema**:

@@ -11,10 +11,10 @@
 import { createServer } from 'http';
 import { postgraphile } from 'postgraphile';
 import { Pool } from 'pg';
-import { writeFileSync, existsSync } from 'fs';
+import { existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import PgOmitArchivedPlugin from '@graphile-contrib/pg-omit-archived';
+import { createSchemaGenerationConfig } from '../src/config/postgraphile.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,7 +26,7 @@ const SCHEMA_OUTPUT_PATH = join(__dirname, '..', 'schema.graphql');
 
 async function generateSchema(): Promise<void> {
   console.log('🚀 Starting GraphQL schema generation...');
-  console.log(`📊 Database URL: ${DATABASE_URL.replace(/:[^:@]*@/, ':***@')}`);
+  console.log(`��� Database URL: ${DATABASE_URL.replace(/:[^:@]*@/, ':***@')}`);
   console.log(`📁 Output path: ${SCHEMA_OUTPUT_PATH}`);
 
   // Test database connection first
@@ -42,32 +42,14 @@ async function generateSchema(): Promise<void> {
   }
 
   // Create PostGraphile instance with schema export
-  const middleware = postgraphile(DATABASE_URL, 'app_public', {
-    watchPg: false,
-    graphiql: false,
-    enhanceGraphiql: false,
-    subscriptions: false,
-    dynamicJson: true,
-    setofFunctionsContainNulls: false,
-    ignoreRBAC: false,
-    showErrorStack: 'json',
-    extendedErrors: ['hint', 'detail', 'errcode'],
-    appendPlugins: [PgOmitArchivedPlugin],
-    graphileBuildOptions: {
-      // Configure pg-omit-archived plugin to use deleted_at column
-      pgArchivedColumnName: 'deleted_at',
-      pgArchivedColumnImpliesVisible: false, // deleted_at IS NOT NULL means hidden
-      pgArchivedRelations: true, // Also apply to related records
-      pgArchivedDefault: 'NO', // Exclude soft-deleted records by default
-    },
-    exportGqlSchemaPath: SCHEMA_OUTPUT_PATH,
-    sortExport: true,
-    legacyRelations: 'omit',
-    pgSettings: _req => ({
-      // Set PostgreSQL settings based on request context
-      role: 'postgres', // This will be enhanced with proper authentication
-    }),
-  });
+  const middleware = postgraphile(
+    DATABASE_URL,
+    'app_public',
+    createSchemaGenerationConfig({
+      exportPath: SCHEMA_OUTPUT_PATH,
+      databaseUrl: DATABASE_URL,
+    })
+  );
 
   // Create a temporary HTTP server to initialize PostGraphile
   const server = createServer(middleware);
