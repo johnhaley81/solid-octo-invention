@@ -48,7 +48,7 @@ async function generateSchema(): Promise<void> {
     createSchemaGenerationConfig({
       exportPath: SCHEMA_OUTPUT_PATH,
       databaseUrl: DATABASE_URL,
-    })
+    }),
   );
 
   // Create a temporary HTTP server to initialize PostGraphile

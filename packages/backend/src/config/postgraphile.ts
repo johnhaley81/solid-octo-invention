@@ -1,6 +1,6 @@
 /**
  * Shared PostGraphile Configuration
- * 
+ *
  * This module provides a centralized configuration for PostGraphile that can be used
  * across different contexts (server, schema generation, etc.) while allowing for
  * environment-specific overrides.
@@ -29,7 +29,9 @@ export interface PostGraphileConfigOptions {
 /**
  * Creates PostGraphile configuration with sensible defaults and environment-specific settings
  */
-export function createPostGraphileConfig(options: PostGraphileConfigOptions = {}): PostGraphileOptions {
+export function createPostGraphileConfig(
+  options: PostGraphileConfigOptions = {},
+): PostGraphileOptions {
   const {
     nodeEnv = process.env.NODE_ENV || 'development',
     enableGraphiQL = false,
@@ -85,9 +87,10 @@ export function createPostGraphileConfig(options: PostGraphileConfigOptions = {}
     }),
 
     // Schema export (for development, test, and CI environments)
-    ...((isDevelopment || isTest || isCI) && exportGqlSchemaPath && { 
-      exportGqlSchemaPath,
-    }),
+    ...((isDevelopment || isTest || isCI) &&
+      exportGqlSchemaPath && {
+        exportGqlSchemaPath,
+      }),
   };
 
   // Apply any overrides

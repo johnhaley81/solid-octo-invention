@@ -65,8 +65,8 @@ const ServerProgram = E.gen(function* () {
   // PostGraphile middleware
   app.use(
     postgraphile(
-      Redacted.value(databaseUrl), 
-      'app_public', 
+      Redacted.value(databaseUrl),
+      'app_public',
       createServerPostGraphileConfig({
         nodeEnv,
         enableGraphiQL,
