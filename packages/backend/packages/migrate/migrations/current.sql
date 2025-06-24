@@ -465,8 +465,12 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA app_private TO postgres;
 
 COMMENT ON SCHEMA app_public IS 'Schema for application public objects exposed via PostGraphile';
 COMMENT ON SCHEMA app_private IS 'Schema for sensitive application data not exposed via PostGraphile';
-COMMENT ON TABLE app_public.users IS 'Application users with soft delete support';
+COMMENT ON TABLE app_public.users IS E'@omit create,delete\\nApplication users with soft delete support';
 COMMENT ON COLUMN app_public.users.deleted_at IS 'Soft delete timestamp - NULL means active user';
+
+-- Omit delete mutations for unique constraints
+COMMENT ON CONSTRAINT users_pkey ON app_public.users IS '@omit delete';
+COMMENT ON CONSTRAINT users_email_key ON app_public.users IS '@omit delete';
 
 -- Checklist for new tables with soft delete support:
 -- ✅ Include deleted_at TIMESTAMPTZ DEFAULT NULL column
@@ -475,6 +479,35 @@ COMMENT ON COLUMN app_public.users.deleted_at IS 'Soft delete timestamp - NULL m
 -- ✅ Set up RLS policies that respect soft delete status
 -- ✅ Grant appropriate permissions
 -- ✅ Test soft delete functionality with the table
+
+-- ============================================================================
+-- POSTGRAPHILE TABLE CREATION GUIDELINES
+-- ============================================================================
+-- 
+-- When creating new tables in app_public schema, follow these PostGraphile smart comment rules:
+--
+-- 1. ALWAYS omit delete operations for security and data integrity:
+--    COMMENT ON TABLE app_public.your_table IS 'Table description
+--    @omit delete';
+--
+-- 2. For sensitive tables, also consider omitting create operations:
+--    COMMENT ON TABLE app_public.sensitive_table IS 'Sensitive table description
+--    @omit create,delete';
+--
+-- 3. Available @omit options:
+--    - create: Prevents INSERT operations via GraphQL
+--    - read: Prevents SELECT operations via GraphQL
+--    - update: Prevents UPDATE operations via GraphQL  
+--    - delete: Prevents DELETE operations via GraphQL
+--    - all: Prevents all CRUD operations via GraphQL
+--
+-- 4. Multiple operations can be omitted: @omit create,delete,update
+--
+-- 5. For more PostGraphile smart comments, see:
+--    https://www.graphile.org/postgraphile/smart-comments/
+--
+-- SECURITY RULE: All future tables MUST include '@omit delete' to prevent
+-- accidental hard deletes through the GraphQL API. Use soft delete patterns instead.
 
 -- ============================================================================
 -- WEBAUTHN FUNCTIONS
