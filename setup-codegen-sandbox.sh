@@ -1,55 +1,68 @@
 #!/bin/bash
 
 # Codegen Sandbox Setup Script
-# Sets up PostgreSQL and pulls latest code with dependencies
+# Pulls latest code, installs dependencies, and sets up the development environment
 
 set -e
 
-echo "🚀 Setting up Codegen Sandbox"
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Function to log messages with timestamps
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+log "🚀 Setting up Codegen Sandbox"
 echo "============================="
 
-# Install PostgreSQL
-echo "📦 Installing PostgreSQL..."
-sudo apt update
-sudo apt install -y postgresql postgresql-contrib postgresql-client
-
-# Start PostgreSQL service
-echo "🔧 Starting PostgreSQL service..."
-sudo service postgresql start
-
-# Configure PostgreSQL
-echo "⚙️  Configuring PostgreSQL..."
-sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
-
-# Create the database
-echo "🗄️  Creating database..."
-sudo -u postgres createdb solid_octo_invention
-
 # Pull latest from main
-echo "📥 Pulling latest from main..."
+log "📥 Pulling latest from main..."
+cd "$SCRIPT_DIR"
 git fetch origin main
 git checkout main
 git pull origin main
 
-# Copy and configure .env file
-echo "⚙️  Setting up environment configuration..."
-cp .env.example .env
-sed -i 's|DATABASE_URL=.*|DATABASE_URL=postgresql://postgres:postgres@localhost:5432/solid_octo_invention|' .env
-
 # Install dependencies
-echo "📦 Installing dependencies..."
-pnpm install
+log "📦 Installing dependencies..."
+if pnpm install; then
+    log "✅ Dependencies installed successfully"
+else
+    log "❌ Failed to install dependencies"
+    exit 1
+fi
 
-# Run migrations
-echo "🗄️  Running migrations..."
-cd packages/backend/packages/migrate
-pnpm migrate:up
+# Set up database and run migrations
+log "🗄️  Setting up database..."
+if [ -f "$SCRIPT_DIR/fix-database-issues.sh" ]; then
+    chmod +x "$SCRIPT_DIR/fix-database-issues.sh"
+    if "$SCRIPT_DIR/fix-database-issues.sh" fix; then
+        log "✅ Database setup completed successfully"
+    else
+        log "❌ Database setup failed"
+        echo ""
+        log "💡 You can try to fix database issues manually by running:"
+        log "   ./fix-database-issues.sh"
+        exit 1
+    fi
+else
+    log "⚠️  Database setup script not found, skipping database setup"
+    log "💡 Make sure fix-database-issues.sh exists in the project root"
+fi
 
+# Display final status
 echo ""
-echo "✅ Codegen sandbox setup complete!"
+log "✅ Codegen sandbox setup complete!"
 echo ""
-echo "🚀 Ready to develop! Your environment includes:"
-echo "   - PostgreSQL running on localhost:5432"
-echo "   - Latest code from main branch"
-echo "   - All dependencies installed"
-echo "   - Database migrations applied"
+log "🚀 Ready to develop! Your environment includes:"
+log "   - Latest code from main branch"
+log "   - All dependencies installed"
+log "   - PostgreSQL database configured and running"
+log "   - Database migrations applied"
+echo ""
+log "🔧 Useful commands:"
+log "   ./fix-database-issues.sh        - Fix any database issues"
+log "   ./fix-database-issues.sh test   - Test database connection"
+log "   pnpm dev                        - Start development servers"
+echo ""
+log "💡 If you encounter database issues, run: ./fix-database-issues.sh"
