@@ -102,6 +102,14 @@ export default [
     },
   },
   {
-    ignores: ['dist', 'build', 'node_modules', '*.config.js', '*.config.ts', 'coverage'],
+    ignores: [
+      'dist',
+      'build',
+      'node_modules',
+      '*.config.js',
+      '*.config.ts',
+      'coverage',
+      '**/generated/**',
+    ],
   },
 ];

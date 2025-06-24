@@ -16,7 +16,7 @@
     "test:e2e:report": "playwright show-report",
     "lint": "eslint src --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src --fix",
-    "type-check": "tsc --noEmit",
+    "type-check": "pnpm codegen && tsc --noEmit",
     "clean": "rm -rf dist",
     "codegen": "graphql-codegen --config codegen.yml",
     "codegen:watch": "graphql-codegen --config codegen.yml --watch"

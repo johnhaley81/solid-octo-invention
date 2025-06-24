@@ -35,4 +35,3 @@ export const UserProfile: React.FC<UserProfileProps> = ({ userId }) => {
 };
 
 export default UserProfile;
-
