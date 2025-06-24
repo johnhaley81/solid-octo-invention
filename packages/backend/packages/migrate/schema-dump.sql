@@ -400,30 +400,6 @@ $$;
 
 
 --
--- Name: register_user(app_public.citext, text, public.auth_method); Type: FUNCTION; Schema: app_public; Owner: -
---
-
-CREATE FUNCTION app_public.register_user(email app_public.citext, name text, auth_method public.auth_method DEFAULT 'password'::public.auth_method) RETURNS app_public.users
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-DECLARE
-  new_user app_public.users;
-BEGIN
-  -- Insert new user
-  INSERT INTO app_public.users (email, name, auth_method)
-  VALUES (email, name, auth_method)
-  RETURNING * INTO new_user;
-
-  -- Create primary email record
-  INSERT INTO app_private.user_emails (user_id, email, is_primary, is_verified)
-  VALUES (new_user.id, email, TRUE, FALSE);
-
-  RETURN new_user;
-END;
-$$;
-
-
---
 -- Name: register_user_with_password(app_public.citext, text, text); Type: FUNCTION; Schema: app_public; Owner: -
 --
 
@@ -558,45 +534,6 @@ BEGIN
   SELECT * INTO user_record
   FROM app_public.users u
   WHERE u.id = user_id;
-
-  RETURN user_record;
-END;
-$$;
-
-
---
--- Name: switch_auth_method(uuid, public.auth_method); Type: FUNCTION; Schema: app_public; Owner: -
---
-
-CREATE FUNCTION app_public.switch_auth_method(user_id uuid, new_method public.auth_method) RETURNS app_public.users
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-DECLARE
-  user_record app_public.users;
-BEGIN
-  -- Find user
-  SELECT * INTO user_record
-  FROM app_public.users u
-  WHERE u.id = switch_auth_method.user_id
-    AND u.deleted_at IS NULL;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'User not found';
-  END IF;
-
-  -- Remove existing authentication methods
-  DELETE FROM app_private.user_authentication_methods
-  WHERE user_authentication_methods.user_id = switch_auth_method.user_id;
-
-  -- Update user's auth method
-  UPDATE app_public.users
-  SET auth_method = new_method
-  WHERE id = switch_auth_method.user_id;
-
-  -- Return updated user
-  SELECT * INTO user_record
-  FROM app_public.users u
-  WHERE u.id = switch_auth_method.user_id;
 
   RETURN user_record;
 END;

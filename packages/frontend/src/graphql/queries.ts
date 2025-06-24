@@ -331,22 +331,21 @@ export const LOGIN_WITH_WEBAUTHN = gql`
 
 /**
  * Switch authentication method
- * Note: This function may not be exposed by PostGraphile, commenting out for now
  */
-// export const SWITCH_AUTH_METHOD = gql`
-//   mutation SwitchAuthMethod($userId: UUID!, $newMethod: AuthMethod!) {
-//     switchAuthMethod(input: { userId: $userId, newMethod: $newMethod }) {
-//       user {
-//         id
-//         nodeId
-//         email
-//         name
-//         authMethod
-//         updatedAt
-//       }
-//     }
-//   }
-// `;
+export const SWITCH_AUTH_METHOD = gql`
+  mutation SwitchAuthMethod($userId: UUID!, $newMethod: AuthMethod!) {
+    switchAuthMethod(input: { userId: $userId, newMethod: $newMethod }) {
+      user {
+        id
+        nodeId
+        email
+        name
+        authMethod
+        updatedAt
+      }
+    }
+  }
+`;
 
 // Legacy exports for backward compatibility
 export const LOGIN_WITH_PASSKEY = LOGIN_WITH_WEBAUTHN;

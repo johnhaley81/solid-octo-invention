@@ -390,6 +390,12 @@ type Mutation {
     """
     input: LoginWithWebauthnInput!
   ): LoginWithWebauthnPayload
+  registerUser(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: RegisterUserInput!
+  ): RegisterUserPayload
   registerUserWithPassword(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
@@ -402,6 +408,12 @@ type Mutation {
     """
     input: RegisterWebauthnCredentialInput!
   ): RegisterWebauthnCredentialPayload
+  switchAuthMethod(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: SwitchAuthMethodInput!
+  ): SwitchAuthMethodPayload
 
   """Updates a single `User` using its globally unique id and a patch."""
   updateUser(
@@ -513,6 +525,40 @@ type Query implements Node {
   userById(id: UUID!): User
 }
 
+"""All input for the `registerUser` mutation."""
+input RegisterUserInput {
+  authMethod: AuthMethod
+
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  email: String
+  name: String
+}
+
+"""The output of our `registerUser` mutation."""
+type RegisterUserPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+  user: User
+
+  """An edge for our `User`. May be used by Relay 1."""
+  userEdge(
+    """The method to use when ordering `User`."""
+    orderBy: [UsersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): UsersEdge
+}
+
 """All input for the `registerUserWithPassword` mutation."""
 input RegisterUserWithPasswordInput {
   """
@@ -564,6 +610,38 @@ input RegisterWebauthnCredentialInput {
 
 """The output of our `registerWebauthnCredential` mutation."""
 type RegisterWebauthnCredentialPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+  user: User
+
+  """An edge for our `User`. May be used by Relay 1."""
+  userEdge(
+    """The method to use when ordering `User`."""
+    orderBy: [UsersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): UsersEdge
+}
+
+"""All input for the `switchAuthMethod` mutation."""
+input SwitchAuthMethodInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  newMethod: AuthMethod
+  userId: UUID
+}
+
+"""The output of our `switchAuthMethod` mutation."""
+type SwitchAuthMethodPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
