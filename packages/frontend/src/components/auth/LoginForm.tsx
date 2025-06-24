@@ -8,7 +8,7 @@ import {
   CURRENT_USER_FROM_SESSION,
 } from '../../graphql/queries.js';
 import { useAuth } from '../../contexts/AuthContext.js';
-import { validateLoginForm } from '../../utils/validation.js';
+import { validateLoginForm } from '../../utils/validation.ts';
 import { isPasskeySupported, authenticateWithPasskey } from '../../utils/passkey.js';
 
 /**
