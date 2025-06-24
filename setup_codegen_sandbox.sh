@@ -27,6 +27,11 @@ git fetch origin main
 git checkout main
 git pull origin main
 
+# Copy and configure .env file
+echo "⚙️  Setting up environment configuration..."
+cp .env.example .env
+sed -i 's|DATABASE_URL=.*|DATABASE_URL=postgresql://postgres:postgres@localhost:5432/solid_octo_invention|' .env
+
 # Install dependencies
 echo "📦 Installing dependencies..."
 pnpm install
@@ -44,4 +49,3 @@ echo "   - PostgreSQL running on localhost:5432"
 echo "   - Latest code from main branch"
 echo "   - All dependencies installed"
 echo "   - Database migrations applied"
-
