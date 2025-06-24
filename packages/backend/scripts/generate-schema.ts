@@ -2,7 +2,7 @@
 
 /**
  * GraphQL Schema Generation Script
- * 
+ *
  * This script generates the GraphQL schema by starting a temporary PostGraphile instance
  * and exporting the schema to a file. It's designed to be used in CI environments
  * to ensure schema stability.
@@ -20,7 +20,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Configuration
-const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/solid_octo_invention';
+const DATABASE_URL =
+  process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/solid_octo_invention';
 const SCHEMA_OUTPUT_PATH = join(__dirname, '..', 'schema.graphql');
 
 async function generateSchema(): Promise<void> {
@@ -41,42 +42,36 @@ async function generateSchema(): Promise<void> {
   }
 
   // Create PostGraphile instance with schema export
-  const middleware = postgraphile(
-    DATABASE_URL,
-    'app_public',
-    {
-      watchPg: false,
-      graphiql: false,
-      enhanceGraphiql: false,
-      subscriptions: false,
-      dynamicJson: true,
-      setofFunctionsContainNulls: false,
-      ignoreRBAC: false,
-      showErrorStack: 'json',
-      extendedErrors: ['hint', 'detail', 'errcode'],
-      appendPlugins: [
-        PgOmitArchivedPlugin,
-      ],
-      graphileBuildOptions: {
-        // Configure pg-omit-archived plugin to use deleted_at column
-        pgArchivedColumnName: 'deleted_at',
-        pgArchivedColumnImpliesVisible: false, // deleted_at IS NOT NULL means hidden
-        pgArchivedRelations: true, // Also apply to related records
-        pgArchivedDefault: 'NO', // Exclude soft-deleted records by default
-      },
-      exportGqlSchemaPath: SCHEMA_OUTPUT_PATH,
-      sortExport: true,
-      legacyRelations: 'omit',
-      pgSettings: _req => ({
-        // Set PostgreSQL settings based on request context
-        role: 'postgres', // This will be enhanced with proper authentication
-      }),
+  const middleware = postgraphile(DATABASE_URL, 'app_public', {
+    watchPg: false,
+    graphiql: false,
+    enhanceGraphiql: false,
+    subscriptions: false,
+    dynamicJson: true,
+    setofFunctionsContainNulls: false,
+    ignoreRBAC: false,
+    showErrorStack: 'json',
+    extendedErrors: ['hint', 'detail', 'errcode'],
+    appendPlugins: [PgOmitArchivedPlugin],
+    graphileBuildOptions: {
+      // Configure pg-omit-archived plugin to use deleted_at column
+      pgArchivedColumnName: 'deleted_at',
+      pgArchivedColumnImpliesVisible: false, // deleted_at IS NOT NULL means hidden
+      pgArchivedRelations: true, // Also apply to related records
+      pgArchivedDefault: 'NO', // Exclude soft-deleted records by default
     },
-  );
+    exportGqlSchemaPath: SCHEMA_OUTPUT_PATH,
+    sortExport: true,
+    legacyRelations: 'omit',
+    pgSettings: _req => ({
+      // Set PostgreSQL settings based on request context
+      role: 'postgres', // This will be enhanced with proper authentication
+    }),
+  });
 
   // Create a temporary HTTP server to initialize PostGraphile
   const server = createServer(middleware);
-  
+
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       server.close();
@@ -85,14 +80,16 @@ async function generateSchema(): Promise<void> {
 
     server.listen(0, () => {
       console.log('🔧 PostGraphile instance started, generating schema...');
-      
+
       // Give PostGraphile time to generate the schema
       setTimeout(() => {
         clearTimeout(timeout);
         server.close(() => {
           if (existsSync(SCHEMA_OUTPUT_PATH)) {
             console.log('✅ GraphQL schema generated successfully!');
-            console.log(`📊 Schema file size: ${require('fs').statSync(SCHEMA_OUTPUT_PATH).size} bytes`);
+            console.log(
+              `📊 Schema file size: ${require('fs').statSync(SCHEMA_OUTPUT_PATH).size} bytes`,
+            );
             resolve();
           } else {
             reject(new Error('Schema file was not generated'));
@@ -101,7 +98,7 @@ async function generateSchema(): Promise<void> {
       }, 5000);
     });
 
-    server.on('error', (error) => {
+    server.on('error', error => {
       clearTimeout(timeout);
       reject(error);
     });
@@ -115,7 +112,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.log('🎉 Schema generation completed successfully!');
       process.exit(0);
     })
-    .catch((error) => {
+    .catch(error => {
       console.error('❌ Schema generation failed:', error);
       process.exit(1);
     });

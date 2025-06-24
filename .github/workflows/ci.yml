@@ -484,7 +484,7 @@ jobs:
       - name: Check for schema changes
         run: |
           echo "🔍 Checking for GraphQL schema changes..."
-          
+
           # Check if committed schema exists
           if ! git show HEAD:packages/backend/schema.graphql > committed-schema.graphql 2>/dev/null; then
             echo "❌ ERROR: No committed schema.graphql file found"
@@ -495,7 +495,7 @@ jobs:
             head -50 packages/backend/schema.graphql || echo "No schema file generated"
             exit 1
           fi
-          
+
           # Compare generated schema with committed version
           if ! diff -u committed-schema.graphql packages/backend/schema.graphql; then
             echo "❌ ERROR: GraphQL schema has changed!"
@@ -507,7 +507,7 @@ jobs:
             echo "⚠️  Review the changes carefully to ensure backward compatibility."
             exit 1
           fi
-          
+
           echo "✅ GraphQL schema validation passed! No changes detected."
 
       - name: Upload generated schema (on failure)
