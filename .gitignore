@@ -139,7 +139,6 @@ temp/
 .dockerignore
 
 # GraphQL generated files
-schema.graphql
 introspection.json
 
 # Graphile
