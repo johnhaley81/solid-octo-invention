@@ -86,7 +86,7 @@ const ServerProgram = E.gen(function* () {
         pgArchivedRelations: true, // Also apply to related records
         pgArchivedDefault: 'NO', // Exclude soft-deleted records by default
       },
-      ...(nodeEnv === 'development' && { exportGqlSchemaPath: 'schema.graphql' }),
+      ...((nodeEnv === 'development' || nodeEnv === 'test' || process.env.CI === 'true') && { exportGqlSchemaPath: 'schema.graphql' }),
       sortExport: true,
       legacyRelations: 'omit',
       pgSettings: _req => ({
