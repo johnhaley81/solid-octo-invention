@@ -1,0 +1,27 @@
+overwrite: true
+schema: "../backend/schema.graphql"
+documents: "src/**/*.{ts,tsx}"
+generates:
+  src/generated/graphql.ts:
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-react-apollo"
+    config:
+      withHooks: true
+      withHOC: false
+      withComponent: false
+      apolloReactHooksImportFrom: "@apollo/client"
+      scalars:
+        UUID: string
+        DateTime: string
+        Date: string
+        Time: string
+        JSON: any
+        BigInt: string
+        BigFloat: string
+        Cursor: string
+hooks:
+  afterAllFileWrite:
+    - prettier --write
+
