@@ -5,7 +5,7 @@ import { MockedProvider } from '@apollo/client/testing';
 import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import { LoginForm } from './LoginForm.js';
-import { LOGIN_WITH_PASSWORD, CURRENT_USER_FROM_SESSION } from '../../graphql/queries.js';
+import { LOGIN_WITH_PASSWORD, CURRENT_USER_FROM_SESSION } from '../../graphql/queries.ts';
 import { AuthProvider } from '../../contexts/AuthContext.js';
 
 // Mock react-router-dom hooks
@@ -117,18 +117,18 @@ describe('LoginForm', () => {
       {
         request: {
           query: CURRENT_USER_FROM_SESSION,
-          variables: {
-            sessionToken: 'mock-session-token',
-          },
+          variables: {},
         },
         result: {
           data: {
             currentUserFromSession: {
-              id: '1',
-              email: 'test@example.com',
-              name: 'Test User',
-              authMethod: 'PASSWORD',
-              createdAt: new Date().toISOString(),
+              user: {
+                id: '1',
+                email: 'test@example.com',
+                name: 'Test User',
+                isVerified: true,
+                createdAt: new Date().toISOString(),
+              },
             },
           },
         },

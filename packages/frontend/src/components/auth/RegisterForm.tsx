@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Link, useNavigate } from 'react-router-dom';
-import { REGISTER_USER } from '../../graphql/queries.js';
+import { REGISTER_USER } from '../../graphql/queries.ts';
 import { validateRegistrationForm } from '../../utils/validation.ts';
 
 /**

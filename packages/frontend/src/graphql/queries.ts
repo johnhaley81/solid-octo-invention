@@ -217,13 +217,10 @@ export const CURRENT_USER_FROM_SESSION = gql`
     currentUserFromSession(input: {}) {
       user {
         id
-        nodeId
-        name
         email
-        avatarUrl
-        authMethod
+        name
+        isVerified
         createdAt
-        updatedAt
       }
     }
   }
@@ -347,8 +344,24 @@ export const SWITCH_AUTH_METHOD = gql`
 `;
 
 /**
- * Legacy exports for backward compatibility
+ * Additional authentication queries from legacy queries.js
+ */
+
+/**
+ * Legacy passkey queries for backward compatibility
  * These maintain compatibility with existing code that uses the old passkey naming
+ * Note: These are aliases to the existing WebAuthn mutations since the backend
+ * doesn't have separate passkey endpoints
+ */
+
+/**
+ * User login with passkey mutation (legacy)
+ * This is an alias to LOGIN_WITH_WEBAUTHN
  */
 export const LOGIN_WITH_PASSKEY = LOGIN_WITH_WEBAUTHN;
+
+/**
+ * Get passkey challenge query (legacy)
+ * This is an alias to GENERATE_WEBAUTHN_AUTHENTICATION_CHALLENGE
+ */
 export const GET_PASSKEY_CHALLENGE = GENERATE_WEBAUTHN_AUTHENTICATION_CHALLENGE;
