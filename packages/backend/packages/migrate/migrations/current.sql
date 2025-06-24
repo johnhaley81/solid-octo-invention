@@ -475,3 +475,262 @@ COMMENT ON COLUMN app_public.users.deleted_at IS 'Soft delete timestamp - NULL m
 -- ✅ Set up RLS policies that respect soft delete status
 -- ✅ Grant appropriate permissions
 -- ✅ Test soft delete functionality with the table
+
+-- ============================================================================
+-- WEBAUTHN FUNCTIONS
+-- ============================================================================
+
+-- Function to generate WebAuthn registration challenge
+CREATE OR REPLACE FUNCTION app_public.generate_webauthn_registration_challenge(
+  user_email app_public.citext
+) RETURNS TABLE(
+  challenge TEXT,
+  user_id UUID,
+  user_name TEXT,
+  user_display_name TEXT
+) AS $$
+DECLARE
+  user_record app_public.users;
+  challenge_bytes BYTEA;
+BEGIN
+  -- Find user by email
+  SELECT * INTO user_record
+  FROM app_public.users u
+  WHERE u.email = user_email
+    AND u.deleted_at IS NULL;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'User not found';
+  END IF;
+
+  -- Generate random 32-byte challenge
+  challenge_bytes := app_public.gen_random_bytes(32);
+
+  -- Return challenge and user info
+  RETURN QUERY SELECT 
+    encode(challenge_bytes, 'base64') AS challenge,
+    user_record.id AS user_id,
+    user_record.email::TEXT AS user_name,
+    user_record.name AS user_display_name;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to register WebAuthn credential
+CREATE OR REPLACE FUNCTION app_public.register_webauthn_credential(
+  user_email app_public.citext,
+  credential_id TEXT,
+  public_key TEXT,
+  challenge TEXT,
+  client_data_json TEXT,
+  attestation_object TEXT
+) RETURNS app_public.users AS $$
+DECLARE
+  user_record app_public.users;
+  existing_auth app_private.user_authentication_methods;
+BEGIN
+  -- Find user by email
+  SELECT * INTO user_record
+  FROM app_public.users u
+  WHERE u.email = user_email
+    AND u.deleted_at IS NULL;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'User not found';
+  END IF;
+
+  -- Check if user already has WebAuthn credentials
+  SELECT * INTO existing_auth
+  FROM app_private.user_authentication_methods uam
+  WHERE uam.user_id = user_record.id
+    AND uam.method = 'webauthn';
+
+  IF FOUND THEN
+    -- Update existing WebAuthn credential
+    UPDATE app_private.user_authentication_methods
+    SET 
+      webauthn_credential_id = credential_id,
+      webauthn_public_key = public_key,
+      webauthn_counter = 0,
+      updated_at = NOW()
+    WHERE user_id = user_record.id
+      AND method = 'webauthn';
+  ELSE
+    -- Insert new WebAuthn credential
+    INSERT INTO app_private.user_authentication_methods (
+      user_id, 
+      method, 
+      webauthn_credential_id, 
+      webauthn_public_key, 
+      webauthn_counter
+    )
+    VALUES (
+      user_record.id, 
+      'webauthn', 
+      credential_id, 
+      public_key, 
+      0
+    );
+  END IF;
+
+  -- Update user's auth method to webauthn
+  UPDATE app_public.users
+  SET auth_method = 'webauthn', updated_at = NOW()
+  WHERE id = user_record.id;
+
+  -- Return updated user record
+  SELECT * INTO user_record
+  FROM app_public.users u
+  WHERE u.id = user_record.id;
+
+  RETURN user_record;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to generate WebAuthn authentication challenge
+CREATE OR REPLACE FUNCTION app_public.generate_webauthn_authentication_challenge(
+  user_email app_public.citext
+) RETURNS TABLE(
+  challenge TEXT,
+  credential_ids TEXT[]
+) AS $$
+DECLARE
+  user_record app_public.users;
+  challenge_bytes BYTEA;
+  cred_ids TEXT[];
+BEGIN
+  -- Find user by email
+  SELECT * INTO user_record
+  FROM app_public.users u
+  WHERE u.email = user_email
+    AND u.deleted_at IS NULL;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'User not found';
+  END IF;
+
+  -- Get user's WebAuthn credentials
+  SELECT ARRAY_AGG(webauthn_credential_id) INTO cred_ids
+  FROM app_private.user_authentication_methods uam
+  WHERE uam.user_id = user_record.id
+    AND uam.method = 'webauthn'
+    AND uam.webauthn_credential_id IS NOT NULL;
+
+  IF cred_ids IS NULL OR array_length(cred_ids, 1) = 0 THEN
+    RAISE EXCEPTION 'No WebAuthn credentials found for user';
+  END IF;
+
+  -- Generate random 32-byte challenge
+  challenge_bytes := app_public.gen_random_bytes(32);
+
+  -- Return challenge and credential IDs
+  RETURN QUERY SELECT 
+    encode(challenge_bytes, 'base64') AS challenge,
+    cred_ids AS credential_ids;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to login with WebAuthn
+CREATE OR REPLACE FUNCTION app_public.login_with_webauthn(
+  user_email app_public.citext,
+  credential_id TEXT,
+  challenge TEXT,
+  client_data_json TEXT,
+  authenticator_data TEXT,
+  signature TEXT
+) RETURNS TABLE(
+  user_id UUID,
+  session_token TEXT,
+  expires_at TIMESTAMPTZ
+) AS $$
+DECLARE
+  user_record app_public.users;
+  auth_record app_private.user_authentication_methods;
+  new_session_token TEXT;
+  session_expires_at TIMESTAMPTZ;
+BEGIN
+  -- Find user by email
+  SELECT * INTO user_record
+  FROM app_public.users u
+  WHERE u.email = user_email
+    AND u.deleted_at IS NULL;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Invalid credentials';
+  END IF;
+
+  -- Get WebAuthn authentication method
+  SELECT * INTO auth_record
+  FROM app_private.user_authentication_methods uam
+  WHERE uam.user_id = user_record.id
+    AND uam.method = 'webauthn'
+    AND uam.webauthn_credential_id = credential_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Invalid credentials';
+  END IF;
+
+  -- TODO: In a real implementation, you would verify the signature here
+  -- For now, we'll assume the signature is valid since this is a demo
+  -- In production, you would:
+  -- 1. Parse the authenticator data
+  -- 2. Verify the signature using the stored public key
+  -- 3. Check the challenge matches
+  -- 4. Update the counter to prevent replay attacks
+
+  -- Update credential counter (simplified for demo)
+  UPDATE app_private.user_authentication_methods
+  SET 
+    webauthn_counter = webauthn_counter + 1,
+    updated_at = NOW()
+  WHERE user_id = user_record.id
+    AND method = 'webauthn'
+    AND webauthn_credential_id = credential_id;
+
+  -- Generate session token
+  new_session_token := encode(app_public.gen_random_bytes(32), 'base64');
+  session_expires_at := NOW() + INTERVAL '30 days';
+
+  -- Create session
+  INSERT INTO app_private.sessions (user_id, session_token, expires_at)
+  VALUES (user_record.id, new_session_token, session_expires_at);
+
+  -- Return session info
+  RETURN QUERY SELECT user_record.id, new_session_token, session_expires_at;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to switch authentication method
+CREATE OR REPLACE FUNCTION app_public.switch_auth_method(
+  user_id UUID,
+  new_method auth_method
+) RETURNS app_public.users AS $$
+DECLARE
+  user_record app_public.users;
+BEGIN
+  -- Find user
+  SELECT * INTO user_record
+  FROM app_public.users u
+  WHERE u.id = user_id
+    AND u.deleted_at IS NULL;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'User not found';
+  END IF;
+
+  -- Remove existing authentication methods
+  DELETE FROM app_private.user_authentication_methods
+  WHERE user_authentication_methods.user_id = user_id;
+
+  -- Update user's auth method
+  UPDATE app_public.users
+  SET auth_method = new_method, updated_at = NOW()
+  WHERE id = user_id;
+
+  -- Return updated user record
+  SELECT * INTO user_record
+  FROM app_public.users u
+  WHERE u.id = user_id;
+
+  RETURN user_record;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

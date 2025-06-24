@@ -160,6 +160,74 @@ type DeleteUserPayload {
   ): UsersEdge
 }
 
+"""All input for the `generateWebauthnAuthenticationChallenge` mutation."""
+input GenerateWebauthnAuthenticationChallengeInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  userEmail: String
+}
+
+"""The output of our `generateWebauthnAuthenticationChallenge` mutation."""
+type GenerateWebauthnAuthenticationChallengePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+  results: [GenerateWebauthnAuthenticationChallengeRecord]
+}
+
+"""
+The return type of our `generateWebauthnAuthenticationChallenge` mutation.
+"""
+type GenerateWebauthnAuthenticationChallengeRecord {
+  challenge: String
+  credentialIds: [String]
+}
+
+"""All input for the `generateWebauthnRegistrationChallenge` mutation."""
+input GenerateWebauthnRegistrationChallengeInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  userEmail: String
+}
+
+"""The output of our `generateWebauthnRegistrationChallenge` mutation."""
+type GenerateWebauthnRegistrationChallengePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+  results: [GenerateWebauthnRegistrationChallengeRecord]
+}
+
+"""
+The return type of our `generateWebauthnRegistrationChallenge` mutation.
+"""
+type GenerateWebauthnRegistrationChallengeRecord {
+  challenge: String
+  userDisplayName: String
+  userId: UUID
+  userName: String
+}
+
 """
 Indicates whether archived items should be included in the results or not.
 """
@@ -207,6 +275,44 @@ type LoginWithPasswordPayload {
 
 """The return type of our `loginWithPassword` mutation."""
 type LoginWithPasswordRecord {
+  expiresAt: Datetime
+  sessionToken: String
+  userId: UUID
+}
+
+"""All input for the `loginWithWebauthn` mutation."""
+input LoginWithWebauthnInput {
+  authenticatorData: String
+  challenge: String
+  clientDataJson: String
+
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  credentialId: String
+  signature: String
+  userEmail: String
+}
+
+"""The output of our `loginWithWebauthn` mutation."""
+type LoginWithWebauthnPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+  results: [LoginWithWebauthnRecord]
+}
+
+"""The return type of our `loginWithWebauthn` mutation."""
+type LoginWithWebauthnRecord {
   expiresAt: Datetime
   sessionToken: String
   userId: UUID
@@ -260,12 +366,30 @@ type Mutation {
     """
     input: DeleteUserByIdInput!
   ): DeleteUserPayload
+  generateWebauthnAuthenticationChallenge(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: GenerateWebauthnAuthenticationChallengeInput!
+  ): GenerateWebauthnAuthenticationChallengePayload
+  generateWebauthnRegistrationChallenge(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: GenerateWebauthnRegistrationChallengeInput!
+  ): GenerateWebauthnRegistrationChallengePayload
   loginWithPassword(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
     input: LoginWithPasswordInput!
   ): LoginWithPasswordPayload
+  loginWithWebauthn(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: LoginWithWebauthnInput!
+  ): LoginWithWebauthnPayload
   registerUser(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
@@ -278,6 +402,18 @@ type Mutation {
     """
     input: RegisterUserWithPasswordInput!
   ): RegisterUserWithPasswordPayload
+  registerWebauthnCredential(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: RegisterWebauthnCredentialInput!
+  ): RegisterWebauthnCredentialPayload
+  switchAuthMethod(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: SwitchAuthMethodInput!
+  ): SwitchAuthMethodPayload
 
   """Updates a single `User` using its globally unique id and a patch."""
   updateUser(
@@ -437,6 +573,75 @@ input RegisterUserWithPasswordInput {
 
 """The output of our `registerUserWithPassword` mutation."""
 type RegisterUserWithPasswordPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+  user: User
+
+  """An edge for our `User`. May be used by Relay 1."""
+  userEdge(
+    """The method to use when ordering `User`."""
+    orderBy: [UsersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): UsersEdge
+}
+
+"""All input for the `registerWebauthnCredential` mutation."""
+input RegisterWebauthnCredentialInput {
+  attestationObject: String
+  challenge: String
+  clientDataJson: String
+
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  credentialId: String
+  publicKey: String
+  userEmail: String
+}
+
+"""The output of our `registerWebauthnCredential` mutation."""
+type RegisterWebauthnCredentialPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+  user: User
+
+  """An edge for our `User`. May be used by Relay 1."""
+  userEdge(
+    """The method to use when ordering `User`."""
+    orderBy: [UsersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): UsersEdge
+}
+
+"""All input for the `switchAuthMethod` mutation."""
+input SwitchAuthMethodInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  newMethod: AuthMethod
+  userId: UUID
+}
+
+"""The output of our `switchAuthMethod` mutation."""
+type SwitchAuthMethodPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
