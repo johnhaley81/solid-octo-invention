@@ -21,6 +21,10 @@ sudo service postgresql start
 echo "⚙️  Configuring PostgreSQL..."
 sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
 
+# Create the database
+echo "🗄️  Creating database..."
+sudo -u postgres createdb solid_octo_invention
+
 # Pull latest from main
 echo "📥 Pulling latest from main..."
 git fetch origin main
