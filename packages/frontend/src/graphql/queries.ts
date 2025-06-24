@@ -219,7 +219,6 @@ export const CURRENT_USER_FROM_SESSION = gql`
         id
         email
         name
-        isVerified
         createdAt
       }
     }

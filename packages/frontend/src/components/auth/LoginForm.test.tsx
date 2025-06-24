@@ -126,7 +126,6 @@ describe('LoginForm', () => {
                 id: '1',
                 email: 'test@example.com',
                 name: 'Test User',
-                isVerified: true,
                 createdAt: new Date().toISOString(),
               },
             },
