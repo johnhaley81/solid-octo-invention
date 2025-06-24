@@ -345,3 +345,10 @@ export const SWITCH_AUTH_METHOD = gql`
     }
   }
 `;
+
+/**
+ * Legacy exports for backward compatibility
+ * These maintain compatibility with existing code that uses the old passkey naming
+ */
+export const LOGIN_WITH_PASSKEY = LOGIN_WITH_WEBAUTHN;
+export const GET_PASSKEY_CHALLENGE = GENERATE_WEBAUTHN_AUTHENTICATION_CHALLENGE;
