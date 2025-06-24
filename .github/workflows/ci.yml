@@ -326,7 +326,7 @@ jobs:
             "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_e2e_shadow",
             "rootConnectionString": "postgresql://postgres:postgres@localhost:5432/postgres",
             "pgSettings": {
-              "search_path": "public"
+              "search_path": "app_public"
             },
             "afterReset": [],
             "afterAllMigrations": [],
@@ -463,7 +463,7 @@ jobs:
             "shadowConnectionString": "postgresql://postgres:postgres@localhost:5432/solid_octo_invention_schema_test_shadow",
             "rootConnectionString": "postgresql://postgres:postgres@localhost:5432/postgres",
             "pgSettings": {
-              "search_path": "public"
+              "search_path": "app_public"
             },
             "afterReset": [],
             "afterAllMigrations": [],
