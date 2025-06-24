@@ -69,9 +69,7 @@ async function generateSchema(): Promise<void> {
         server.close(() => {
           if (existsSync(SCHEMA_OUTPUT_PATH)) {
             console.log('✅ GraphQL schema generated successfully!');
-            console.log(
-              `📊 Schema file size: ${statSync(SCHEMA_OUTPUT_PATH).size} bytes`,
-            );
+            console.log(`📊 Schema file size: ${statSync(SCHEMA_OUTPUT_PATH).size} bytes`);
             resolve();
           } else {
             reject(new Error('Schema file was not generated'));
