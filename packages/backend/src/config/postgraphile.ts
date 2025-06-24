@@ -6,7 +6,9 @@
  * environment-specific overrides.
  */
 
-import PgOmitArchivedPlugin from '@graphile-contrib/pg-omit-archived';
+import * as PgOmitArchivedModule from '@graphile-contrib/pg-omit-archived';
+const PgOmitArchivedPlugin =
+  (PgOmitArchivedModule.default as any).default || PgOmitArchivedModule.default;
 import type { PostGraphileOptions } from 'postgraphile';
 
 export interface PostGraphileConfigOptions {
