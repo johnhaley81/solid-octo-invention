@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
-import { RegisterForm } from '../components/auth/RegisterForm.js';
-import { useAuth } from '../contexts/AuthContext.js';
+import { RegisterForm } from '../components/auth/RegisterForm.tsx';
+import { useAuth } from '../contexts/AuthContext.tsx';
 
 /**
  * Registration page component

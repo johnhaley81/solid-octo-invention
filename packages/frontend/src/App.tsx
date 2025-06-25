@@ -1,11 +1,11 @@
 import { Routes, Route } from 'react-router-dom';
-import { Layout } from './components/Layout.js';
-import { HomePage } from './routes/HomePage.js';
-import { LoginPage } from './routes/LoginPage.js';
-import { RegisterPage } from './routes/RegisterPage.js';
-import { NotFoundPage } from './routes/NotFoundPage.js';
-import { AuthProvider } from './contexts/AuthContext.js';
-import { ProtectedRoute } from './components/auth/ProtectedRoute.js';
+import { Layout } from './components/Layout.tsx';
+import { HomePage } from './routes/HomePage.tsx';
+import { LoginPage } from './routes/LoginPage.tsx';
+import { RegisterPage } from './routes/RegisterPage.tsx';
+import { NotFoundPage } from './routes/NotFoundPage.tsx';
+import { AuthProvider } from './contexts/AuthContext.tsx';
+import { ProtectedRoute } from './components/auth/ProtectedRoute.tsx';
 
 // Mock protected component for testing
 function DashboardPage() {

@@ -7,9 +7,9 @@ import {
   GET_PASSKEY_CHALLENGE,
   CURRENT_USER_FROM_SESSION,
 } from '../../graphql/queries.ts';
-import { useAuth } from '../../contexts/AuthContext.js';
+import { useAuth } from '../../contexts/AuthContext.tsx';
 import { validateLoginForm } from '../../utils/validation.ts';
-import { isPasskeySupported, authenticateWithPasskey } from '../../utils/passkey.js';
+import { isPasskeySupported, authenticateWithPasskey } from '../../utils/passkey.ts';
 
 /**
  * Login form component with validation and error handling

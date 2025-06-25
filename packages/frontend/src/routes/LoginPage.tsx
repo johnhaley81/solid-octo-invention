@@ -1,6 +1,6 @@
 import { useLocation, Navigate } from 'react-router-dom';
-import { LoginForm } from '../components/auth/LoginForm.js';
-import { useAuth } from '../contexts/AuthContext.js';
+import { LoginForm } from '../components/auth/LoginForm.tsx';
+import { useAuth } from '../contexts/AuthContext.tsx';
 
 /**
  * Login page component

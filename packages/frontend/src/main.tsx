@@ -2,8 +2,8 @@ import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ApolloProvider } from '@apollo/client';
 import { BrowserRouter } from 'react-router-dom';
-import { apolloClient } from './apollo/client.js';
-import App from './App.js';
+import { apolloClient } from './apollo/client.ts';
+import App from './App.tsx';
 import './index.css';
 
 /**

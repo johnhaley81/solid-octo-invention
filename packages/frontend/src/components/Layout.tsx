@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext.js';
+import { useAuth } from '../contexts/AuthContext.tsx';
 
 interface LayoutProps {
   children: React.ReactNode;
