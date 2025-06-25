@@ -4,9 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { MockedProvider } from '@apollo/client/testing';
 import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
-import { LoginForm } from './LoginForm.js';
-import { LOGIN_WITH_PASSWORD, CURRENT_USER_FROM_SESSION } from '../../graphql/queries.js';
-import { AuthProvider } from '../../contexts/AuthContext.js';
+import { LoginForm } from './LoginForm.tsx';
+import { LOGIN_WITH_PASSWORD, CURRENT_USER_FROM_SESSION } from '../../graphql/queries.ts';
+import { AuthProvider } from '../../contexts/AuthContext.tsx';
 
 // Mock react-router-dom hooks
 const mockNavigate = vi.fn();
@@ -124,11 +124,12 @@ describe('LoginForm', () => {
         result: {
           data: {
             currentUserFromSession: {
-              id: '1',
-              email: 'test@example.com',
-              name: 'Test User',
-              authMethod: 'PASSWORD',
-              createdAt: new Date().toISOString(),
+              user: {
+                id: '1',
+                email: 'test@example.com',
+                name: 'Test User',
+                createdAt: new Date().toISOString(),
+              },
             },
           },
         },

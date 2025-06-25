@@ -161,8 +161,8 @@ export const LOGIN_WITH_PASSWORD = gql`
  * Get current user from session
  */
 export const CURRENT_USER_FROM_SESSION = gql`
-  mutation CurrentUserFromSession {
-    currentUserFromSession(input: {}) {
+  mutation CurrentUserFromSession($sessionToken: String!) {
+    currentUserFromSession(input: { sessionToken: $sessionToken }) {
       user {
         id
         nodeId
@@ -296,7 +296,12 @@ export const SWITCH_AUTH_METHOD = gql`
 
 /**
  * Legacy exports for backward compatibility
- * These maintain compatibility with existing code that uses the old passkey naming
+ * These maintain compatibility with existing code that uses the old naming conventions
  */
+
+// Passkey aliases (WebAuthn)
 export const LOGIN_WITH_PASSKEY = LOGIN_WITH_WEBAUTHN;
 export const GET_PASSKEY_CHALLENGE = GENERATE_WEBAUTHN_AUTHENTICATION_CHALLENGE;
+
+// Registration alias
+export const REGISTER_USER = REGISTER_USER_WITH_PASSWORD;

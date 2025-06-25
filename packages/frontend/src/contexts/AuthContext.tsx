@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
-import { useLazyQuery } from '@apollo/client';
-import { CURRENT_USER_FROM_SESSION } from '../graphql/queries.js';
+import { useMutation } from '@apollo/client';
+import { CURRENT_USER_FROM_SESSION } from '../graphql/queries.ts';
 
 /**
  * User type definition
@@ -105,7 +105,7 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  const [getCurrentUser] = useLazyQuery(CURRENT_USER_FROM_SESSION);
+  const [getCurrentUser] = useMutation(CURRENT_USER_FROM_SESSION);
   // Note: logout is handled client-side by clearing localStorage
 
   /**
@@ -140,8 +140,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         variables: { sessionToken: token },
       });
 
-      if (data?.currentUserFromSession) {
-        dispatch({ type: 'SET_USER', payload: data.currentUserFromSession });
+      if (data?.currentUserFromSession?.user) {
+        dispatch({ type: 'SET_USER', payload: data.currentUserFromSession.user });
         dispatch({ type: 'SET_SESSION_TOKEN', payload: token });
       } else {
         // Invalid token, remove it
