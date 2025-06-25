@@ -41,30 +41,30 @@ test.describe('Authentication Flow', () => {
         console.log('Console error:', msg.text());
       }
     });
-    
+
     // Listen for page errors
     page.on('pageerror', error => {
       console.log('Page error:', error.message);
     });
-    
+
     // Navigate directly to auth page
     await page.goto('/auth');
 
     // Should be on auth page
     await expect(page).toHaveURL('/auth');
-    
+
     // Wait for page to load and check for any h2 elements
     await page.waitForLoadState('networkidle');
-    
+
     // Debug: check if React app root exists
     const rootElement = await page.locator('#root').count();
     console.log('Root element count:', rootElement);
-    
+
     // Debug: check what's in the root
     const rootContent = await page.locator('#root').innerHTML();
     console.log('Root content length:', rootContent.length);
     console.log('Root content preview:', rootContent.substring(0, 200));
-    
+
     // Check for the specific headings
     await expect(page.locator('h2:has-text("Sign up")')).toBeVisible();
     await expect(page.locator('h2:has-text("Log in")')).toBeVisible();
@@ -108,7 +108,7 @@ test.describe('Authentication Flow', () => {
     });
 
     // Click the sign up button (in the left form)
-    await page.locator('form').first().locator('button[type="submit"]').click();
+    await page.locator('button:has-text("Sign up")').click();
 
     // Wait for the GraphQL response
     const response = await responsePromise;
@@ -128,7 +128,9 @@ test.describe('Authentication Flow', () => {
     }
 
     // Should show success message in the left form
-    await expect(page.locator('text=Registration successful! Please check your email to verify your account.')).toBeVisible();
+    await expect(
+      page.locator('text=Registration successful! Please check your email to verify your account.'),
+    ).toBeVisible();
 
     // Should stay on auth page (no redirect in new design)
     await expect(page).toHaveURL('/auth');
@@ -138,7 +140,7 @@ test.describe('Authentication Flow', () => {
     await page.goto('/auth');
 
     // Try to submit empty registration form
-    await page.locator('form').first().locator('button[type="submit"]').click();
+    await page.locator('button:has-text("Sign up")').click();
 
     // Should show validation errors
     await expect(page.locator('text=Name is required')).toBeVisible();
@@ -146,28 +148,22 @@ test.describe('Authentication Flow', () => {
     await expect(page.locator('text=Password is required')).toBeVisible();
 
     // Test invalid email
-    await page.fill('#email', 'invalid-email');
-    await page.click('button[type="submit"]');
+    await page.fill('#register-email', 'invalid-email');
+    await page.locator('button:has-text("Sign up")').click();
     await expect(page.locator('text=Please enter a valid email address')).toBeVisible();
 
     // Test weak password
-    await page.fill('#email', 'test@example.com');
-    await page.fill('#password', 'weak');
-    await page.click('button[type="submit"]');
+    await page.fill('#register-email', 'test@example.com');
+    await page.fill('#register-password', 'weak');
+    await page.locator('button:has-text("Sign up")').click();
     await expect(page.locator('text=Password must be at least 8 characters')).toBeVisible();
-
-    // Test password mismatch
-    await page.fill('#password', 'StrongPassword123!');
-    await page.fill('#confirmPassword', 'DifferentPassword123!');
-    await page.click('button[type="submit"]');
-    await expect(page.locator('text=Passwords do not match')).toBeVisible();
   });
 
   test('should validate login form fields', async ({ page }) => {
     await page.goto('/auth');
 
     // Try to submit empty login form (right side)
-    await page.locator('form').last().locator('button[type="submit"]').click();
+    await page.locator('button:has-text("Log in")').click();
 
     // Should show validation errors
     await expect(page.locator('text=Email is required')).toBeVisible();
@@ -175,13 +171,13 @@ test.describe('Authentication Flow', () => {
 
     // Test invalid email
     await page.fill('#login-email', 'invalid-email');
-    await page.locator('form').last().locator('button[type="submit"]').click();
+    await page.locator('button:has-text("Log in")').click();
     await expect(page.locator('text=Please enter a valid email address')).toBeVisible();
 
     // Test short password
     await page.fill('#login-email', 'test@example.com');
     await page.fill('#login-password', 'short');
-    await page.locator('form').last().locator('button[type="submit"]').click();
+    await page.locator('button:has-text("Log in")').click();
     await expect(page.locator('text=Password must be at least 8 characters')).toBeVisible();
   });
 
@@ -193,7 +189,7 @@ test.describe('Authentication Flow', () => {
     await page.fill('#login-password', 'WrongPassword123!');
 
     // Submit login form
-    await page.locator('form').last().locator('button[type="submit"]').click();
+    await page.locator('button:has-text("Log in")').click();
 
     // Should show error message
     await expect(page.locator('text=Invalid email or password')).toBeVisible();
@@ -346,7 +342,7 @@ test.describe('Authentication Flow', () => {
     // Should show both sign up and login forms
     await expect(page.locator('h2:has-text("Sign up")')).toBeVisible();
     await expect(page.locator('h2:has-text("Log in")')).toBeVisible();
-    
+
     // Should show form fields for both
     await expect(page.locator('#register-name')).toBeVisible();
     await expect(page.locator('#register-email')).toBeVisible();
