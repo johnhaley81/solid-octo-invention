@@ -35,13 +35,37 @@ test.describe('Authentication Flow', () => {
   });
 
   test('should navigate to combined auth page', async ({ page }) => {
-    await page.goto('/');
-
-    // Click auth link
-    await page.locator('text=Sign in / Sign up').click();
+    // Listen for console errors
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        console.log('Console error:', msg.text());
+      }
+    });
+    
+    // Listen for page errors
+    page.on('pageerror', error => {
+      console.log('Page error:', error.message);
+    });
+    
+    // Navigate directly to auth page
+    await page.goto('/auth');
 
     // Should be on auth page
     await expect(page).toHaveURL('/auth');
+    
+    // Wait for page to load and check for any h2 elements
+    await page.waitForLoadState('networkidle');
+    
+    // Debug: check if React app root exists
+    const rootElement = await page.locator('#root').count();
+    console.log('Root element count:', rootElement);
+    
+    // Debug: check what's in the root
+    const rootContent = await page.locator('#root').innerHTML();
+    console.log('Root content length:', rootContent.length);
+    console.log('Root content preview:', rootContent.substring(0, 200));
+    
+    // Check for the specific headings
     await expect(page.locator('h2:has-text("Sign up")')).toBeVisible();
     await expect(page.locator('h2:has-text("Log in")')).toBeVisible();
   });

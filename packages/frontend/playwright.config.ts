@@ -79,6 +79,19 @@ export default defineConfig({
     // },
   ],
 
-  /* Server management is handled by run-e2e-tests.sh script */
-  // webServer configuration removed - server orchestration is handled externally
+  /* Configure web servers for testing */
+  webServer: [
+    {
+      command: 'cd ../backend && npm run dev',
+      port: 3001,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },
+    {
+      command: 'npm run dev',
+      port: 5173,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },
+  ],
 });
