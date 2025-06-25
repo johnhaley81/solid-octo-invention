@@ -32,6 +32,15 @@ else
     exit 1
 fi
 
+# Install Playwright browsers for e2e testing
+log "🎭 Installing Playwright browsers..."
+if pnpm --filter frontend exec playwright install; then
+    log "✅ Playwright browsers installed successfully"
+else
+    log "❌ Failed to install Playwright browsers"
+    exit 1
+fi
+
 # Set up database and run migrations
 log "🗄️  Setting up database..."
 if [ -f "$SCRIPT_DIR/fix-database-issues.sh" ]; then
@@ -59,10 +68,12 @@ log "   - Latest code from main branch"
 log "   - All dependencies installed"
 log "   - PostgreSQL database configured and running"
 log "   - Database migrations applied"
+log "   - Playwright browsers installed for e2e testing"
 echo ""
 log "🔧 Useful commands:"
 log "   ./fix-database-issues.sh        - Fix any database issues"
 log "   ./fix-database-issues.sh test   - Test database connection"
 log "   pnpm dev                        - Start development servers"
+log "   pnpm test:e2e                   - Run e2e tests"
 echo ""
 log "💡 If you encounter database issues, run: ./fix-database-issues.sh"
