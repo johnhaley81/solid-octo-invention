@@ -465,8 +465,12 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA app_private TO postgres;
 
 COMMENT ON SCHEMA app_public IS 'Schema for application public objects exposed via PostGraphile';
 COMMENT ON SCHEMA app_private IS 'Schema for sensitive application data not exposed via PostGraphile';
-COMMENT ON TABLE app_public.users IS 'Application users with soft delete support';
+COMMENT ON TABLE app_public.users IS E'@omit create,delete\\nApplication users with soft delete support';
 COMMENT ON COLUMN app_public.users.deleted_at IS 'Soft delete timestamp - NULL means active user';
+
+-- Omit delete mutations for unique constraints
+COMMENT ON CONSTRAINT users_pkey ON app_public.users IS '@omit delete';
+COMMENT ON CONSTRAINT users_email_key ON app_public.users IS '@omit delete';
 
 -- Checklist for new tables with soft delete support:
 -- ✅ Include deleted_at TIMESTAMPTZ DEFAULT NULL column
@@ -475,6 +479,16 @@ COMMENT ON COLUMN app_public.users.deleted_at IS 'Soft delete timestamp - NULL m
 -- ✅ Set up RLS policies that respect soft delete status
 -- ✅ Grant appropriate permissions
 -- ✅ Test soft delete functionality with the table
+
+-- ============================================================================
+-- POSTGRAPHILE SMART COMMENTS
+-- ============================================================================
+-- 
+-- PostGraphile table creation guidelines have been moved to:
+-- packages/backend/.cursor/rules/backend-architecture.mdc
+-- 
+-- See the "PostGraphile Smart Comments (SECURITY CRITICAL)" section for
+-- detailed guidelines on using @omit smart comments for security.
 
 -- ============================================================================
 -- WEBAUTHN FUNCTIONS

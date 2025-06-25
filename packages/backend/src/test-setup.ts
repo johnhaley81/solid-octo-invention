@@ -34,7 +34,7 @@ beforeAll(async () => {
       console.log('🔧 Setting up test database schema...');
 
       // Read and execute the migration file
-      const migrationPath = join(process.cwd(), 'migrations', 'current.sql');
+      const migrationPath = join(process.cwd(), 'packages', 'migrate', 'migrations', 'current.sql');
       const migrationSQL = readFileSync(migrationPath, 'utf8');
 
       // Execute migration
@@ -48,20 +48,20 @@ beforeAll(async () => {
     const tableCheck = await pool.query(`
       SELECT table_name 
       FROM information_schema.tables 
-      WHERE table_schema = 'public' AND table_name = 'users'
+      WHERE table_schema = 'app_public' AND table_name = 'users'
       UNION
       SELECT table_name 
       FROM information_schema.tables 
-      WHERE table_schema = 'app_private' AND table_name IN ('password_credentials', 'webauthn_credentials', 'otp_tokens', 'user_sessions')
+      WHERE table_schema = 'app_private' AND table_name IN ('user_authentication_methods', 'user_emails', 'otp_tokens', 'sessions')
     `);
 
     const existingTables = tableCheck.rows.map(row => row.table_name);
     const requiredTables = [
       'users',
-      'password_credentials',
-      'webauthn_credentials',
+      'user_authentication_methods',
+      'user_emails',
       'otp_tokens',
-      'user_sessions',
+      'sessions',
     ];
 
     const missingTables = requiredTables.filter(table => !existingTables.includes(table));
@@ -76,18 +76,17 @@ beforeAll(async () => {
     const functionCheck = await pool.query(`
       SELECT routine_name 
       FROM information_schema.routines 
-      WHERE routine_schema = 'public' 
-      AND routine_name IN ('register_user', 'verify_email', 'login_with_password', 'switch_auth_method', 'current_user_from_session', 'logout')
+      WHERE routine_schema = 'app_public' 
+      AND routine_name IN ('register_user', 'login_with_password', 'switch_auth_method', 'current_user_from_session', 'register_user_with_password')
     `);
 
     const existingFunctions = functionCheck.rows.map(row => row.routine_name);
     const requiredFunctions = [
       'register_user',
-      'verify_email',
       'login_with_password',
       'switch_auth_method',
       'current_user_from_session',
-      'logout',
+      'register_user_with_password',
     ];
 
     const missingFunctions = requiredFunctions.filter(func => !existingFunctions.includes(func));
