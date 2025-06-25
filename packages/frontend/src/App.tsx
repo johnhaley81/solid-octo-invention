@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout.js';
 import { HomePage } from './routes/HomePage.js';
+import { AuthPage } from './routes/AuthPage.js';
 import { LoginPage } from './routes/LoginPage.js';
 import { RegisterPage } from './routes/RegisterPage.js';
 import { NotFoundPage } from './routes/NotFoundPage.js';
@@ -43,6 +44,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route

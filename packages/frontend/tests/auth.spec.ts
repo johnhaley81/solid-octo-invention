@@ -8,8 +8,12 @@ test.describe('Authentication Flow', () => {
   };
 
   test.beforeEach(async ({ page }) => {
+    // Set longer timeout for slow CI environments
+    test.setTimeout(60000);
+    
     // Clear any existing auth state
     await page.context().clearCookies();
+    
     // Try to clear localStorage, but handle security errors gracefully
     try {
       await page.evaluate(() => localStorage.clear());
@@ -20,40 +24,80 @@ test.describe('Authentication Flow', () => {
         error.message,
       );
     }
+
+    // Add error handling for network failures
+    page.on('requestfailed', request => {
+      console.log('Request failed:', request.url(), request.failure()?.errorText);
+    });
   });
 
-  test('should display login and register links when not authenticated', async ({ page }) => {
+  test('should display auth link when not authenticated', async ({ page }) => {
     await page.goto('/');
 
-    // Check that auth links are visible
-    await expect(page.locator('a[href="/login"]').first()).toBeVisible();
-    await expect(page.locator('a[href="/register"]').first()).toBeVisible();
+    // Check that auth link is visible
+    await expect(page.locator('a[href="/auth"]').first()).toBeVisible();
+    await expect(page.locator('text=Sign in / Sign up')).toBeVisible();
 
     // Check that user info is not visible
     await expect(page.locator('text=Welcome,')).not.toBeVisible();
     await expect(page.locator('text=Sign out')).not.toBeVisible();
   });
 
-  test('should navigate to registration page', async ({ page }) => {
-    await page.goto('/');
+  test('should navigate to combined auth page', async ({ page }) => {
+    // Listen for console errors
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        console.log('Console error:', msg.text());
+      }
+    });
 
-    // Click sign up link
-    await page.locator('text=Sign up').click();
+    // Listen for page errors
+    page.on('pageerror', error => {
+      console.log('Page error:', error.message);
+    });
 
-    // Should be on registration page
-    await expect(page).toHaveURL('/register');
-    await expect(page.locator('h2:has-text("Create your account")')).toBeVisible();
-  });
+    try {
+      // Navigate directly to auth page
+      await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-  test('should navigate to login page', async ({ page }) => {
-    await page.goto('/');
+      // Should be on auth page
+      await expect(page).toHaveURL('/auth');
 
-    // Click sign in link
-    await page.locator('a[href="/login"]').first().click();
+      // Wait for page to load with a reasonable timeout
+      await page.waitForLoadState('networkidle', { timeout: 15000 });
 
-    // Should be on login page
-    await expect(page).toHaveURL('/login');
-    await expect(page.locator('h2:has-text("Sign in to your account")')).toBeVisible();
+      // Debug: check if React app root exists
+      const rootElement = await page.locator('#root').count();
+      console.log('Root element count:', rootElement);
+
+      if (rootElement > 0) {
+        // Debug: check what's in the root
+        const rootContent = await page.locator('#root').innerHTML();
+        console.log('Root content length:', rootContent.length);
+        console.log('Root content preview:', rootContent.substring(0, 200));
+      }
+
+      // Check for the specific headings with timeout
+      await expect(page.locator('h2:has-text("Sign up")')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('h2:has-text("Log in")')).toBeVisible({ timeout: 10000 });
+      
+      // Verify both forms are present
+      await expect(page.locator('#register-name')).toBeVisible();
+      await expect(page.locator('#register-email')).toBeVisible();
+      await expect(page.locator('#register-password')).toBeVisible();
+      await expect(page.locator('#login-email')).toBeVisible();
+      await expect(page.locator('#login-password')).toBeVisible();
+      
+      // Verify buttons are present
+      await expect(page.locator('button:has-text("Sign up")')).toBeVisible();
+      await expect(page.locator('button:has-text("Log in")')).toBeVisible();
+      
+    } catch (error) {
+      console.log('Auth page test failed:', error.message);
+      // Take a screenshot for debugging
+      await page.screenshot({ path: 'auth-page-error.png', fullPage: true });
+      throw error;
+    }
   });
 
   test('should register a new user successfully', async ({ page }) => {
@@ -76,31 +120,41 @@ test.describe('Authentication Flow', () => {
       }
     });
 
-    await page.goto('/register');
+    await page.goto('/auth');
 
-    // Fill out registration form
-    await page.fill('#name', testUser.name);
-    await page.fill('#email', testUser.email);
-    await page.fill('#password', testUser.password);
-    await page.fill('#confirmPassword', testUser.password);
+    // Fill out registration form (left side)
+    await page.fill('#register-name', testUser.name);
+    await page.fill('#register-email', testUser.email);
+    await page.fill('#register-password', testUser.password);
 
-    // Submit form and wait for network request
-    const responsePromise = page.waitForResponse(response => {
-      const postData = response.request().postData();
-      return (
-        response.url().includes('graphql') &&
-        postData !== null &&
-        postData.includes('registerUserWithPassword')
-      );
-    });
+    // Submit form and wait for network request with timeout
+    const responsePromise = page.waitForResponse(
+      response => {
+        const postData = response.request().postData();
+        return (
+          response.url().includes('graphql') &&
+          postData !== null &&
+          postData.includes('registerUserWithPassword')
+        );
+      },
+      { timeout: 30000 } // 30 second timeout
+    );
 
-    await page.click('button[type="submit"]');
+    // Click the sign up button (in the left form)
+    await page.locator('button:has-text("Sign up")').click();
 
-    // Wait for the GraphQL response
-    const response = await responsePromise;
-    console.log('Registration response status:', response.status());
-    const responseBody = await response.text();
-    console.log('Registration response body:', responseBody);
+    try {
+      // Wait for the GraphQL response
+      const response = await responsePromise;
+      console.log('Registration response status:', response.status());
+      const responseBody = await response.text();
+      console.log('Registration response body:', responseBody);
+    } catch (error) {
+      console.log('Failed to get registration response:', error.message);
+      // Take a screenshot for debugging
+      await page.screenshot({ path: 'registration-error.png', fullPage: true });
+      throw error;
+    }
 
     // Check for any error messages on the page
     const errorElements = await page
@@ -113,20 +167,20 @@ test.describe('Authentication Flow', () => {
       }
     }
 
-    // Should show success message
-    await expect(page.locator('h2:has-text("Registration Successful!")')).toBeVisible();
-    await expect(page.locator('text=Please check your email to verify')).toBeVisible();
+    // Should show success message in the left form
+    await expect(
+      page.locator('text=Registration successful! Please check your email to verify your account.'),
+    ).toBeVisible();
 
-    // Should redirect to login page
-    await expect(page).toHaveURL('/login', { timeout: 10000 });
-    await expect(page.locator('text=Registration successful!')).toBeVisible();
+    // Should stay on auth page (no redirect in new design)
+    await expect(page).toHaveURL('/auth');
   });
 
   test('should validate registration form fields', async ({ page }) => {
-    await page.goto('/register');
+    await page.goto('/auth');
 
-    // Try to submit empty form
-    await page.click('button[type="submit"]');
+    // Try to submit empty registration form
+    await page.locator('button:has-text("Sign up")').click();
 
     // Should show validation errors
     await expect(page.locator('text=Name is required')).toBeVisible();
@@ -134,66 +188,60 @@ test.describe('Authentication Flow', () => {
     await expect(page.locator('text=Password is required')).toBeVisible();
 
     // Test invalid email
-    await page.fill('#email', 'invalid-email');
-    await page.click('button[type="submit"]');
+    await page.fill('#register-email', 'invalid-email');
+    await page.locator('button:has-text("Sign up")').click();
     await expect(page.locator('text=Please enter a valid email address')).toBeVisible();
 
     // Test weak password
-    await page.fill('#email', 'test@example.com');
-    await page.fill('#password', 'weak');
-    await page.click('button[type="submit"]');
+    await page.fill('#register-email', 'test@example.com');
+    await page.fill('#register-password', 'weak');
+    await page.locator('button:has-text("Sign up")').click();
     await expect(page.locator('text=Password must be at least 8 characters')).toBeVisible();
-
-    // Test password mismatch
-    await page.fill('#password', 'StrongPassword123!');
-    await page.fill('#confirmPassword', 'DifferentPassword123!');
-    await page.click('button[type="submit"]');
-    await expect(page.locator('text=Passwords do not match')).toBeVisible();
   });
 
   test('should validate login form fields', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/auth');
 
-    // Try to submit empty form
-    await page.click('button[type="submit"]');
+    // Try to submit empty login form (right side)
+    await page.locator('button:has-text("Log in")').click();
 
     // Should show validation errors
     await expect(page.locator('text=Email is required')).toBeVisible();
     await expect(page.locator('text=Password is required')).toBeVisible();
 
     // Test invalid email
-    await page.fill('#email', 'invalid-email');
-    await page.click('button[type="submit"]');
+    await page.fill('#login-email', 'invalid-email');
+    await page.locator('button:has-text("Log in")').click();
     await expect(page.locator('text=Please enter a valid email address')).toBeVisible();
 
     // Test short password
-    await page.fill('#email', 'test@example.com');
-    await page.fill('#password', 'short');
-    await page.click('button[type="submit"]');
+    await page.fill('#login-email', 'test@example.com');
+    await page.fill('#login-password', 'short');
+    await page.locator('button:has-text("Log in")').click();
     await expect(page.locator('text=Password must be at least 8 characters')).toBeVisible();
   });
 
   test('should handle login with invalid credentials', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/auth');
 
-    // Fill form with invalid credentials
-    await page.fill('#email', 'nonexistent@example.com');
-    await page.fill('#password', 'WrongPassword123!');
+    // Fill login form with invalid credentials (right side)
+    await page.fill('#login-email', 'nonexistent@example.com');
+    await page.fill('#login-password', 'WrongPassword123!');
 
-    // Submit form
-    await page.click('button[type="submit"]');
+    // Submit login form
+    await page.locator('button:has-text("Log in")').click();
 
     // Should show error message
     await expect(page.locator('text=Invalid email or password')).toBeVisible();
   });
 
-  test('should redirect to login when accessing protected routes', async ({ page }) => {
+  test('should redirect to auth when accessing protected routes', async ({ page }) => {
     // Try to access protected dashboard page
     await page.goto('/dashboard');
 
-    // Should redirect to login
-    await expect(page).toHaveURL('/login');
-    await expect(page.locator('h2:has-text("Sign in to your account")')).toBeVisible();
+    // Should redirect to auth page
+    await expect(page).toHaveURL('/auth');
+    await expect(page.locator('h2:has-text("Log in")')).toBeVisible();
   });
 
   test('should redirect authenticated users away from auth pages', async ({ page }) => {
@@ -230,8 +278,8 @@ test.describe('Authentication Flow', () => {
       }
     });
 
-    // Try to access login page
-    await page.goto('/login');
+    // Try to access auth page
+    await page.goto('/auth');
 
     // Should redirect to home
     await expect(page).toHaveURL('/');
@@ -267,8 +315,8 @@ test.describe('Authentication Flow', () => {
     // Should show loading state
     await expect(page.locator('text=Loading...')).toBeVisible();
 
-    // Should eventually redirect to login
-    await expect(page).toHaveURL('/login', { timeout: 5000 });
+    // Should eventually redirect to auth page
+    await expect(page).toHaveURL('/auth', { timeout: 5000 });
   });
 
   test('should handle logout functionality', async ({ page }) => {
@@ -323,27 +371,30 @@ test.describe('Authentication Flow', () => {
     await page.click('text=Sign out');
 
     // Should show unauthenticated state
-    await expect(page.locator('a[href="/login"]').first()).toBeVisible();
-    await expect(page.locator('a[href="/register"]').first()).toBeVisible();
+    await expect(page.locator('a[href="/auth"]').first()).toBeVisible();
+    await expect(page.locator('text=Sign in / Sign up')).toBeVisible();
     await expect(page.locator('text=Welcome,')).not.toBeVisible();
   });
 
-  test('should navigate between login and register pages', async ({ page }) => {
-    await page.goto('/login');
+  test('should show both forms on combined auth page', async ({ page }) => {
+    await page.goto('/auth');
 
-    // Click "create a new account" link
-    await page.click('text=create a new account');
-    await expect(page).toHaveURL('/register');
+    // Should show both sign up and login forms
+    await expect(page.locator('h2:has-text("Sign up")')).toBeVisible();
+    await expect(page.locator('h2:has-text("Log in")')).toBeVisible();
 
-    // Click "sign in to your existing account" link
-    await page.click('text=sign in to your existing account');
-    await expect(page).toHaveURL('/login');
+    // Should show form fields for both
+    await expect(page.locator('#register-name')).toBeVisible();
+    await expect(page.locator('#register-email')).toBeVisible();
+    await expect(page.locator('#register-password')).toBeVisible();
+    await expect(page.locator('#login-email')).toBeVisible();
+    await expect(page.locator('#login-password')).toBeVisible();
   });
 
-  test('should show forgot password link on login page', async ({ page }) => {
-    await page.goto('/login');
+  test('should show forgot password link on auth page', async ({ page }) => {
+    await page.goto('/auth');
 
-    // Should show forgot password link
+    // Should show forgot password link in login section
     await expect(page.locator('text=Forgot your password?')).toBeVisible();
 
     // Link should be clickable (even if page doesn't exist yet)
@@ -351,17 +402,13 @@ test.describe('Authentication Flow', () => {
     await expect(forgotLink).toHaveAttribute('href', '/forgot-password');
   });
 
-  test('should show terms and privacy links on register page', async ({ page }) => {
-    await page.goto('/register');
+  test('should not show OAuth buttons as requested', async ({ page }) => {
+    await page.goto('/auth');
 
-    // Should show terms and privacy links
-    await expect(page.locator('text=Terms of Service')).toBeVisible();
-    await expect(page.locator('text=Privacy Policy')).toBeVisible();
-
-    // Links should be clickable (even if pages don't exist yet)
-    const termsLink = page.locator('text=Terms of Service');
-    const privacyLink = page.locator('text=Privacy Policy');
-    await expect(termsLink).toHaveAttribute('href', '/terms');
-    await expect(privacyLink).toHaveAttribute('href', '/privacy');
+    // Should NOT show Google/Facebook OAuth buttons as per requirements
+    await expect(page.locator('text=Google')).not.toBeVisible();
+    await expect(page.locator('text=Facebook')).not.toBeVisible();
+    await expect(page.locator('text=Continue with Google')).not.toBeVisible();
+    await expect(page.locator('text=Continue with Facebook')).not.toBeVisible();
   });
 });

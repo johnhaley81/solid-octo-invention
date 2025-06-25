@@ -20,7 +20,7 @@ export function HomePage() {
             Get Started
           </Link>
           <Link
-            to="/login"
+            to="/auth"
             className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors inline-block"
           >
             Sign in

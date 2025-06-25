@@ -11,7 +11,7 @@ test.describe('Basic Application Tests', () => {
     await expect(page.locator('h1')).toBeVisible();
   });
 
-  test('should navigate to dashboard and redirect to login when not authenticated', async ({
+  test('should navigate to dashboard and redirect to auth when not authenticated', async ({
     page,
   }) => {
     await page.goto('/');
@@ -21,11 +21,12 @@ test.describe('Basic Application Tests', () => {
     await expect(dashboardLink).toBeVisible();
     await dashboardLink.click();
 
-    // Since dashboard is protected, should redirect to login
-    await expect(page).toHaveURL('/login');
+    // Since dashboard is protected, should redirect to auth page
+    await expect(page).toHaveURL('/auth');
 
-    // Should show login form
-    await expect(page.locator('h2')).toContainText('Sign in to your account');
+    // Should show combined auth forms
+    await expect(page.locator('h2:has-text("Sign up")')).toBeVisible();
+    await expect(page.locator('h2:has-text("Log in")')).toBeVisible();
   });
 
   test('should handle 404 page', async ({ page }) => {

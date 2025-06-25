@@ -71,16 +71,10 @@ export function Layout({ children }: LayoutProps) {
                 ) : (
                   <>
                     <Link
-                      to="/login"
-                      className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                      to="/auth"
+                      className="text-sm bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                     >
-                      Sign in
-                    </Link>
-                    <Link
-                      to="/register"
-                      className="text-sm bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      Sign up
+                      Sign in / Sign up
                     </Link>
                   </>
                 )}
