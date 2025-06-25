@@ -135,6 +135,30 @@ deleted_at TIMESTAMPTZ DEFAULT NULL
 2. Run `SELECT app_private.setup_soft_delete_for_table('your_table_name')` to add infrastructure
 3. Or manually follow the template in `current.sql` (see soft delete section)
 
+### PostGraphile Smart Comments (SECURITY CRITICAL)
+
+**All tables in `app_public` schema MUST include appropriate `@omit` smart comments for security:**
+
+```sql
+-- REQUIRED: All future tables MUST include '@omit delete' to prevent
+-- accidental hard deletes through the GraphQL API
+COMMENT ON TABLE app_public.your_table IS 'Table description
+@omit delete';
+```
+
+**Available `@omit` options:**
+- `create`: Prevents INSERT operations via GraphQL
+- `read`: Prevents SELECT operations via GraphQL  
+- `update`: Prevents UPDATE operations via GraphQL
+- `delete`: Prevents DELETE operations via GraphQL
+- `all`: Prevents all CRUD operations via GraphQL
+
+**Multiple operations can be omitted:** `@omit create,delete,update`
+
+**SECURITY RULE:** All future tables MUST include `@omit delete` to prevent accidental hard deletes through the GraphQL API. Use soft delete patterns instead.
+
+**For more PostGraphile smart comments:** https://www.graphile.org/postgraphile/smart-comments/
+
 ## 🚫 PROHIBITED PATTERNS
 
 ### REST API Endpoints
