@@ -481,33 +481,14 @@ COMMENT ON CONSTRAINT users_email_key ON app_public.users IS '@omit delete';
 -- ✅ Test soft delete functionality with the table
 
 -- ============================================================================
--- POSTGRAPHILE TABLE CREATION GUIDELINES
+-- POSTGRAPHILE SMART COMMENTS
 -- ============================================================================
 -- 
--- When creating new tables in app_public schema, follow these PostGraphile smart comment rules:
---
--- 1. ALWAYS omit delete operations for security and data integrity:
---    COMMENT ON TABLE app_public.your_table IS 'Table description
---    @omit delete';
---
--- 2. For sensitive tables, also consider omitting create operations:
---    COMMENT ON TABLE app_public.sensitive_table IS 'Sensitive table description
---    @omit create,delete';
---
--- 3. Available @omit options:
---    - create: Prevents INSERT operations via GraphQL
---    - read: Prevents SELECT operations via GraphQL
---    - update: Prevents UPDATE operations via GraphQL  
---    - delete: Prevents DELETE operations via GraphQL
---    - all: Prevents all CRUD operations via GraphQL
---
--- 4. Multiple operations can be omitted: @omit create,delete,update
---
--- 5. For more PostGraphile smart comments, see:
---    https://www.graphile.org/postgraphile/smart-comments/
---
--- SECURITY RULE: All future tables MUST include '@omit delete' to prevent
--- accidental hard deletes through the GraphQL API. Use soft delete patterns instead.
+-- PostGraphile table creation guidelines have been moved to:
+-- packages/backend/.cursor/rules/backend-architecture.mdc
+-- 
+-- See the "PostGraphile Smart Comments (SECURITY CRITICAL)" section for
+-- detailed guidelines on using @omit smart comments for security.
 
 -- ============================================================================
 -- WEBAUTHN FUNCTIONS
