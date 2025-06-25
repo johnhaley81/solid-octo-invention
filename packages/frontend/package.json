@@ -13,6 +13,7 @@
     "test:watch": "vitest --watch",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:ui-only": "playwright test auth-ui.spec.ts",
     "test:e2e:report": "playwright show-report",
     "lint": "eslint src --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint src --fix",

@@ -8,8 +8,12 @@ test.describe('Authentication Flow', () => {
   };
 
   test.beforeEach(async ({ page }) => {
+    // Set longer timeout for slow CI environments
+    test.setTimeout(60000);
+    
     // Clear any existing auth state
     await page.context().clearCookies();
+    
     // Try to clear localStorage, but handle security errors gracefully
     try {
       await page.evaluate(() => localStorage.clear());
@@ -20,6 +24,11 @@ test.describe('Authentication Flow', () => {
         error.message,
       );
     }
+
+    // Add error handling for network failures
+    page.on('requestfailed', request => {
+      console.log('Request failed:', request.url(), request.failure()?.errorText);
+    });
   });
 
   test('should display auth link when not authenticated', async ({ page }) => {
@@ -47,27 +56,48 @@ test.describe('Authentication Flow', () => {
       console.log('Page error:', error.message);
     });
 
-    // Navigate directly to auth page
-    await page.goto('/auth');
+    try {
+      // Navigate directly to auth page
+      await page.goto('/auth', { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-    // Should be on auth page
-    await expect(page).toHaveURL('/auth');
+      // Should be on auth page
+      await expect(page).toHaveURL('/auth');
 
-    // Wait for page to load and check for any h2 elements
-    await page.waitForLoadState('networkidle');
+      // Wait for page to load with a reasonable timeout
+      await page.waitForLoadState('networkidle', { timeout: 15000 });
 
-    // Debug: check if React app root exists
-    const rootElement = await page.locator('#root').count();
-    console.log('Root element count:', rootElement);
+      // Debug: check if React app root exists
+      const rootElement = await page.locator('#root').count();
+      console.log('Root element count:', rootElement);
 
-    // Debug: check what's in the root
-    const rootContent = await page.locator('#root').innerHTML();
-    console.log('Root content length:', rootContent.length);
-    console.log('Root content preview:', rootContent.substring(0, 200));
+      if (rootElement > 0) {
+        // Debug: check what's in the root
+        const rootContent = await page.locator('#root').innerHTML();
+        console.log('Root content length:', rootContent.length);
+        console.log('Root content preview:', rootContent.substring(0, 200));
+      }
 
-    // Check for the specific headings
-    await expect(page.locator('h2:has-text("Sign up")')).toBeVisible();
-    await expect(page.locator('h2:has-text("Log in")')).toBeVisible();
+      // Check for the specific headings with timeout
+      await expect(page.locator('h2:has-text("Sign up")')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('h2:has-text("Log in")')).toBeVisible({ timeout: 10000 });
+      
+      // Verify both forms are present
+      await expect(page.locator('#register-name')).toBeVisible();
+      await expect(page.locator('#register-email')).toBeVisible();
+      await expect(page.locator('#register-password')).toBeVisible();
+      await expect(page.locator('#login-email')).toBeVisible();
+      await expect(page.locator('#login-password')).toBeVisible();
+      
+      // Verify buttons are present
+      await expect(page.locator('button:has-text("Sign up")')).toBeVisible();
+      await expect(page.locator('button:has-text("Log in")')).toBeVisible();
+      
+    } catch (error) {
+      console.log('Auth page test failed:', error.message);
+      // Take a screenshot for debugging
+      await page.screenshot({ path: 'auth-page-error.png', fullPage: true });
+      throw error;
+    }
   });
 
   test('should register a new user successfully', async ({ page }) => {
@@ -97,24 +127,34 @@ test.describe('Authentication Flow', () => {
     await page.fill('#register-email', testUser.email);
     await page.fill('#register-password', testUser.password);
 
-    // Submit form and wait for network request
-    const responsePromise = page.waitForResponse(response => {
-      const postData = response.request().postData();
-      return (
-        response.url().includes('graphql') &&
-        postData !== null &&
-        postData.includes('registerUserWithPassword')
-      );
-    });
+    // Submit form and wait for network request with timeout
+    const responsePromise = page.waitForResponse(
+      response => {
+        const postData = response.request().postData();
+        return (
+          response.url().includes('graphql') &&
+          postData !== null &&
+          postData.includes('registerUserWithPassword')
+        );
+      },
+      { timeout: 30000 } // 30 second timeout
+    );
 
     // Click the sign up button (in the left form)
     await page.locator('button:has-text("Sign up")').click();
 
-    // Wait for the GraphQL response
-    const response = await responsePromise;
-    console.log('Registration response status:', response.status());
-    const responseBody = await response.text();
-    console.log('Registration response body:', responseBody);
+    try {
+      // Wait for the GraphQL response
+      const response = await responsePromise;
+      console.log('Registration response status:', response.status());
+      const responseBody = await response.text();
+      console.log('Registration response body:', responseBody);
+    } catch (error) {
+      console.log('Failed to get registration response:', error.message);
+      // Take a screenshot for debugging
+      await page.screenshot({ path: 'registration-error.png', fullPage: true });
+      throw error;
+    }
 
     // Check for any error messages on the page
     const errorElements = await page
