@@ -82,24 +82,6 @@ export const REGISTER_USER_WITH_PASSWORD = gql`
 `;
 
 /**
- * Register a new user (without password - for WebAuthn)
- */
-export const REGISTER_USER = gql`
-  mutation RegisterUser($email: String!, $name: String!, $authMethod: AuthMethod!) {
-    createUser(input: { user: { email: $email, name: $name, authMethod: $authMethod } }) {
-      user {
-        id
-        nodeId
-        email
-        name
-        authMethod
-        createdAt
-      }
-    }
-  }
-`;
-
-/**
  * Update user profile
  */
 export const UPDATE_USER_PROFILE = gql`
@@ -145,45 +127,11 @@ export const GET_ALL_USERS = gql`
 `;
 
 /**
- * Create a new user
- */
-export const CREATE_USER = gql`
-  mutation CreateUser($email: String!, $name: String!, $authMethod: AuthMethod!) {
-    createUser(input: { user: { email: $email, name: $name, authMethod: $authMethod } }) {
-      user {
-        id
-        nodeId
-        email
-        name
-        authMethod
-        createdAt
-      }
-    }
-  }
-`;
-
-/**
  * Delete a user by nodeId
  */
 export const DELETE_USER = gql`
   mutation DeleteUser($nodeId: ID!) {
     deleteUser(input: { nodeId: $nodeId }) {
-      user {
-        id
-        nodeId
-        name
-        email
-      }
-    }
-  }
-`;
-
-/**
- * Delete a user by email
- */
-export const DELETE_USER_BY_EMAIL = gql`
-  mutation DeleteUserByEmail($email: String!) {
-    deleteUserByEmail(input: { email: $email }) {
       user {
         id
         nodeId

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Link, useNavigate } from 'react-router-dom';
-import { REGISTER_USER } from '../../graphql/queries.ts';
+import { REGISTER_USER_WITH_PASSWORD } from '../../graphql/queries.ts';
 import { validateRegistrationForm } from '../../utils/validation.ts';
 
 /**
@@ -25,7 +25,7 @@ export function RegisterForm() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const navigate = useNavigate();
-  const [registerUser] = useMutation(REGISTER_USER);
+  const [registerUser] = useMutation(REGISTER_USER_WITH_PASSWORD);
 
   /**
    * Handle input changes
