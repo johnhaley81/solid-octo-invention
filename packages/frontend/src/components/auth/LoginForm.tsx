@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { useMutation, useLazyQuery } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LOGIN_WITH_PASSWORD,
   LOGIN_WITH_PASSKEY,
   GET_PASSKEY_CHALLENGE,
   CURRENT_USER_FROM_SESSION,
-} from '../../graphql/queries.js';
-import { useAuth } from '../../contexts/AuthContext.js';
+} from '../../graphql/queries.ts';
+import { useAuth } from '../../contexts/AuthContext.tsx';
 import { validateLoginForm } from '../../utils/validation.ts';
 import { isPasskeySupported, authenticateWithPasskey } from '../../utils/passkey.js';
 
@@ -27,8 +27,8 @@ export function LoginForm() {
   const [loginWithPassword] = useMutation(LOGIN_WITH_PASSWORD);
   // TODO: Implement passkey authentication mutations in backend
   const [loginWithPasskey] = useMutation(LOGIN_WITH_PASSKEY || LOGIN_WITH_PASSWORD); // Fallback to password login
-  const [getPasskeyChallenge] = useLazyQuery(GET_PASSKEY_CHALLENGE || CURRENT_USER_FROM_SESSION); // Fallback
-  const [getCurrentUser] = useLazyQuery(CURRENT_USER_FROM_SESSION);
+  const [getPasskeyChallenge] = useMutation(GET_PASSKEY_CHALLENGE || CURRENT_USER_FROM_SESSION); // Fallback
+  const [getCurrentUser] = useMutation(CURRENT_USER_FROM_SESSION);
 
   // Get the intended destination or default to home
   const from = (location.state as any)?.from?.pathname || '/';

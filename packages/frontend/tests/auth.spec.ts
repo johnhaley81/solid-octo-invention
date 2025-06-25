@@ -88,7 +88,9 @@ test.describe('Authentication Flow', () => {
     const responsePromise = page.waitForResponse(response => {
       const postData = response.request().postData();
       return (
-        response.url().includes('graphql') && postData !== null && postData.includes('registerUser')
+        response.url().includes('graphql') &&
+        postData !== null &&
+        postData.includes('registerUserWithPassword')
       );
     });
 
@@ -212,11 +214,13 @@ test.describe('Authentication Flow', () => {
           body: JSON.stringify({
             data: {
               currentUserFromSession: {
-                id: '1',
-                email: 'test@example.com',
-                name: 'Test User',
-                authMethod: 'PASSWORD',
-                createdAt: new Date().toISOString(),
+                user: {
+                  id: '1',
+                  email: 'test@example.com',
+                  name: 'Test User',
+                  authMethod: 'PASSWORD',
+                  createdAt: new Date().toISOString(),
+                },
               },
             },
           }),
@@ -285,11 +289,13 @@ test.describe('Authentication Flow', () => {
           body: JSON.stringify({
             data: {
               currentUserFromSession: {
-                id: '1',
-                email: 'test@example.com',
-                name: 'Test User',
-                authMethod: 'PASSWORD',
-                createdAt: new Date().toISOString(),
+                user: {
+                  id: '1',
+                  email: 'test@example.com',
+                  name: 'Test User',
+                  authMethod: 'PASSWORD',
+                  createdAt: new Date().toISOString(),
+                },
               },
             },
           }),
