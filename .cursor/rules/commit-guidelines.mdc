@@ -122,3 +122,53 @@ If you absolutely must commit without passing all checks (emergency hotfix):
 - Run tests frequently during development to catch issues early
 
 Remember: **Quality code is committed code. Never commit broken code.**
+
+## Sandbox Environment Authority and Responsibility
+
+**CODEGEN HAS THE AUTHORITY AND RESPONSIBILITY TO MAINTAIN THE SANDBOX AND ITS DEV ENVIRONMENT**
+
+As the AI assistant for this project, Codegen has full authority and responsibility to:
+
+### 1. Sandbox Environment Management
+- Install, update, and configure development dependencies
+- Modify system configurations needed for development
+- Set up and maintain database connections and services
+- Configure and optimize the development environment for testing
+
+### 2. Development Infrastructure
+- Maintain and improve build scripts and development tools
+- Update package configurations and dependencies as needed
+- Ensure all development servers and services work properly
+- Optimize the development workflow for efficiency
+
+### 3. Testing Environment
+- **Full authority to run and maintain e2e tests in the sandbox**
+- Configure test environments and dependencies
+- Ensure all test suites (unit, integration, e2e) run reliably
+- Maintain test infrastructure and tooling
+
+### 4. Quality Assurance
+- Ensure all quality checks pass before commits
+- Maintain and improve linting, formatting, and type checking
+- Keep the codebase in a deployable state at all times
+- Resolve any development environment issues that arise
+
+### 5. Documentation and Setup
+- Keep setup documentation current and accurate
+- Maintain sandbox setup scripts and automation
+- Document any changes to the development environment
+- Ensure new developers can easily set up the environment
+
+**This authority extends to making necessary changes to:**
+- Configuration files (package.json, tsconfig.json, etc.)
+- Development scripts and automation
+- Environment setup and dependencies
+- Testing infrastructure and configuration
+- Documentation and setup guides
+
+**The goal is to maintain a fully functional development environment that allows for:**
+- Reliable local development
+- Comprehensive testing (unit, integration, e2e)
+- Consistent code quality
+- Easy onboarding for new developers
+- Efficient CI/CD processes

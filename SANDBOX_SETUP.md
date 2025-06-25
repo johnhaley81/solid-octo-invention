@@ -143,3 +143,103 @@ Both scripts are designed to be run multiple times safely:
 - **Connection:**
   `postgresql://postgres:postgres@localhost:5432/solid_octo_invention`
 - **Service:** Automatically enabled to start on boot
+
+## E2E Testing in Sandbox
+
+### 🎭 `run-e2e-tests.sh` - Comprehensive E2E Test Runner
+
+A dedicated script for running end-to-end tests with full server orchestration.
+
+**What it does:**
+
+- Starts backend server (port 3001) and frontend server (port 5173)
+- Waits for both servers to be ready with health checks
+- Runs Playwright e2e tests with proper environment setup
+- Automatically cleans up servers after tests complete
+- Provides detailed logging and error handling
+
+**Usage:**
+
+```bash
+# Run full e2e test suite
+./run-e2e-tests.sh
+pnpm test:e2e
+
+# Run tests with Playwright UI
+./run-e2e-tests.sh --ui
+pnpm test:e2e:ui
+
+# Run tests in headed mode (see browser)
+./run-e2e-tests.sh --headed
+pnpm test:e2e:headed
+
+# Run specific test file
+./run-e2e-tests.sh tests/auth.spec.ts
+
+# Start servers for manual testing
+./run-e2e-tests.sh --start
+pnpm test:e2e:start
+
+# Cleanup any running servers
+./run-e2e-tests.sh --cleanup
+pnpm test:e2e:cleanup
+```
+
+**Features:**
+
+- **Automatic Server Management:** Starts and stops both backend and frontend
+  servers
+- **Health Checking:** Waits for servers to be ready before running tests
+- **Port Conflict Detection:** Handles existing servers gracefully
+- **Comprehensive Cleanup:** Ensures no orphaned processes remain
+- **Detailed Logging:** Timestamped logs with color coding for easy debugging
+- **Flexible Arguments:** Pass any Playwright arguments through to the test
+  runner
+
+**Server Configuration:**
+
+- **Backend:** http://localhost:3001 (GraphQL endpoint: /graphql, Health:
+  /health)
+- **Frontend:** http://localhost:5173
+- **Database:** PostgreSQL on localhost:5432
+- **Test Environment:** Automatically configured for e2e testing
+
+### E2E Test Development
+
+The e2e tests are located in `packages/frontend/tests/` and use Playwright for
+browser automation.
+
+**Available Test Files:**
+
+- `basic.spec.ts` - Basic application functionality tests
+- `auth.spec.ts` - Authentication flow tests
+
+**Test Reports:** After running tests, reports are available at:
+
+- HTML Report: `packages/frontend/playwright-report/index.html`
+- View with: `pnpm --filter frontend exec playwright show-report`
+
+### Troubleshooting E2E Tests
+
+**Server startup issues:**
+
+```bash
+./run-e2e-tests.sh --cleanup  # Clean up any stuck processes
+./fix-database-issues.sh      # Ensure database is working
+./run-e2e-tests.sh --start    # Test server startup manually
+```
+
+**Test failures:**
+
+```bash
+./run-e2e-tests.sh --headed   # Run tests in headed mode to see what's happening
+./run-e2e-tests.sh --ui       # Use Playwright UI for debugging
+```
+
+**Port conflicts:** The script automatically detects and handles port conflicts,
+but you can manually check:
+
+```bash
+lsof -i :3001  # Check backend port
+lsof -i :5173  # Check frontend port
+```
