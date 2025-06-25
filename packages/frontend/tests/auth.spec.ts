@@ -61,36 +61,47 @@ test.describe('Authentication Flow', () => {
     page.on('console', msg => console.log('PAGE LOG:', msg.text()));
     page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
 
-    // Listen for network requests
+    // Listen for ALL network requests
     page.on('request', request => {
-      if (request.url().includes('graphql')) {
-        console.log('GraphQL REQUEST:', request.method(), request.url());
-        console.log('GraphQL BODY:', request.postData());
+      console.log('REQUEST:', request.method(), request.url());
+      if (request.postData()) {
+        console.log('REQUEST BODY:', request.postData());
       }
     });
 
     page.on('response', response => {
+      console.log('RESPONSE:', response.status(), response.url());
       if (response.url().includes('graphql')) {
-        console.log('GraphQL RESPONSE:', response.status(), response.url());
         response.text().then(text => console.log('GraphQL RESPONSE BODY:', text));
       }
     });
 
     await page.goto('/register');
 
+    // Wait for page to load
+    await page.waitForSelector('form');
+    
+
+    
     // Fill out registration form
     await page.fill('#name', testUser.name);
     await page.fill('#email', testUser.email);
     await page.fill('#password', testUser.password);
     await page.fill('#confirmPassword', testUser.password);
 
+    console.log('Form filled, clicking submit...');
+
+    // Check if there are any validation errors before submitting
+    const validationErrors = await page.locator('.error, [role="alert"], .text-red-500').count();
+    console.log('Validation errors before submit:', validationErrors);
+
     // Submit form and wait for network request
     const responsePromise = page.waitForResponse(response => {
       const postData = response.request().postData();
       return (
-        response.url().includes('graphql') && postData !== null && postData.includes('registerUser')
+        response.url().includes('graphql') && postData !== null && postData.includes('registerUserWithPassword')
       );
-    });
+    }, { timeout: 10000 });
 
     await page.click('button[type="submit"]');
 

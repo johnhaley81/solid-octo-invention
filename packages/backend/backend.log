@@ -1,0 +1,168 @@
+
+> @solid-octo-invention/backend@0.1.0 dev
+> tsx watch src/server.ts
+
+[2025-06-25T01:22:16.426Z] INFO: Initializing database connection pool {
+  fiberId: {
+    _id: 'FiberId',
+    _tag: 'Runtime',
+    id: 3,
+    startTimeMillis: 1750814536424
+  },
+  cause: { _id: 'Cause', _tag: 'Empty' },
+  context: FiberRefsImpl {
+    locals: Map(5) {
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array]
+    },
+    [Symbol(effect/FiberRefs)]: Symbol(effect/FiberRefs)
+  },
+  spans: { _id: 'List', _tag: 'Nil' },
+  annotations: { _id: 'HashMap', values: [] },
+  date: 2025-06-25T01:22:16.426Z
+}
+[01:22:16.426] INFO (#3): Initializing database connection pool
+[2025-06-25T01:22:16.435Z] INFO: Initializing Graphile Worker,[object Object] {
+  fiberId: {
+    _id: 'FiberId',
+    _tag: 'Runtime',
+    id: 4,
+    startTimeMillis: 1750814536424
+  },
+  cause: { _id: 'Cause', _tag: 'Empty' },
+  context: FiberRefsImpl {
+    locals: Map(5) {
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array]
+    },
+    [Symbol(effect/FiberRefs)]: Symbol(effect/FiberRefs)
+  },
+  spans: { _id: 'List', _tag: 'Nil' },
+  annotations: { _id: 'HashMap', values: [] },
+  date: 2025-06-25T01:22:16.435Z
+}
+[01:22:16.435] INFO (#4): Initializing Graphile Worker
+  { concurrency: 5 }
+[2025-06-25T01:22:16.455Z] INFO: Database connection pool initialized successfully {
+  fiberId: {
+    _id: 'FiberId',
+    _tag: 'Runtime',
+    id: 3,
+    startTimeMillis: 1750814536424
+  },
+  cause: { _id: 'Cause', _tag: 'Empty' },
+  context: FiberRefsImpl {
+    locals: Map(5) {
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array]
+    },
+    [Symbol(effect/FiberRefs)]: Symbol(effect/FiberRefs)
+  },
+  spans: { _id: 'List', _tag: 'Nil' },
+  annotations: { _id: 'HashMap', values: [] },
+  date: 2025-06-25T01:22:16.455Z
+}
+[01:22:16.455] INFO (#3): Database connection pool initialized successfully
+[core] INFO: Failed to read crontab file '/tmp/johnhaley81/solid-octo-invention/packages/backend/crontab'; cron is disabled
+[2025-06-25T01:22:16.461Z] INFO: Graphile Worker started successfully {
+  fiberId: {
+    _id: 'FiberId',
+    _tag: 'Runtime',
+    id: 4,
+    startTimeMillis: 1750814536424
+  },
+  cause: { _id: 'Cause', _tag: 'Empty' },
+  context: FiberRefsImpl {
+    locals: Map(5) {
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array]
+    },
+    [Symbol(effect/FiberRefs)]: Symbol(effect/FiberRefs)
+  },
+  spans: { _id: 'List', _tag: 'Nil' },
+  annotations: { _id: 'HashMap', values: [] },
+  date: 2025-06-25T01:22:16.461Z
+}
+[01:22:16.461] INFO (#4): Graphile Worker started successfully
+[2025-06-25T01:22:16.464Z] INFO: Starting Solid Octo Invention server,[object Object] {
+  fiberId: {
+    _id: 'FiberId',
+    _tag: 'Runtime',
+    id: 1,
+    startTimeMillis: 1750814536415
+  },
+  cause: { _id: 'Cause', _tag: 'Empty' },
+  context: FiberRefsImpl {
+    locals: Map(4) {
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array]
+    },
+    [Symbol(effect/FiberRefs)]: Symbol(effect/FiberRefs)
+  },
+  spans: { _id: 'List', _tag: 'Nil' },
+  annotations: { _id: 'HashMap', values: [] },
+  date: 2025-06-25T01:22:16.464Z
+}
+[01:22:16.464] INFO (#1): Starting Solid Octo Invention server
+  { port: 3001, nodeEnv: 'development', enableGraphiQL: true }
+[2025-06-25T01:22:16.470Z] INFO: Server started successfully,[object Object] {
+  fiberId: {
+    _id: 'FiberId',
+    _tag: 'Runtime',
+    id: 1,
+    startTimeMillis: 1750814536415
+  },
+  cause: { _id: 'Cause', _tag: 'Empty' },
+  context: FiberRefsImpl {
+    locals: Map(4) {
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array],
+      [Object] => [Array]
+    },
+    [Symbol(effect/FiberRefs)]: Symbol(effect/FiberRefs)
+  },
+  spans: { _id: 'List', _tag: 'Nil' },
+  annotations: { _id: 'HashMap', values: [] },
+  date: 2025-06-25T01:22:16.470Z
+}
+[01:22:16.470] INFO (#1): Server started successfully
+  {
+    port: 3001,
+    graphqlEndpoint: 'http://localhost:3001/graphql',
+    healthEndpoint: 'http://localhost:3001/health'
+  }
+Server started successfully {
+  port: 3001,
+  graphqlEndpoint: 'http://localhost:3001/graphql',
+  healthEndpoint: 'http://localhost:3001/health'
+}
+[core] INFO: Worker connected and looking for jobs... (task names: 'send-verification-email', 'send-login-otp', 'send-password-reset-email', 'cleanup-expired-auth-data', 'send-auth-method-change-notification', 'send-email', 'process-image', 'cleanup-expired-sessions')
+0 error(s) as postgres in 29.01ms :: { __schema { types { name } } }
+0 error(s) as postgres in 2.42ms :: { __schema { types { name } } }
+0 error(s) as postgres in 9.35ms :: { __schema { types { name } } }
+0 error(s) as postgres in 26.81ms :: mutation RegisterUserWithPassword($email: String!, $name: String!, $password: String!) { registerUserWithPassword( input: {email: $email, name: $name, password: $password} ) { user { id nodeId email name authMethod createdAt __typename } __typename } }
+0 error(s) as postgres in 9.90ms :: { __schema { types { name } } }
+0 error(s) as postgres in 18.81ms :: mutation RegisterUserWithPassword($email: String!, $name: String!, $password: String!) { registerUserWithPassword( input: {email: $email, name: $name, password: $password} ) { user { id nodeId email name authMethod createdAt __typename } __typename } }
+1 error(s) as postgres in 16.76ms :: mutation LoginWithPassword($email: String!, $password: String!) { loginWithPassword(input: {email: $email, password: $password}) { results { sessionToken userId expiresAt __typename } __typename } }
+0 error(s) as postgres in 2.24ms :: { __schema { types { name } } }
+0 error(s) as postgres in 11.24ms :: mutation RegisterUserWithPassword($email: String!, $name: String!, $password: String!) { registerUserWithPassword( input: {email: $email, name: $name, password: $password} ) { user { id nodeId email name authMethod createdAt __typename } __typename } }
+1 error(s) as postgres in 6.56ms :: mutation LoginWithPassword($email: String!, $password: String!) { loginWithPassword(input: {email: $email, password: $password}) { results { sessionToken userId expiresAt __typename } __typename } }
+0 error(s) as postgres in 1.86ms :: { __schema { types { name } } }
+0 error(s) as postgres in 8.07ms :: mutation RegisterUserWithPassword($email: String!, $name: String!, $password: String!) { registerUserWithPassword( input: {email: $email, name: $name, password: $password} ) { user { id nodeId email name authMethod createdAt __typename } __typename } }
+1 error(s) as postgres in 3.90ms :: mutation LoginWithPassword($email: String!, $password: String!) { loginWithPassword(input: {email: $email, password: $password}) { results { sessionToken userId expiresAt __typename } __typename } }
+0 error(s) as postgres in 22.81ms :: mutation RegisterUserWithPassword($email: String!, $name: String!, $password: String!) { registerUserWithPassword( input: {email: $email, name: $name, password: $password} ) { user { id nodeId email name authMethod createdAt __typename } __typename } }
