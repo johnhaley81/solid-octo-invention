@@ -17,7 +17,11 @@ export function AuthPage() {
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const [loginErrors, setLoginErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+  const [loginErrors, setLoginErrors] = useState<{
+    email?: string;
+    password?: string;
+    general?: string;
+  }>({});
   const [isLoginLoading, setIsLoginLoading] = useState(false);
 
   // Registration form state
@@ -55,7 +59,7 @@ export function AuthPage() {
 
     const validation = validateLoginForm(loginEmail, loginPassword);
     setLoginErrors(validation.errors);
-    
+
     if (!validation.isValid) {
       return;
     }
@@ -186,7 +190,7 @@ export function AuthPage() {
         <div className="w-full max-w-md">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
             <h2 className="text-3xl font-bold text-white mb-8 text-center">Sign up</h2>
-            
+
             {isRegisterSuccess ? (
               <div className="text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
@@ -290,7 +294,7 @@ export function AuthPage() {
           <div className="bg-white rounded-2xl p-8 shadow-xl">
             <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">Log in</h2>
             <p className="text-gray-600 text-center mb-8">Already have an account?</p>
-            
+
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
                 <input
