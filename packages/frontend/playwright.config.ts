@@ -80,12 +80,22 @@ export default defineConfig({
   ],
 
   /* Configure web servers for testing */
-  webServer: {
-    command: 'npm run dev',
-    port: 5173,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-    // Frontend should always start successfully
-    ignoreHTTPSErrors: true,
-  },
+  webServer: [
+    {
+      command: 'cd ../backend && npm run dev',
+      port: 3001,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+      // Backend with database
+      ignoreHTTPSErrors: true,
+    },
+    {
+      command: 'npm run dev',
+      port: 5173,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+      // Frontend
+      ignoreHTTPSErrors: true,
+    },
+  ],
 });
